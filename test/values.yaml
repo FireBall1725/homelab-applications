@@ -43,7 +43,7 @@ ingress:
   main:
     enabled: true
     hosts:
-    - host: test.k3s.firekatt.ca
+    - host: test2.k3s.firekatt.ca
       paths:
       - path: /
         pathType: Prefix
