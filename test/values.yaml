@@ -37,16 +37,18 @@ config:
 
   php-fpm-server.conf: {}
 
+
 ingress:
   # -- Enable and configure ingress settings for the chart under this key.
   # @default -- See values.yaml
   main:
     enabled: true
     hosts:
-    - host: test2.k3s.firekatt.ca
+    - host: test3.k3s.firekatt.ca
       paths:
       - path: /
         pathType: Prefix
+
 
 # -- Configure persistence settings for the chart under this key.
 # @default -- See values.yaml
