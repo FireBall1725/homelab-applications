@@ -5,7 +5,10 @@ nginx-php:
   # This chart inherits from our common library chart. You can check the default values/options here:
   # https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common/values.yaml
   #
-
+  
+  controller:
+      replicas: 2
+  
   image:
     # -- image repository
     repository: trafex/php-nginx
