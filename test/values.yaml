@@ -44,6 +44,7 @@ nginx-php:
     # @default -- See values.yaml
     main:
       enabled: true
+      ingressClassName: traefik
       hosts:
       - host: test3.k3s.firekatt.ca
         paths:
