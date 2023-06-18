@@ -113,6 +113,15 @@ home-assistant:
       volumeMounts:
       - name: config
         mountPath: /data/config
+      ingress:
+        enabled: true
+        ingressClassName:  # "nginx"
+        hosts:
+          - host: ha-code.k3s.firekatt.ca
+            paths:
+              - path: /
+                pathType: Prefix
+
 
 
 
