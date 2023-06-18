@@ -26,6 +26,10 @@ home-assistant:
   service:
     main:
       ports:
+        homekit:
+          port: 5353
+        homekit2:
+          port: 21063
         http:
           port: 8123
 
@@ -41,7 +45,7 @@ home-assistant:
           pathType: Prefix
 
   # -- Enable devices to be discoverable
-  hostNetwork: true
+  # hostNetwork: true
 
   # -- When hostNetwork is true set dnsPolicy to ClusterFirstWithHostNet
   # dnsPolicy: ClusterFirstWithHostNet
@@ -71,51 +75,6 @@ home-assistant:
       enabled: false
       type: hostPath
       hostPath: /path/to/device
-
-  # -- Enable and configure mariadb database subchart under this key.
-  #    For more options see [mariadb chart documentation](https://github.com/bitnami/charts/tree/master/bitnami/mariadb)
-  # @default -- See values.yaml
-  mariadb:
-    enabled: false
-    architecture: standalone
-    auth:
-      database: home-assistant
-      username: home-assistant
-      password: home-assistant-pass
-      rootPassword: home-assistantrootpass
-    primary:
-      persistence:
-        enabled: false
-        # storageClass: ""
-
-  # -- Enable and configure postgresql database subchart under this key.
-  #    For more options see [postgresql chart documentation](https://github.com/bitnami/charts/tree/master/bitnami/postgresql)
-  # @default -- See values.yaml
-  postgresql:
-    enabled: false
-    image:
-      repository: bitnami/postgresql
-      tag: 14.1.0
-    postgresqlUsername: home-assistant
-    postgresqlPassword: home-assistant-pass
-    postgresqlDatabase: home-assistant
-    persistence:
-      primary:
-        enabled: false
-        # storageClass: ""
-
-  # -- Enable and configure influxdb database subchart under this key.
-  #    For more options see [influxdb chart documentation](https://github.com/bitnami/charts/tree/master/bitnami/influxdb)
-  # @default -- See values.yaml
-  influxdb:
-    enabled: false
-    architecture: standalone
-    database: home_assistant
-    authEnabled: false
-    persistence:
-      enabled: false
-      # storageClass: ""
-      # size: 8Gi
 
   metrics:
     # -- Enable and configure a Prometheus serviceMonitor for the chart under this key.
