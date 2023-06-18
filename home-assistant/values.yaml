@@ -54,7 +54,16 @@ home-assistant:
   # @default -- See values.yaml
   persistence:
     config:
-      enabled: false
+      accessMode: ReadWriteOnce
+      enabled: true
+      readOnly: false
+      retain: false
+      size: 1Gi
+      type: pvc
+    shared:
+      enabled: true
+      mountPath: /shared
+      type: emptyDir
     # -- Configure a hostPathMount to mount a USB device in the container.
     # @default -- See values.yaml
     usb:
