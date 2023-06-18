@@ -57,8 +57,9 @@ home-assistant:
       accessMode: ReadWriteOnce
       enabled: true
       readOnly: false
-      retain: false
-      size: 1Gi
+      storageClass: longhorn
+      retain: true
+      size: 8Gi
       type: pvc
     shared:
       enabled: true
