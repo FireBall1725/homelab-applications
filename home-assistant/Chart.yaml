@@ -11,6 +11,6 @@ keywords:
   - homeassistant
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Home_Assistant_Logo.svg/519px-Home_Assistant_Logo.svg.png
 dependencies:
-  - name: k8s-home-lab
+  - name: home-assistant
     repository: https://k8s-home-lab.github.io/helm-charts/
     version: 14.0.0
