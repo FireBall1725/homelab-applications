@@ -45,14 +45,10 @@ home-assistant:
           pathType: Prefix
 
   # -- Enable devices to be discoverable
-  # hostNetwork: true
+  hostNetwork: true
 
   # -- When hostNetwork is true set dnsPolicy to ClusterFirstWithHostNet
-  # dnsPolicy: ClusterFirstWithHostNet
-
-  # securityContext:
-  #   # -- (bool) Privileged securityContext may be required if USB devics are accessed directly through the host machine
-  #   privileged:  # true
+  dnsPolicy: ClusterFirstWithHostNet
 
   # -- Configure persistence settings for the chart under this key.
   # @default -- See values.yaml
@@ -69,12 +65,6 @@ home-assistant:
       enabled: true
       mountPath: /shared
       type: emptyDir
-    # -- Configure a hostPathMount to mount a USB device in the container.
-    # @default -- See values.yaml
-    usb:
-      enabled: false
-      type: hostPath
-      hostPath: /path/to/device
 
   metrics:
     # -- Enable and configure a Prometheus serviceMonitor for the chart under this key.
@@ -114,7 +104,7 @@ home-assistant:
     #    This allows for easy access to configuration.yaml
     # @default -- See values.yaml
     codeserver:
-      enabled: false
+      enabled: true
       args:
         - --auth
         - none
