@@ -1,0 +1,22 @@
+image:
+  repository: ghcr.io/home-assistant/home-assistant
+  tag: 2023.6.2
+  pullPolicy: IfNotPresent
+
+env:
+  TZ: UTC
+
+service:
+  main:
+    ports:
+      http:
+        port: 8123
+
+ingress:
+  main:
+    enabled: false
+
+persistence:
+  config:
+    enabled: false
+

@@ -1,0 +1,11 @@
+apiVersion: v2
+name: home-assistant
+description: Home Assistant
+type: application
+icon: https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Home_Assistant_Logo.svg/519px-Home_Assistant_Logo.svg.png
+version: 1.0.0
+appVersion: 2023.6.2
+dependencies:
+  - name: common
+    repository: https://library-charts.k8s-at-home.com
+    version: 4.5.2
