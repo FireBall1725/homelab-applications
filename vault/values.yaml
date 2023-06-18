@@ -760,7 +760,7 @@ vault:
     # the "file" backend.  This mode is not highly available and should not be scaled
     # past a single replica.
     standalone:
-      enabled: "-"
+      enabled: false
 
       # config is a raw string of default configuration when using a Stateful
       # deployment. Default is to use a PersistentVolumeClaim mounted at /vault/data
@@ -809,7 +809,7 @@ vault:
     # Helm project by default.  It is possible to manually configure Vault to use a
     # different HA backend.
     ha:
-      enabled: false
+      enabled: true
       replicas: 3
 
       # Set the api_addr configuration for Vault HA
@@ -845,9 +845,9 @@ vault:
             address = "[::]:8200"
             cluster_address = "[::]:8201"
             # Enable unauthenticated metrics access (necessary for Prometheus Operator)
-            #telemetry {
-            #  unauthenticated_metrics_access = "true"
-            #}
+            telemetry {
+              unauthenticated_metrics_access = "true"
+            }
           }
 
           storage "raft" {
