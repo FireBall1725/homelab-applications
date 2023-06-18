@@ -1,22 +1,1106 @@
+addons:
+  codeserver:
+    args:
+    - --auth
+    - none
+    - --user-data-dir
+    - /data/config/.vscode
+    enabled: true
+    volumeMounts:
+    - mountPath: /data/config
+      name: config
+common:
+  additionalContainers: {}
+  addons:
+    codeserver:
+      args:
+      - --auth
+      - none
+      enabled: true
+      env: {}
+      git:
+        deployKey: ""
+        deployKeyBase64: ""
+        deployKeySecret: ""
+      image:
+        pullPolicy: IfNotPresent
+        repository: codercom/code-server
+        tag: 3.9.2
+      ingress:
+        annotations: {}
+        enabled: true
+        hosts:
+        - host: code.k3s.firekatt.ca
+          paths:
+          - path: /
+            pathType: Prefix
+        labels: {}
+        tls: []
+      securityContext:
+        runAsUser: 0
+      service:
+        annotations: {}
+        enabled: true
+        ipFamilies:
+        - IPv4
+        ipFamilyPolicy: SingleStack
+        labels: {}
+        ports:
+          codeserver:
+            enabled: true
+            port: 12321
+            protocol: TCP
+            targetPort: codeserver
+        type: ClusterIP
+      volumeMounts:
+      - mountPath: /config
+        name: config
+      workingDir: ""
+    netshoot:
+      enabled: false
+      env: {}
+      image:
+        pullPolicy: Always
+        repository: nicolaka/netshoot
+        tag: latest
+      securityContext:
+        capabilities:
+          add:
+          - NET_ADMIN
+    promtail:
+      args: []
+      enabled: false
+      env: {}
+      image:
+        pullPolicy: IfNotPresent
+        repository: grafana/promtail
+        tag: 2.2.0
+      logs: []
+      loki: ""
+      securityContext:
+        runAsUser: 0
+      volumeMounts: []
+    vpn:
+      additionalVolumeMounts: []
+      args: []
+      enabled: false
+      env: {}
+      gluetun:
+        image:
+          pullPolicy: IfNotPresent
+          repository: docker.io/qmcgaw/gluetun
+          tag: v3.30.0
+      livenessProbe: {}
+      networkPolicy:
+        annotations: {}
+        enabled: false
+        labels: {}
+        podSelectorLabels: {}
+      openvpn:
+        image:
+          pullPolicy: IfNotPresent
+          repository: dperson/openvpn-client
+          tag: latest
+      scripts: {}
+      securityContext:
+        capabilities:
+          add:
+          - NET_ADMIN
+          - SYS_MODULE
+      type: openvpn
+      wireguard:
+        image:
+          pullPolicy: IfNotPresent
+          repository: ghcr.io/k8s-at-home/wireguard
+          tag: v1.0.20210914
+  affinity: {}
+  args: []
+  automountServiceAccountToken: true
+  autoscaling:
+    enabled: false
+  command: []
+  configmap:
+    config:
+      annotations: {}
+      data: {}
+      enabled: false
+      labels: {}
+  controller:
+    annotations: {}
+    enabled: true
+    labels: {}
+    replicas: 1
+    revisionHistoryLimit: 3
+    rollingUpdate: {}
+    type: deployment
+  dnsConfig: {}
+  enableServiceLinks: true
+  envFrom: []
+  global:
+    annotations: {}
+    labels: {}
+  hostAliases: []
+  hostNetwork: true
+  image: {}
+  imagePullSecrets: []
+  ingress:
+    main:
+      annotations: {}
+      enabled: true
+      hosts:
+      - host: ha.k3s.firekatt.ca
+        paths:
+        - path: /
+          pathType: Prefix
+          service:
+            name: null
+            port: null
+      labels: {}
+      primary: true
+      tls: []
+  initContainers: {}
+  lifecycle: {}
+  nodeSelector: {}
+  persistence:
+    config:
+      accessMode: ReadWriteOnce
+      enabled: true
+      readOnly: false
+      retain: false
+      size: 1Gi
+      type: pvc
+    shared:
+      enabled: true
+      mountPath: /shared
+      type: emptyDir
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext: {}
+  probes:
+    liveness:
+      custom: false
+      enabled: true
+      spec:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        timeoutSeconds: 1
+    readiness:
+      custom: false
+      enabled: true
+      spec:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        timeoutSeconds: 1
+    startup:
+      custom: false
+      enabled: true
+      spec:
+        failureThreshold: 30
+        initialDelaySeconds: 0
+        periodSeconds: 5
+        timeoutSeconds: 1
+  resources: {}
+  secret: {}
+  securityContext: {}
+  service:
+    main:
+      annotations: {}
+      enabled: true
+      externalTrafficPolicy: null
+      ipFamilies: []
+      ipFamilyPolicy: null
+      labels: {}
+      ports:
+        homekit:
+          enabled: true
+          port: 5353
+          protocol: UDP
+        homekit2:
+          enabled: true
+          port: 21063
+          protocol: TCP
+        http:
+          enabled: true
+          primary: true
+          protocol: HTTP
+      primary: true
+      type: ClusterIP
+  serviceAccount:
+    annotations: {}
+    create: false
+    name: ""
+  termination: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  volumeClaimTemplates: []
+env:
+  TZ: America/Toronto
 image:
   repository: ghcr.io/home-assistant/home-assistant
   tag: 2023.6.2
   pullPolicy: IfNotPresent
+influxdb:
+  adminUser:
+    name: admin
+    pwd: null
+    usePasswordFile: false
+  architecture: standalone
+  authEnabled: false
+  backup:
+    cronjob:
+      historyLimit: 1
+      podAnnotations: null
+      schedule: 0 2 * * *
+      securityContext:
+        enabled: true
+        fsGroup: 1001
+        runAsUser: 1001
+    directory: /backups
+    enabled: false
+    retentionDays: 10
+    uploadProviders:
+      azure:
+        containerName: influxdb-container
+        enabled: false
+        existingSecret: ""
+        image:
+          pullPolicy: IfNotPresent
+          registry: docker.io
+          repository: bitnami/azure-cli
+          tag: 2.17.1-debian-10-r4
+        secret: ""
+        secretKey: connection-string
+      google:
+        bucketName: gs://bucket/influxdb
+        enabled: false
+        existingSecret: ""
+        image:
+          pullPolicy: IfNotPresent
+          registry: docker.io
+          repository: bitnami/google-cloud-sdk
+          tag: 0.322.0-debian-10-r1
+        secret: ""
+        secretKey: key.json
+  clusterDomain: cluster.local
+  common:
+    exampleValue: common-chart
+    global: null
+  database: home_assistant
+  enabled: false
+  global: null
+  image:
+    debug: false
+    pullPolicy: IfNotPresent
+    registry: docker.io
+    repository: bitnami/influxdb
+    tag: 1.8.3-debian-10-r88
+  influxdb:
+    affinity: null
+    containerPorts:
+      http: 8086
+      rpc: 8088
+    livenessProbe:
+      enabled: true
+      failureThreshold: 6
+      initialDelaySeconds: 180
+      periodSeconds: 45
+      successThreshold: 1
+      timeoutSeconds: 30
+    nodeAffinityPreset:
+      key: ""
+      type: ""
+      values: null
+    nodeSelector: null
+    podAffinityPreset: ""
+    podAntiAffinityPreset: soft
+    podManagementPolicy: OrderedReady
+    readinessProbe:
+      enabled: true
+      failureThreshold: 6
+      initialDelaySeconds: 60
+      periodSeconds: 45
+      successThreshold: 1
+      timeoutSeconds: 30
+    replicaCount: 1
+    resources:
+      limits: null
+      requests: null
+    securityContext:
+      enabled: true
+      fsGroup: 1001
+      runAsUser: 1001
+    service:
+      annotations: null
+      nodePorts:
+        http: ""
+        rpc: ""
+      port: 8086
+      rpcPort: 8088
+      type: ClusterIP
+    tolerations: null
+    updateStrategy: RollingUpdate
+  ingress:
+    annotations: null
+    certManager: false
+    enabled: false
+    hosts:
+    - name: influxdb.local
+      path: /
+    secrets: null
+  metrics:
+    enabled: false
+    service:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: '{{ .Values.influxdb.service.port }}'
+        prometheus.io/scrape: true
+      nodePort: ""
+      port: 9122
+      type: ClusterIP
+    serviceMonitor:
+      enabled: false
+  networkPolicy:
+    allowExternal: true
+    enabled: false
+  persistence:
+    accessModes:
+    - ReadWriteOnce
+    enabled: false
+    size: 8Gi
+  readUser:
+    name: null
+    pwd: null
+    usePasswordFile: false
+  relay:
+    affinity: null
+    configuration: |-
+      [[http]]
+      # Name of the HTTP server, used for display purposes only.
+      name = "relay-server"
 
-env:
-  TZ: UTC
+      # TCP address to bind to, for HTTP server.
+      bind-addr = "0.0.0.0:9096"
 
+      # Array of InfluxDB(TM) instances to use as backends for Relay.
+      output = [
+          {{- $influxdbReplicaCount := int .Values.influxdb.replicaCount }}
+          {{- $influxdbFullname := include "influxdb.fullname" . }}
+          {{- $influxdbHeadlessServiceName := printf "%s-headless" (include "influxdb.fullname" .) }}
+          {{- $releaseName := .Release.Namespace }}
+          {{- $clusterDomain:= .Values.clusterDomain }}
+          {{- range $e, $i := until $influxdbReplicaCount }}
+          { name="{{ $influxdbFullname }}-{{ $i }}", location="http://{{ $influxdbFullname }}-{{ $i }}.{{ $influxdbHeadlessServiceName }}.{{ $releaseName }}.svc.{{ $clusterDomain }}:8086/write", timeout="10s"},
+          {{- end }}
+      ]
+    containerPorts:
+      http: 9096
+    image:
+      pullPolicy: IfNotPresent
+      registry: docker.io
+      repository: bitnami/influxdb-relay
+      tag: 0.20200717.0-scratch-r7
+    livenessProbe:
+      enabled: true
+      failureThreshold: 6
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 5
+    nodeAffinityPreset:
+      key: ""
+      type: ""
+      values: null
+    nodeSelector: null
+    podAffinityPreset: ""
+    podAntiAffinityPreset: soft
+    readinessProbe:
+      enabled: true
+      failureThreshold: 6
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 5
+    replicaCount: 1
+    resources:
+      limits: null
+      requests: null
+    securityContext:
+      enabled: true
+      fsGroup: 1001
+      runAsUser: 1001
+    service:
+      annotations: null
+      nodePort: ""
+      port: 9096
+      type: ClusterIP
+    tolerations: null
+    updateStrategy: RollingUpdate
+  user:
+    name: null
+    pwd: null
+    usePasswordFile: false
+  volumePermissions:
+    enabled: false
+    image:
+      pullPolicy: Always
+      registry: docker.io
+      repository: bitnami/minideb
+      tag: buster
+    securityContext:
+      runAsUser: 0
+  writeUser:
+    name: null
+    pwd: null
+    usePasswordFile: false
+ingress:
+  main:
+    enabled: true
+mariadb:
+  architecture: standalone
+  auth:
+    customPasswordFiles: null
+    database: home-assistant
+    existingSecret: ""
+    forcePassword: false
+    password: home-assistant-pass
+    replicationPassword: ""
+    replicationUser: replicator
+    rootPassword: home-assistantrootpass
+    usePasswordFiles: false
+    username: home-assistant
+  clusterDomain: cluster.local
+  common:
+    exampleValue: common-chart
+    global:
+      imagePullSecrets: null
+      imageRegistry: ""
+      storageClass: ""
+  commonAnnotations: null
+  commonLabels: null
+  diagnosticMode:
+    args:
+    - infinity
+    command:
+    - sleep
+    enabled: false
+  enabled: false
+  extraDeploy: null
+  fullnameOverride: ""
+  global:
+    imagePullSecrets: null
+    imageRegistry: ""
+    storageClass: ""
+  image:
+    debug: false
+    pullPolicy: IfNotPresent
+    pullSecrets: null
+    registry: docker.io
+    repository: bitnami/mariadb
+    tag: 10.5.12-debian-10-r68
+  initdbScripts: null
+  initdbScriptsConfigMap: ""
+  metrics:
+    annotations:
+      prometheus.io/port: 9104
+      prometheus.io/scrape: true
+    enabled: false
+    extraArgs:
+      primary: null
+      secondary: null
+    image:
+      pullPolicy: IfNotPresent
+      pullSecrets: null
+      registry: docker.io
+      repository: bitnami/mysqld-exporter
+      tag: 0.13.0-debian-10-r135
+    livenessProbe:
+      enabled: true
+      failureThreshold: 3
+      initialDelaySeconds: 120
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    readinessProbe:
+      enabled: true
+      failureThreshold: 3
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    resources:
+      limits: null
+      requests: null
+    serviceMonitor:
+      additionalLabels: null
+      enabled: false
+      honorLabels: false
+      interval: 30s
+      namespace: ""
+      relabellings: ""
+      release: ""
+      scrapeTimeout: ""
+  nameOverride: ""
+  primary:
+    affinity: null
+    args: null
+    command: null
+    configuration: |-
+      [mysqld]
+      skip-name-resolve
+      explicit_defaults_for_timestamp
+      basedir=/opt/bitnami/mariadb
+      plugin_dir=/opt/bitnami/mariadb/plugin
+      port=3306
+      socket=/opt/bitnami/mariadb/tmp/mysql.sock
+      tmpdir=/opt/bitnami/mariadb/tmp
+      max_allowed_packet=16M
+      bind-address=0.0.0.0
+      pid-file=/opt/bitnami/mariadb/tmp/mysqld.pid
+      log-error=/opt/bitnami/mariadb/logs/mysqld.log
+      character-set-server=UTF8
+      collation-server=utf8_general_ci
+
+      [client]
+      port=3306
+      socket=/opt/bitnami/mariadb/tmp/mysql.sock
+      default-character-set=UTF8
+      plugin_dir=/opt/bitnami/mariadb/plugin
+
+      [manager]
+      port=3306
+      socket=/opt/bitnami/mariadb/tmp/mysql.sock
+      pid-file=/opt/bitnami/mariadb/tmp/mysqld.pid
+    containerSecurityContext:
+      enabled: true
+      runAsUser: 1001
+    customLivenessProbe: null
+    customReadinessProbe: null
+    customStartupProbe: null
+    existingConfiguration: ""
+    extraEnvVars: null
+    extraEnvVarsCM: ""
+    extraEnvVarsSecret: ""
+    extraFlags: ""
+    extraVolumeMounts: null
+    extraVolumes: null
+    hostAliases: null
+    initContainers: null
+    livenessProbe:
+      enabled: true
+      failureThreshold: 3
+      initialDelaySeconds: 120
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    nodeAffinityPreset:
+      key: ""
+      type: ""
+      values: null
+    nodeSelector: null
+    pdb:
+      enabled: false
+      maxUnavailable: ""
+      minAvailable: 1
+    persistence:
+      accessModes:
+      - ReadWriteOnce
+      annotations: null
+      enabled: true
+      existingClaim: ""
+      selector: null
+      size: 8Gi
+      storageClass: ""
+      subPath: ""
+    podAffinityPreset: ""
+    podAnnotations: null
+    podAntiAffinityPreset: soft
+    podSecurityContext:
+      enabled: true
+      fsGroup: 1001
+    priorityClassName: ""
+    readinessProbe:
+      enabled: true
+      failureThreshold: 3
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    resources:
+      limits: null
+      requests: null
+    revisionHistoryLimit: 10
+    rollingUpdatePartition: ""
+    service:
+      annotations: null
+      clusterIP: ""
+      externalTrafficPolicy: Cluster
+      loadBalancerIP: ""
+      loadBalancerSourceRanges: null
+      nodePort: ""
+      port: 3306
+      type: ClusterIP
+    sidecars: null
+    startupProbe:
+      enabled: false
+      failureThreshold: 10
+      initialDelaySeconds: 120
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 5
+    startupWaitOptions: null
+    tolerations: null
+    topologySpreadConstraints: null
+    updateStrategy: RollingUpdate
+  rbac:
+    create: false
+  schedulerName: ""
+  secondary:
+    affinity: null
+    args: null
+    command: null
+    configuration: |-
+      [mysqld]
+      skip-name-resolve
+      explicit_defaults_for_timestamp
+      basedir=/opt/bitnami/mariadb
+      port=3306
+      socket=/opt/bitnami/mariadb/tmp/mysql.sock
+      tmpdir=/opt/bitnami/mariadb/tmp
+      max_allowed_packet=16M
+      bind-address=0.0.0.0
+      pid-file=/opt/bitnami/mariadb/tmp/mysqld.pid
+      log-error=/opt/bitnami/mariadb/logs/mysqld.log
+      character-set-server=UTF8
+      collation-server=utf8_general_ci
+
+      [client]
+      port=3306
+      socket=/opt/bitnami/mariadb/tmp/mysql.sock
+      default-character-set=UTF8
+
+      [manager]
+      port=3306
+      socket=/opt/bitnami/mariadb/tmp/mysql.sock
+      pid-file=/opt/bitnami/mariadb/tmp/mysqld.pid
+    containerSecurityContext:
+      enabled: true
+      runAsUser: 1001
+    customLivenessProbe: null
+    customReadinessProbe: null
+    customStartupProbe: null
+    existingConfiguration: ""
+    extraEnvVars: null
+    extraEnvVarsCM: ""
+    extraEnvVarsSecret: ""
+    extraFlags: ""
+    extraVolumeMounts: null
+    extraVolumes: null
+    hostAliases: null
+    initContainers: null
+    livenessProbe:
+      enabled: true
+      failureThreshold: 3
+      initialDelaySeconds: 120
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    nodeAffinityPreset:
+      key: ""
+      type: ""
+      values: null
+    nodeSelector: null
+    pdb:
+      enabled: false
+      maxUnavailable: ""
+      minAvailable: 1
+    persistence:
+      accessModes:
+      - ReadWriteOnce
+      annotations: null
+      enabled: true
+      selector: null
+      size: 8Gi
+      storageClass: ""
+      subPath: ""
+    podAffinityPreset: ""
+    podAnnotations: null
+    podAntiAffinityPreset: soft
+    podSecurityContext:
+      enabled: true
+      fsGroup: 1001
+    priorityClassName: ""
+    readinessProbe:
+      enabled: true
+      failureThreshold: 3
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    replicaCount: 1
+    resources:
+      limits: null
+      requests: null
+    revisionHistoryLimit: 10
+    rollingUpdatePartition: ""
+    service:
+      annotations: null
+      clusterIP: ""
+      externalTrafficPolicy: Cluster
+      loadBalancerIP: ""
+      loadBalancerSourceRanges: null
+      nodePort: ""
+      port: 3306
+      type: ClusterIP
+    sidecars: null
+    startupProbe:
+      enabled: false
+      failureThreshold: 10
+      initialDelaySeconds: 120
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 5
+    startupWaitOptions: null
+    tolerations: null
+    topologySpreadConstraints: null
+    updateStrategy: RollingUpdate
+  serviceAccount:
+    annotations: null
+    create: true
+    name: ""
+  volumePermissions:
+    enabled: false
+    image:
+      pullPolicy: IfNotPresent
+      pullSecrets: null
+      registry: docker.io
+      repository: bitnami/bitnami-shell
+      tag: 10-debian-10-r232
+    resources:
+      limits: null
+      requests: null
+persistence:
+  config:
+    enabled: true
+  usb:
+    enabled: false
+    hostPath: /path/to/device
+    type: hostPath
+postgresql:
+  audit:
+    clientMinMessages: error
+    logConnections: false
+    logDisconnections: false
+    logHostname: false
+    logLinePrefix: ""
+    logTimezone: ""
+    pgAuditLog: ""
+    pgAuditLogCatalog: false
+  common:
+    exampleValue: common-chart
+    global:
+      imagePullSecrets: null
+      imageRegistry: ""
+      postgresql:
+        existingSecret: ""
+        postgresqlDatabase: ""
+        postgresqlPassword: ""
+        postgresqlUsername: ""
+        replicationPassword: ""
+        servicePort: ""
+      storageClass: ""
+  commonAnnotations: null
+  commonLabels: null
+  configurationConfigMap: ""
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+  customLivenessProbe: null
+  customReadinessProbe: null
+  customStartupProbe: null
+  diagnosticMode:
+    args:
+    - infinity
+    command:
+    - sleep
+    enabled: false
+  enabled: false
+  existingSecret: ""
+  extendedConfConfigMap: ""
+  extraDeploy: null
+  extraEnv: null
+  extraEnvVarsCM: ""
+  fullnameOverride: ""
+  global:
+    imagePullSecrets: null
+    imageRegistry: ""
+    postgresql:
+      existingSecret: ""
+      postgresqlDatabase: ""
+      postgresqlPassword: ""
+      postgresqlUsername: ""
+      replicationPassword: ""
+      servicePort: ""
+    storageClass: ""
+  image:
+    debug: false
+    pullPolicy: IfNotPresent
+    pullSecrets: null
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: 11.13.0-debian-10-r79
+  initdbPassword: ""
+  initdbScripts: null
+  initdbScriptsConfigMap: ""
+  initdbScriptsSecret: ""
+  initdbUser: ""
+  ldap:
+    baseDN: ""
+    bind_password: ""
+    bindDN: ""
+    enabled: false
+    port: ""
+    prefix: ""
+    scheme: ""
+    search_attr: ""
+    search_filter: ""
+    server: ""
+    suffix: ""
+    tls: ""
+    url: ""
+  lifecycleHooks: null
+  livenessProbe:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  metrics:
+    customMetrics: null
+    enabled: false
+    extraEnvVars: null
+    image:
+      pullPolicy: IfNotPresent
+      pullSecrets: null
+      registry: docker.io
+      repository: bitnami/postgres-exporter
+      tag: 0.10.0-debian-10-r106
+    livenessProbe:
+      enabled: true
+      failureThreshold: 6
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 5
+    prometheusRule:
+      additionalLabels: null
+      enabled: false
+      namespace: ""
+      rules: null
+    readinessProbe:
+      enabled: true
+      failureThreshold: 6
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 5
+    resources: null
+    securityContext:
+      enabled: false
+      runAsUser: 1001
+    service:
+      annotations:
+        prometheus.io/port: 9187
+        prometheus.io/scrape: true
+      loadBalancerIP: ""
+      type: ClusterIP
+    serviceMonitor:
+      additionalLabels: null
+      enabled: false
+      interval: ""
+      metricRelabelings: null
+      namespace: ""
+      relabelings: null
+      scrapeTimeout: ""
+  nameOverride: ""
+  networkPolicy:
+    allowExternal: true
+    enabled: false
+    explicitNamespacesSelector: null
+  persistence:
+    accessModes:
+    - ReadWriteOnce
+    annotations: null
+    enabled: false
+    existingClaim: ""
+    mountPath: /bitnami/postgresql
+    primary:
+      enabled: false
+    selector: null
+    size: 8Gi
+    storageClass: ""
+    subPath: ""
+  pgHbaConfiguration: ""
+  postgresqlConfiguration: null
+  postgresqlDataDir: /bitnami/postgresql/data
+  postgresqlDatabase: home-assistant
+  postgresqlDbUserConnectionLimit: ""
+  postgresqlExtendedConf: null
+  postgresqlInitdbArgs: ""
+  postgresqlInitdbWalDir: ""
+  postgresqlMaxConnections: ""
+  postgresqlPassword: home-assistant-pass
+  postgresqlPghbaRemoveFilters: ""
+  postgresqlPostgresConnectionLimit: ""
+  postgresqlPostgresPassword: ""
+  postgresqlSharedPreloadLibraries: pgaudit
+  postgresqlStatementTimeout: ""
+  postgresqlTcpKeepalivesCount: ""
+  postgresqlTcpKeepalivesIdle: ""
+  postgresqlTcpKeepalivesInterval: ""
+  postgresqlUsername: home-assistant
+  primary:
+    affinity: null
+    annotations: null
+    extraInitContainers: null
+    extraPodSpec: null
+    extraVolumeMounts: null
+    extraVolumes: null
+    labels: null
+    nodeAffinityPreset:
+      key: ""
+      type: ""
+      values: null
+    nodeSelector: null
+    podAffinityPreset: ""
+    podAnnotations: null
+    podAntiAffinityPreset: soft
+    podLabels: null
+    priorityClassName: ""
+    service:
+      clusterIP: ""
+      nodePort: ""
+      type: ""
+    sidecars: null
+    tolerations: null
+  primaryAsStandBy:
+    enabled: false
+    primaryHost: ""
+    primaryPort: ""
+  psp:
+    create: false
+  rbac:
+    create: false
+  readReplicas:
+    affinity: null
+    annotations: null
+    extraInitContainers: null
+    extraPodSpec: null
+    extraVolumeMounts: null
+    extraVolumes: null
+    labels: null
+    nodeAffinityPreset:
+      key: ""
+      type: ""
+      values: null
+    nodeSelector: null
+    persistence:
+      enabled: true
+    podAffinityPreset: ""
+    podAnnotations: null
+    podAntiAffinityPreset: soft
+    podLabels: null
+    priorityClassName: ""
+    resources: null
+    service:
+      clusterIP: ""
+      nodePort: ""
+      type: ""
+    sidecars: null
+    tolerations: null
+    topologySpreadConstraints: null
+  readinessProbe:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  replication:
+    applicationName: my_application
+    enabled: false
+    numSynchronousReplicas: 0
+    password: repl_password
+    readReplicas: 1
+    singleService: true
+    synchronousCommit: false
+    uniqueServices: false
+    user: repl_user
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  schedulerName: ""
+  securityContext:
+    enabled: true
+    fsGroup: 1001
+  service:
+    annotations: null
+    clusterIP: ""
+    externalTrafficPolicy: Cluster
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: null
+    nodePort: ""
+    port: 5432
+    type: ClusterIP
+  serviceAccount:
+    autoMount: false
+    enabled: false
+    name: ""
+  shmVolume:
+    chmod:
+      enabled: true
+    enabled: true
+    sizeLimit: ""
+  startupProbe:
+    enabled: false
+    failureThreshold: 10
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 5
+  terminationGracePeriodSeconds: ""
+  tls:
+    autoGenerated: false
+    certCAFilename: ""
+    certFilename: ""
+    certKeyFilename: ""
+    certificatesSecret: ""
+    crlFilename: ""
+    enabled: false
+    preferServerCiphers: true
+  updateStrategy:
+    type: RollingUpdate
+  usePasswordFile: false
+  volumePermissions:
+    enabled: false
+    image:
+      pullPolicy: IfNotPresent
+      pullSecrets: null
+      registry: docker.io
+      repository: bitnami/bitnami-shell
+      tag: 10-debian-10-r238
+    securityContext:
+      runAsUser: 0
+securityContext: {}
 service:
   main:
     ports:
+      homekit:
+        port: 5353
+      homekit2:
+        port: 21063
       http:
         port: 8123
-
-ingress:
-  main:
-    enabled: false
-
-persistence:
-  config:
-    enabled: false
-
