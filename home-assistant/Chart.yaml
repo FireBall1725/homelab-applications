@@ -1,6 +1,6 @@
 ---
 apiVersion: v2
-appVersion: 2023.6.1
+appVersion: 2023.6.2
 description: Home Assistant
 name: home-assistant
 version: 1.0.0
@@ -9,25 +9,8 @@ keywords:
   - home-assistant
   - hass
   - homeassistant
-home: https://github.com/k8s-at-home/charts/tree/master/charts/stable/home-assistant
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Home_Assistant_Logo.svg/519px-Home_Assistant_Logo.svg.png
-sources:
-  - https://github.com/home-assistant/home-assistant
-  - https://github.com/cdr/code-server
-  - https://github.com/k8s-at-home/charts/tree/master/charts/stable/home-assistant
 dependencies:
-  - name: common
-    repository: https://library-charts.k8s-at-home.com
-    version: 4.5.2
-  - name: postgresql
-    version: 11.6.12
-    repository: https://charts.bitnami.com/bitnami
-    condition: postgresql.enabled
-  - name: mariadb
-    version: 11.0.14
-    repository: https://charts.bitnami.com/bitnami
-    condition: mariadb.enabled
-  - name: influxdb
-    version: 5.3.5
-    repository: https://charts.bitnami.com/bitnami
-    condition: influxdb.enabled
+  - name: k8s-home-lab
+    repository: https://k8s-home-lab.github.io/helm-charts/
+    version: 14.0.0
