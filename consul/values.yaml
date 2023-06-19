@@ -2393,7 +2393,7 @@ consul:
     enabled: false
 
     # Number of replicas for the Deployment.
-    replicas: 1
+    replicas: 3
 
     # What gets registered as WAN address for the gateway.
     wanAddress:
@@ -2999,7 +2999,7 @@ consul:
     # Configuration for the api-gateway controller component
     controller:
       # This value sets the number of controller replicas to deploy.
-      replicas: 1
+      replicas: 3
 
       # Annotations to apply to the api-gateway-controller pods.
       #
