@@ -815,7 +815,7 @@ vault:
       # Set the api_addr configuration for Vault HA
       # See https://www.vaultproject.io/docs/configuration#api_addr
       # If set to null, this will be set to the Pod IP Address
-      apiAddr: vault.k3s.firekatt.ca
+      apiAddr: https://vault.k3s.firekatt.ca
 
       # Set the cluster_addr confuguration for Vault HA
       # See https://www.vaultproject.io/docs/configuration#cluster_addr
