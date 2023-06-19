@@ -815,7 +815,7 @@ vault:
       # Set the api_addr configuration for Vault HA
       # See https://www.vaultproject.io/docs/configuration#api_addr
       # If set to null, this will be set to the Pod IP Address
-      apiAddr: null
+      apiAddr: vault.k3s.firekatt.ca
 
       # Set the cluster_addr confuguration for Vault HA
       # See https://www.vaultproject.io/docs/configuration#cluster_addr
@@ -874,7 +874,7 @@ vault:
         }
         storage "consul" {
           path = "vault"
-          address = "HOST_IP:8500"
+          address = "consul-consul-server.consul:8500"
         }
 
         service_registration "kubernetes" {}
