@@ -684,7 +684,7 @@ consul:
     # The number of server agents to run. This determines the fault tolerance of
     # the cluster. Please refer to the [deployment table](https://developer.hashicorp.com/consul/docs/architecture/consensus#deployment-table)
     # for more information.
-    replicas: 1
+    replicas: 3
 
     # The number of servers that are expected to be running.
     # It defaults to server.replicas.
