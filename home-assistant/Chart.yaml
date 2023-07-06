@@ -1,6 +1,6 @@
 ---
 apiVersion: v2
-appVersion: 2023.6.2
+appVersion: 2023.7.0
 description: Home Assistant
 name: home-assistant
 version: 1.0.0
