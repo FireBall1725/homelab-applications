@@ -1,0 +1,11 @@
+---
+apiVersion: v2
+appVersion: 11.1.2
+description: Unifi Poller
+name: unifi-poller
+version: 1.0.0
+kubeVersion: ">=1.16.0-0"
+dependencies:
+  - name: unifi-poller
+    repository: https://k8s-home-lab.github.io/helm-charts/
+    version: 11.1.2
