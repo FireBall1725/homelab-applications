@@ -43,6 +43,8 @@ unifi-poller:
           key: password
     - name: UP_INFLUXDB_DISABLE
       value: true
+    - name: UP_UNIFI_DEFAULT_SAVE_DPI
+      value: true
 
   service:
     main:
