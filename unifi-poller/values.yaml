@@ -54,16 +54,11 @@ unifi-poller:
           protocol: TCP
           port: 9130
 
-  ingress:
-      # -- Expose [unifi-poller's web interface](https://unifipoller.com/docs/advanced/webserver)
-      #    (if enabled in the configuration) via the k8s ingress by setting this true.
-    main:
-      enabled: false
-      hosts:
-      - host: unifipoller.k3s.firekatt.ca
-        paths:
-        - path: /
-          pathType: Prefix
+ingress:
+  main:
+    # -- Expose [unifi-poller's web interface](https://unifipoller.com/docs/advanced/webserver)
+    #    (if enabled in the configuration) via the k8s ingress by setting this true.
+    enabled: true
 
   influxdb:
     # -- Create an InfluxDB instance as a [unifi-poller storage backend](https://unifipoller.com/docs/dependencies/influxdb).
