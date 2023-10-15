@@ -7,5 +7,5 @@ version: 1.0.0
 kubeVersion: ">=1.16.0-0"
 dependencies:
   - name: unifi-poller
-    repository: https://k8s-home-lab.github.io/helm-charts/
+    repository: https://geek-cookbook.github.io/charts/
     version: 11.1.2
