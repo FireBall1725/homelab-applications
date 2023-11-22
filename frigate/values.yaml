@@ -41,7 +41,12 @@ frigate:
     # -- Enable and configure ingress settings for the chart under this key.
     # @default -- See values.yaml
     main:
-      enabled: false
+      enabled: true
+      hosts:
+      - host: frigate.k3s.firekatt.ca
+        paths:
+        - path: /
+          pathType: Prefix
 
   securityContext:
     # -- (bool) Privileged securityContext may be required if USB devices are accessed directly through the host machine
@@ -97,26 +102,26 @@ frigate:
     #   gpu.intel.com/i915: 1
     #   memory: 4096Mi
 
-  configmap:
-    config:
-      # -- Store frigate configuration as a ConfigMap
-      enabled: true
+  # configmap:
+  #   config:
+  #     # -- Store frigate configuration as a ConfigMap
+  #     enabled: true
 
-      # -- See [docs](https://blakeblackshear.github.io/frigate/) for more details.
-      # @default -- see URL to default config
-      data:
-        config.yml: |
-          mqtt:
-            host: mosquitto.default
-          cameras:
-            back:
-              ffmpeg:
-                inputs:
-                  - path: rtsp://demo:demo@ipvmdemo.dyndns.org:5541/onvif-media/media.amp?profile=profile_1_h264&sessiontimeout=60&streamtype=unicast
-                    roles:
-                      - detect
-                      - rtmp
-              detect:
-                width: 1280
-                height: 720
+  #     # -- See [docs](https://blakeblackshear.github.io/frigate/) for more details.
+  #     # @default -- see URL to default config
+  #     data:
+  #       config.yml: |
+  #         mqtt:
+  #           host: mosquitto.default
+  #         cameras:
+  #           back:
+  #             ffmpeg:
+  #               inputs:
+  #                 - path: rtsp://demo:demo@ipvmdemo.dyndns.org:5541/onvif-media/media.amp?profile=profile_1_h264&sessiontimeout=60&streamtype=unicast
+  #                   roles:
+  #                     - detect
+  #                     - rtmp
+  #             detect:
+  #               width: 1280
+  #               height: 720
 
