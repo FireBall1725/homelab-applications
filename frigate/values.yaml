@@ -107,7 +107,7 @@ frigate:
       data:
         config.yml: |
           mqtt:
-            host: mqtt.server.com
+            host: mosquitto.default
           cameras:
             back:
               ffmpeg:
