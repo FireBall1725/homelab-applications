@@ -135,13 +135,9 @@ frigate:
             mode: objects
 
           ffmpeg:
-            global_args: -hide_banner -loglevel warning -threads 2 -an
+            global_args: -hide_banner -threads 2 -an
             hwaccel_args: []
             input_args: preset-rtsp-generic
-            output_args:
-              detect: -threads 2 -f rawvideo -pix_fmt yuv420p
-              record: preset-record-generic
-              rtmp: preset-rtmp-generic
 
           rtmp:
             enabled: true
