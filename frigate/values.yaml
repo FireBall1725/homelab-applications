@@ -113,32 +113,10 @@ frigate:
         config.yml: |
           mqtt:
             host: 10.0.1.101
-
-          detectors:
-            detector_name:
-              type: cpu
-
-          database:
-            path: /media/frigate/frigate.db
-
-          logger:
-            default: info
-
-          birdseye:
-            enabled: true
-            width: 1280
-            height: 720
-            quality: 8
-            mode: objects
-
-          ffmpeg:
-            global_args: -hide_banner -threads 2 -an
-
-          rtmp:
-            enabled: true
-
           cameras:
             firelabs_entrance:
+              rtmp:
+                enabled: true
               ffmpeg:
                 inputs:
                   - path: rtsps://10.1.1.254:7441/a88cJPjhGxGvn1Zn?enableSrtp
@@ -148,6 +126,6 @@ frigate:
               detect:
                 width: 2688
                 height: 1512
-              rtmp:
-                enabled: true
+          ffmpeg:
+            global_args: -an
 
