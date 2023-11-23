@@ -113,9 +113,6 @@ frigate:
         config.yml: |
           mqtt:
             host: 10.0.1.101
-            port: 1883
-            topic_prefix: frigate
-            client_id: frigate
 
           detectors:
             detector_name:
