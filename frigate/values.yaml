@@ -112,7 +112,7 @@ frigate:
       data:
         config.yml: |
           mqtt:
-            enabled: True
+            enabled: true
             host: 10.0.1.101
             port: 1883
             topic_prefix: frigate
@@ -129,8 +129,8 @@ frigate:
             default: info
 
           birdseye:
-            enabled: True
-            restream: False
+            enabled: true
+            restream: false
             width: 1280
             height: 720
             quality: 8
@@ -148,8 +148,6 @@ frigate:
           rtmp:
             enabled: false
 
-          go2rtc:
-
           cameras:
             firelabs_entrance:
               ffmpeg:
@@ -162,5 +160,3 @@ frigate:
                 width: 2688
                 height: 1512
 
-          telemetry:
-            version_check: true
