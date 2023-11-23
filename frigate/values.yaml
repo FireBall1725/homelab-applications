@@ -32,7 +32,7 @@ frigate:
         http:
           port: 5000
         rtmp:
-          enabled: false
+          enabled: true
           port: 1935
           protocol: TCP
           targetPort: 1935
