@@ -136,8 +136,6 @@ frigate:
 
           ffmpeg:
             global_args: -hide_banner -threads 2 -an
-            hwaccel_args: []
-            input_args: preset-rtsp-generic
 
           rtmp:
             enabled: true
