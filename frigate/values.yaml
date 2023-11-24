@@ -130,6 +130,10 @@ frigate:
               # Detectors may require additional configuration.
               # Refer to the Detectors configuration page for more information.
               type: edgetpu
+          objects:
+            track:
+              - person
+              - car
           cameras:
             firelabs_entrance:
               rtmp:
@@ -155,10 +159,6 @@ frigate:
               detect:
                 width: 2688
                 height: 1512
-              objects:
-                track:
-                  - person
-                  - car
               zones:
                 driveway:
                   coordinates: 2688,1512,2688,1224,2509,966,2268,713,1960,435,1342,474,1359,949,1380,1512
@@ -185,10 +185,6 @@ frigate:
               detect:
                 width: 2688
                 height: 1512
-              objects:
-                track:
-                  - person
-                  - car
               zones:
                 garage:
                   coordinates: 0,1512,2688,1512,2688,0,0,0
