@@ -182,9 +182,10 @@ frigate:
                 width: 2688
                 height: 1512
               zones:
-                car:
-                  coordinates: 2688,1512,2645,1038,2003,560,1777,465,1308,492,1040,587,969,883,1104,1512
+                garage:
+                  coordinates: 0,1512,2688,1512,2688,0,0,0
                   objects:
+                    - person
                     - car
           ffmpeg:
             global_args: -an
