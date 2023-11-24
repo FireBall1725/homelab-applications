@@ -121,6 +121,15 @@ frigate:
         config.yml: |
           mqtt:
             host: 10.0.1.101
+          detectors:
+            # Required: name of the detector
+            detector_name:
+              # Required: type of the detector
+              # Frigate provided types include 'cpu', 'edgetpu', and 'openvino' (default: shown below)
+              # Additional detector types can also be plugged in.
+              # Detectors may require additional configuration.
+              # Refer to the Detectors configuration page for more information.
+              type: edgetpu
           cameras:
             firelabs_entrance:
               rtmp:
