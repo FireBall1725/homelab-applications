@@ -15,6 +15,16 @@ frigate:
     # -- image pull policy
     pullPolicy: IfNotPresent
 
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - k3s-node-01.firekatt.ca
+
   # -- environment variables. See [docs](https://blakeblackshear.github.io/frigate/) for more details.
   # @default -- See below
   env:
@@ -50,7 +60,7 @@ frigate:
 
   securityContext:
     # -- (bool) Privileged securityContext may be required if USB devices are accessed directly through the host machine
-    privileged: false
+    privileged: true
 
   # -- Configure persistence settings for the chart under this key.
   # @default -- See values.yaml
@@ -64,7 +74,7 @@ frigate:
     # -- Configure a hostPathMount to mount a USB device in the container.
     # @default -- See values.yaml
     usb:
-      enabled: false
+      enabled: true
       type: hostPath
       hostPath: /dev/bus/usb
     # -- Configure a temporary cache. See [docs](https://blakeblackshear.github.io/frigate/) for more details..
@@ -126,6 +136,29 @@ frigate:
               detect:
                 width: 2688
                 height: 1512
+            firekatt3_front_yard_driveway:
+              rtmp:
+                enabled: true
+              ffmpeg:
+                inputs:
+                  - path: rtsps://10.0.1.254:7441/H8yEGCAauh000h4l?enableSrtp
+                    roles:
+                      - detect
+                      - rtmp
+              detect:
+                width: 2688
+                height: 1512
+            firekatt3_garage:
+              rtmp:
+                enabled: true
+              ffmpeg:
+                inputs:
+                  - path: rtsps://10.0.1.254:7441/zz4up51HfNHxl7y5?enableSrtp
+                    roles:
+                      - detect
+                      - rtmp
+              detect:
+                width: 2688
+                height: 1512
           ffmpeg:
             global_args: -an
-
