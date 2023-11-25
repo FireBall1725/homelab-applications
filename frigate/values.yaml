@@ -8,10 +8,10 @@ frigate:
 
   image:
     # -- image repository
-    repository: blakeblackshear/frigate
+    repository: ghcr.io/blakeblackshear/frigate
     # -- image tag
     # @default -- chart.appVersion
-    tag:
+    tag: stable
     # -- image pull policy
     pullPolicy: IfNotPresent
 
