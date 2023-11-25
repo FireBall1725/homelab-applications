@@ -56,8 +56,14 @@ frigate:
   # @default -- See values.yaml
   persistence:
     data:
-      enabled: false
       mountPath: /data
+      accessMode: ReadWriteOnce
+      enabled: true
+      readOnly: false
+      storageClass: longhorn
+      retain: true
+      size: 8Gi
+      type: pvc
     media:
       enabled: false
       mountPath: /media
