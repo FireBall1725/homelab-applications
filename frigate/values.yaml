@@ -130,6 +130,7 @@ frigate:
         config.yml: |
           mqtt:
             host: 10.0.1.101
+
           detectors:
             # Required: name of the detector
             detector_name:
@@ -139,10 +140,41 @@ frigate:
               # Detectors may require additional configuration.
               # Refer to the Detectors configuration page for more information.
               type: edgetpu
+
           objects:
             track:
               - person
               - car
+
+          ffmpeg:
+            global_args: -an
+
+          record:
+            enabled: true
+            expire_interval: 60
+            retain:
+              days: 30
+              mode: all
+            events:
+              pre_capture: 5
+              post_capture: 5
+              objects:
+                - person
+                - car
+              retain:
+                default: 10
+                mode: motion
+
+          snapshots:
+            enabled: true
+            clean_copy: true
+            timestamp: true
+            bounding_box: true
+            crop: false
+            height: 175
+            retain:
+              default: 10
+
           cameras:
             firelabs_entrance:
               rtmp:
@@ -156,6 +188,7 @@ frigate:
               detect:
                 width: 2688
                 height: 1512
+
             firekatt3_front_yard_driveway:
               rtmp:
                 enabled: true
@@ -182,6 +215,7 @@ frigate:
                   coordinates: 1073,486,866,488,607,561,291,626,0,692,0,1020,144,960,951,952,1348,940,1340,471
                   objects:
                     - person
+
             firekatt3_garage:
               rtmp:
                 enabled: true
@@ -200,5 +234,3 @@ frigate:
                   objects:
                     - person
                     - car
-          ffmpeg:
-            global_args: -an
