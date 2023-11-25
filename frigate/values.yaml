@@ -65,8 +65,11 @@ frigate:
       size: 8Gi
       type: pvc
     media:
-      enabled: false
+      enabled: true
       mountPath: /media
+      type: nfs
+      server: 10.0.1.242
+      path: /volume1/media
     # -- Configure a hostPathMount to mount a USB device in the container.
     # @default -- See values.yaml
     usb:
