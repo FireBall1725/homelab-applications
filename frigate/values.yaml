@@ -247,3 +247,18 @@ frigate:
                   objects:
                     - person
                     - car
+
+            firekatt3_backyard:
+              rtmp:
+                enabled: true
+              ffmpeg:
+                inputs:
+                  - path: rtsps://10.0.1.254:7441/RToisfPlXP9wFT1b?enableSrtp
+                    roles:
+                      - detect
+                      - record
+                      - rtmp
+                      - clips
+              detect:
+                width: 2688
+                height: 1512
