@@ -179,6 +179,9 @@ frigate:
             retain:
               default: 10
 
+          motion:
+            improve_contrast: true
+
           cameras:
             firelabs_entrance:
               rtmp:
