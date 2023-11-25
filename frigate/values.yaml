@@ -144,7 +144,11 @@ frigate:
           objects:
             track:
               - person
+              - bicycle
               - car
+              - motorcycle
+              - cat
+              - dog
 
           ffmpeg:
             global_args: -an
@@ -184,7 +188,9 @@ frigate:
                   - path: rtsps://10.1.1.254:7441/a88cJPjhGxGvn1Zn?enableSrtp
                     roles:
                       - detect
+                      - record
                       - rtmp
+                      - clips
               detect:
                 width: 2688
                 height: 1512
@@ -197,7 +203,9 @@ frigate:
                   - path: rtsps://10.0.1.254:7441/H8yEGCAauh000h4l?enableSrtp
                     roles:
                       - detect
+                      - record
                       - rtmp
+                      - clips
               detect:
                 width: 2688
                 height: 1512
@@ -224,7 +232,9 @@ frigate:
                   - path: rtsps://10.0.1.254:7441/zz4up51HfNHxl7y5?enableSrtp
                     roles:
                       - detect
+                      - record
                       - rtmp
+                      - clips
               detect:
                 width: 2688
                 height: 1512
