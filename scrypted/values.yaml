@@ -11,6 +11,7 @@ scrypted:
     repository: koush/scrypted
     # -- image tag
     # tag: 16-bullseye
+    tag: 0.68.0
     # -- image pull policy
     pullPolicy: IfNotPresent
 
