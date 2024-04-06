@@ -43,6 +43,9 @@ data:
     cardBlur: sm # sm, "", md, etc... see https://tailwindcss.com/docs/backdrop-blur
     base: https://homepage.k3s.firekatt.ca/
     target: _self
+    providers:
+      longhorn:
+        url: https://longhorn.k3s.firekatt.ca
     layout:
       Storage:
         tab: Storage
@@ -241,6 +244,11 @@ data:
           cpu: true
           memory: true
           showLabel: true
+    - longhorn:
+        expanded: true
+        total: true
+        labels: true
+        nodes: true
     - resources:
         backend: resources
         expanded: true
