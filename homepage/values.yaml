@@ -2,6 +2,7 @@ homepage:
   config:
     settings:
       title: FireBall - FireKatt3 Homepage
+      color: slate
       theme: dark
       headerStyle: boxed
       # background: https://wallpapersmug.com/u/12c15c/cityscape-cycle-ride-lets-go-home-art.jpeg
@@ -18,6 +19,13 @@ homepage:
           - Longhorn:
               href: https://longhorn.k3s.firekatt.ca
               icon: "longhorn.png"
+          - Media Synology:
+              href: http://10.0.1.241:5000/
+              icon: "synology.png"
+          - Backup Synology:
+              href: http://10.0.1.242:5000/
+              icon: "synology.png"
+
       - Media:
           - Plex:
               href: https://plex.k3s.firekatt.ca
@@ -46,6 +54,10 @@ homepage:
           - Readarr:
               href: https://readarr.k3s.firekatt.ca
               icon: "readarr.png"
+          - Tautulli:
+              href: https://tautulli.k3s.firekatt.ca/
+              icon: "tautulli.png"
+
       - Home Automation:
           - Home Assistant:
               href: https://ha.k3s.firekatt.ca
@@ -53,20 +65,23 @@ homepage:
           - ESPHome:
               href: https://esphome.k3s.firekatt.ca
               icon: "esphome.png"
-      - My First Group:
-          - My First Service:
-              href: http://localhost/
-              description: Homepage is awesome
+          - Node Red:
+              href: https://nodered.k3s.firekatt.ca
+              icon: "nodered.png"
+          - ZWaveJS2MQTT:
+              href: https://zwave.k3s.firekatt.ca/
+              icon: "zwavejs2mqtt.png"
+          - Zigbee2MQTT:
+              href: https://zigbee.k3s.firekatt.ca/
+              icon: "zigbee2mqtt.png"
+          - ESPHome (Old):
+              href: https://esphome.erins.net/
+              icon: "esphome.png"
 
-      - My Second Group:
-          - My Second Service:
-              href: http://localhost/
-              description: Homepage is the best
-
-      - My Third Group:
-          - My Third Service:
-              href: http://localhost/
-              description: Homepage is 😎
+      - Home Lab:
+          - Traefik:
+              href: https://traefik.k3s.firekatt.ca/
+              icon: "traefik.png"
     widgets:
       # show the kubernetes widget, with the cluster summary and individual nodes
       - kubernetes:
@@ -83,7 +98,7 @@ homepage:
             showLabel: true
       - search:
           provider: duckduckgo
-          target: _blank
+          target: _self
     kubernetes:
       mode: cluster
 
@@ -98,13 +113,13 @@ homepage:
   ingress:
     main:
       enabled: true
-      annotations:
-        # Example annotations to add Homepage to your Homepage!
-        gethomepage.dev/enabled: "true"
-        gethomepage.dev/name: "Homepage"
-        gethomepage.dev/description: "Dynamically Detected Homepage"
-        gethomepage.dev/group: "Dynamic"
-        gethomepage.dev/icon: "homepage.png"
+      # annotations:
+      #   # Example annotations to add Homepage to your Homepage!
+      #   gethomepage.dev/enabled: "true"
+      #   gethomepage.dev/name: "Homepage"
+      #   gethomepage.dev/description: "Dynamically Detected Homepage"
+      #   gethomepage.dev/group: "Dynamic"
+      #   gethomepage.dev/icon: "homepage.png"
       hosts:
         - host: homepage.k3s.firekatt.ca
           paths:
