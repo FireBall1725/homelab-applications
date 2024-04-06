@@ -115,7 +115,7 @@ data:
             siteMonitor: https://sabnzbd.k3s.firekatt.ca
             widget:
               type: sabnzbd
-              url: http://sabnzbd.host.or.ip
+              url: https://sabnzbd.k3s.firekatt.ca
               key: {{HOMEPAGE_VAR_API_SABNZBD}}
         - Overseerr:
             href: https://overseerr.k3s.firekatt.ca
@@ -147,7 +147,7 @@ data:
             siteMonitor: https://prowlarr.k3s.firekatt.ca
             widget:
               type: prowlarr
-              url: http://prowlarr.host.or.ip
+              url: https://prowlarr.k3s.firekatt.ca
               key: {{HOMEPAGE_VAR_API_PROWLARR}}
         - Readarr:
             href: https://readarr.k3s.firekatt.ca
