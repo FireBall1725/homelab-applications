@@ -101,6 +101,9 @@ homepage:
           - Unifi (Local):
               href: http://10.0.1.254/
               icon: "unifi.png"
+          - Argo CD:
+              href: https://argocd.k3s.firekatt.ca/
+              icon: "argocd.png"
 
       - Monitoring:
           - Grafana:
