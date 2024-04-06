@@ -38,7 +38,7 @@ data:
     title: FireBall - FireKatt3 Homepage
     color: slate
     theme: dark
-    headerStyle: boxed
+    headerStyle: clean
     background:
       image: https://wallpapersmug.com/u/12c15c/cityscape-cycle-ride-lets-go-home-art.jpeg
       saturate: 50 # 0, 50, 100... see https://tailwindcss.com/docs/backdrop-saturate
