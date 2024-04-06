@@ -86,6 +86,11 @@ data:
         - Plex:
             href: https://plex.k3s.firekatt.ca
             icon: "plex.png"
+            siteMonitor: https://plex.k3s.firekatt.ca
+            widget:
+              type: plex
+              url: https://plex.k3s.firekatt.ca
+              key: {{HOMEPAGE_VAR_API_PLEX}}
         - Sonarr:
             href: https://sonarr.k3s.firekatt.ca
             icon: "sonarr.png"
@@ -298,11 +303,16 @@ spec:
         - name: homepage
           image: "ghcr.io/gethomepage/homepage:latest"
           env:
+            - name: HOMEPAGE_VAR_API_PLEX
+              valueFrom:
+                secretKeyRef:
+                  name: media
+                  key: apikey_plex
             - name: HOMEPAGE_VAR_API_BAZARR
               valueFrom:
                 secretKeyRef:
-                  name: bazarr
-                  key: apikey
+                  name: media
+                  key: apikey_bazarr
           imagePullPolicy: Always
           ports:
             - name: http
