@@ -43,6 +43,7 @@ data:
     cardBlur: sm # sm, "", md, etc... see https://tailwindcss.com/docs/backdrop-blur
     base: https://homepage.k3s.firekatt.ca/
     target: _self
+    language: en-CA
     providers:
       longhorn:
         url: https://longhorn.k3s.firekatt.ca
@@ -244,6 +245,10 @@ data:
           cpu: true
           memory: true
           showLabel: true
+    - datetime:
+        text_size: xl
+        format:
+          timeStyle: short
     - longhorn:
         expanded: true
         total: true
