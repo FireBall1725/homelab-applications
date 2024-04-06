@@ -31,12 +31,15 @@ homepage:
       - Storage:
           - Longhorn:
               href: https://longhorn.k3s.firekatt.ca
+              ping: longhorn.k3s.firekatt.ca
               icon: "longhorn.png"
           - Media Synology:
               href: http://10.0.1.241:5000/
+              ping: 10.0.1.241
               icon: "synology.png"
           - Backup Synology:
               href: http://10.0.1.242:5000/
+              ping: 10.0.1.241
               icon: "synology.png"
 
       - Media:
