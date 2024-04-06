@@ -5,12 +5,8 @@ homepage:
       color: pink
       theme: dark
       headerStyle: boxed
-      background:
-        image: https://wallpapersmug.com/u/12c15c/cityscape-cycle-ride-lets-go-home-art.jpeg
-        blur: sm # sm, "", md, xl... see https://tailwindcss.com/docs/backdrop-blur
-        saturate: 50 # 0, 50, 100... see https://tailwindcss.com/docs/backdrop-saturate
-        brightness: 50 # 0, 50, 75... see https://tailwindcss.com/docs/backdrop-brightness
-        opacity: 50 # 0-100
+      background: https://wallpapersmug.com/u/12c15c/cityscape-cycle-ride-lets-go-home-art.jpeg
+      cardBlur: sm # sm, "", md, etc... see https://tailwindcss.com/docs/backdrop-blur
     bookmarks:
       - Developer:
         - Github:
