@@ -9,6 +9,22 @@ homepage:
       # cardBlur: sm # sm, "", md, etc... see https://tailwindcss.com/docs/backdrop-blur
       base: https://homepage.k3s.firekatt.ca/
       target: _self
+      layout:
+        storage:
+          style: row
+          columns: 4
+        Media:
+          style: row
+          columns: 4
+        Home Automation:
+          style: row
+          columns: 4
+        Home Lab:
+          style: row
+          columns: 4
+        Monitoring:
+          style: row
+          columns: 4
 
     bookmarks:
       - Developer:
