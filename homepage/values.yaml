@@ -77,10 +77,11 @@ homepage:
           - Bazarr:
               href: https://bazarr.k3s.firekatt.ca
               icon: "bazarr.png"
+              siteMonitor: https://bazarr.k3s.firekatt.ca
               widget:
                 type: bazarr
                 url: https://bazarr.k3s.firekatt.ca
-                key: 8ee0fecdae9c48fe88d5b28d01cbddd7
+                key: 911895afe2c00aeeceb71c601afee4ac
           - Prowlarr:
               href: https://prowlarr.k3s.firekatt.ca
               icon: "prowlarr.png"
