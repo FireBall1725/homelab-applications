@@ -8,31 +8,43 @@ homepage:
     services:
       - Storage:
           - Longhorn:
-            href: https://longhorn.k3s.firekatt.ca
+              href: https://longhorn.k3s.firekatt.ca
+              icon: "longhorn.png"
       - Media:
           - Plex:
-            href: https://plex.k3s.firekatt.ca
+              href: https://plex.k3s.firekatt.ca
+              icon: "plex.png"
           - Sonarr:
-            href: https://sonarr.k3s.firekatt.ca
+              href: https://sonarr.k3s.firekatt.ca
+              icon: "sonarr.png"
           - Radarr:
-            href: https://radarr.k3s.firekatt.ca
+              href: https://radarr.k3s.firekatt.ca
+              icon: "radarr.png"
           - SABnzbd:
-            href: https://sabnzbd.k3s.firekatt.ca
+              href: https://sabnzbd.k3s.firekatt.ca
+              icon: "sabnzbd.png"
           - Overseerr:
-            href: https://overseerr.k3s.firekatt.ca
+              href: https://overseerr.k3s.firekatt.ca
+              icon: "overseerr.png"
           - Mylar:
-            href: https://mylar.k3s.firekatt.ca
+              href: https://mylar.k3s.firekatt.ca
+              icon: "mylar.png"
           - Bazarr:
-            href: https://bazarr.k3s.firekatt.ca
+              href: https://bazarr.k3s.firekatt.ca
+              icon: "bazarr.png"
           - Prowlarr:
-            href: https://prowlarr.k3s.firekatt.ca
+              href: https://prowlarr.k3s.firekatt.ca
+              icon: "prowlarr.png"
           - Readarr:
-            href: https://readarr.k3s.firekatt.ca
+              href: https://readarr.k3s.firekatt.ca
+              icon: "readarr.png"
       - Home Automation:
           - Home Assistant:
-            href: https://ha.k3s.firekatt.ca
+              href: https://ha.k3s.firekatt.ca
+              icon: "home-assistant.png"
           - ESPHome:
-            href: https://esphome.k3s.firekatt.ca
+              href: https://esphome.k3s.firekatt.ca
+              icon: "esphome.png"
       - My First Group:
           - My First Service:
               href: http://localhost/
