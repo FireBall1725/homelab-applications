@@ -9,11 +9,24 @@ homepage:
       # cardBlur: sm # sm, "", md, etc... see https://tailwindcss.com/docs/backdrop-blur
       base: https://homepage.k3s.firekatt.ca/
       target: _self
+
     bookmarks:
       - Developer:
         - Github:
           - abbr: GH
             href: https://github.com/
+
+      - Misc:
+        - Royal Bank of Canada:
+          - abbr: RB
+            href: https://www.rbcroyalbank.com/personal.html
+        - Transport Canada:
+          - abbr: TC
+            href: https://tc.canada.ca/en
+        - Kwartzlab OS:
+          - abbr: KO
+            href: https://kos.kwartzlab.ca/login
+
     services:
       - Storage:
           - Longhorn:
@@ -67,7 +80,7 @@ homepage:
               icon: "esphome.png"
           - Node Red:
               href: https://nodered.k3s.firekatt.ca
-              icon: "nodered.png"
+              icon: "node-red.png"
           - ZWaveJS2MQTT:
               href: https://zwave.k3s.firekatt.ca/
               icon: "zwavejs2mqtt.png"
@@ -82,6 +95,24 @@ homepage:
           - Traefik:
               href: https://traefik.k3s.firekatt.ca/
               icon: "traefik.png"
+          - Unifi:
+              href: https://unifi.ui.com/
+              icon: "unifi.png"
+          - Unifi (Local):
+              href: http://10.0.1.254/
+              icon: "unifi.png"
+
+      - Monitoring:
+          - Grafana:
+              href: https://grafana.k3s.firekatt.ca/
+              icon: "grafana.png"
+          - Prometheus:
+              href: https://prometheus.k3s.firekatt.ca/
+              icon: "prometheus.png"
+          - Alert Manager:
+              href: https://alertmanager.k3s.firekatt.ca/
+              icon: "alertmanager.png"
+
     widgets:
       # show the kubernetes widget, with the cluster summary and individual nodes
       - kubernetes:
