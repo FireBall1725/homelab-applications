@@ -54,8 +54,7 @@ data:
             widget:
               type: bazarr
               url: https://bazarr.k3s.firekatt.ca
-              key: -
-                {{HOMEPAGE_VAR_API_BAZARR}}
+              key: {{HOMEPAGE_VAR_API_BAZARR}}
 
     - My Second Group:
         - My Second Service:
