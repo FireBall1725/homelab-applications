@@ -45,18 +45,23 @@ data:
     target: _self
     layout:
       Storage:
+        tab: first
         style: row
         columns: 4
       Media:
+        tab: second
         style: row
         columns: 4
       Home Automation:
+        tab: third
         style: row
         columns: 4
       Home Lab:
+        tab: fourth
         style: row
         columns: 4
       Monitoring:
+        tab: fifth
         style: row
         columns: 4
 
