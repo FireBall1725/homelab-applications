@@ -44,7 +44,7 @@ data:
     base: https://homepage.k3s.firekatt.ca/
     target: _self
     layout:
-      storage:
+      Storage:
         style: row
         columns: 4
       Media:
