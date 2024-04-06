@@ -77,6 +77,10 @@ homepage:
           - Bazarr:
               href: https://bazarr.k3s.firekatt.ca
               icon: "bazarr.png"
+              widget:
+                type: bazarr
+                url: https://bazarr.k3s.firekatt.ca
+                key: 8ee0fecdae9c48fe88d5b28d01cbddd7
           - Prowlarr:
               href: https://prowlarr.k3s.firekatt.ca
               icon: "prowlarr.png"
@@ -168,11 +172,11 @@ homepage:
       enabled: true
       # annotations:
       #   # Example annotations to add Homepage to your Homepage!
-      #   gethomepage.dev/enabled: "true"
-      #   gethomepage.dev/name: "Homepage"
-      #   gethomepage.dev/description: "Dynamically Detected Homepage"
-      #   gethomepage.dev/group: "Dynamic"
-      #   gethomepage.dev/icon: "homepage.png"
+        # gethomepage.dev/enabled: "true"
+        # gethomepage.dev/name: "Homepage"
+        # gethomepage.dev/description: "Dynamically Detected Homepage"
+        # gethomepage.dev/group: "Dynamic"
+        # gethomepage.dev/icon: "homepage.png"
       hosts:
         - host: homepage.k3s.firekatt.ca
           paths:
