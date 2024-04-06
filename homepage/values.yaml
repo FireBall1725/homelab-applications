@@ -81,7 +81,7 @@ homepage:
               widget:
                 type: bazarr
                 url: https://bazarr.k3s.firekatt.ca
-                key: 911895afe2c00aeeceb71c601afee4ac
+                key: {{HOMEPAGE_VAR_API_BAZARR}}
           - Prowlarr:
               href: https://prowlarr.k3s.firekatt.ca
               icon: "prowlarr.png"
@@ -167,6 +167,13 @@ homepage:
 
   # This enables the service account to access the necessary resources
   enableRbac: true
+
+  env:
+    - name: HOMEPAGE_VAR_API_BAZARR
+      valueFrom:
+        secretKeyRef:
+          name: bazarr
+          key: apikey
 
   ingress:
     main:
