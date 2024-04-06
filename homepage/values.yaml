@@ -81,7 +81,11 @@ homepage:
               widget:
                 type: bazarr
                 url: https://bazarr.k3s.firekatt.ca
-                key: "{{HOMEPAGE_VAR_API_BAZARR}}"
+                keys:
+                  valueFrom:
+                    secretKeyRef:
+                      name: bazarr
+                      key: apikey
           - Prowlarr:
               href: https://prowlarr.k3s.firekatt.ca
               icon: "prowlarr.png"
