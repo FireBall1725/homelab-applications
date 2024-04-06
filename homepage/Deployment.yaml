@@ -39,7 +39,7 @@ data:
     color: slate
     theme: dark
     headerStyle: boxed
-    background: https://wallpapersmug.com/u/12c15c/cityscape-cycle-ride-lets-go-home-art.jpeg
+    # background: https://wallpapersmug.com/u/12c15c/cityscape-cycle-ride-lets-go-home-art.jpeg
     cardBlur: sm # sm, "", md, etc... see https://tailwindcss.com/docs/backdrop-blur
     base: https://homepage.k3s.firekatt.ca/
     target: _self
