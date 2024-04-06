@@ -31,7 +31,6 @@ homepage:
       - Storage:
           - Longhorn:
               href: https://longhorn.k3s.firekatt.ca
-              siteMonitor: https://longhorn.k3s.firekatt.ca
               icon: "longhorn.png"
           - Media Synology:
               href: http://10.0.1.241:5000/
@@ -96,6 +95,9 @@ homepage:
           - Traefik:
               href: https://traefik.k3s.firekatt.ca/
               icon: "traefik.png"
+              widget:
+                type: traefik
+                url: https://traefik.k3s.firekatt.ca/
           - Unifi:
               href: https://unifi.ui.com/
               icon: "unifi.png"
