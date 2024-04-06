@@ -45,23 +45,24 @@ data:
     target: _self
     layout:
       Storage:
-        tab: first
+        tab: Storage
         style: row
         columns: 4
       Media:
-        tab: second
+        tab: Media
         style: row
         columns: 4
       Home Automation:
-        tab: third
+        tab: Home Automation
         style: row
         columns: 4
+        icon: home-assistant.png
       Home Lab:
-        tab: fourth
+        tab: Home Lab
         style: row
         columns: 4
       Monitoring:
-        tab: fifth
+        tab: Monitoring
         style: row
         columns: 4
 
