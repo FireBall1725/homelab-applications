@@ -94,18 +94,45 @@ data:
         - Sonarr:
             href: https://sonarr.k3s.firekatt.ca
             icon: "sonarr.png"
+            siteMonitor: https://sonarr.k3s.firekatt.ca
+            widget:
+              type: sonarr
+              url: https://sonarr.k3s.firekatt.ca
+              key: {{HOMEPAGE_VAR_API_SONARR}}
+              enableQueue: true
         - Radarr:
             href: https://radarr.k3s.firekatt.ca
             icon: "radarr.png"
+            siteMonitor: https://radarr.k3s.firekatt.ca
+            widget:
+              type: radarr
+              url: https://radarr.k3s.firekatt.ca
+              key: {{HOMEPAGE_VAR_API_RADARR}}
+              enableQueue: true
         - SABnzbd:
             href: https://sabnzbd.k3s.firekatt.ca
             icon: "sabnzbd.png"
+            siteMonitor: https://sabnzbd.k3s.firekatt.ca
+            widget:
+              type: sabnzbd
+              url: http://sabnzbd.host.or.ip
+              key: {{HOMEPAGE_VAR_API_SABNZBD}}
         - Overseerr:
             href: https://overseerr.k3s.firekatt.ca
             icon: "overseerr.png"
+            siteMonitor: https://overseerr.k3s.firekatt.ca
+            widget:
+              type: overseerr
+              url: https://overseerr.k3s.firekatt.ca
+              key: {{HOMEPAGE_VAR_API_OVERSEERR}}
         - Mylar:
             href: https://mylar.k3s.firekatt.ca
             icon: "mylar.png"
+            siteMonitor: https://mylar.k3s.firekatt.ca
+            widget:
+              type: mylar
+              url: https://mylar.k3s.firekatt.ca
+              key: {{HOMEPAGE_VAR_API_MYLAR}}
         - Bazarr:
             href: https://bazarr.k3s.firekatt.ca
             icon: "bazarr.png"
@@ -117,9 +144,19 @@ data:
         - Prowlarr:
             href: https://prowlarr.k3s.firekatt.ca
             icon: "prowlarr.png"
+            siteMonitor: https://prowlarr.k3s.firekatt.ca
+            widget:
+              type: prowlarr
+              url: http://prowlarr.host.or.ip
+              key: {{HOMEPAGE_VAR_API_PROWLARR}}
         - Readarr:
             href: https://readarr.k3s.firekatt.ca
             icon: "readarr.png"
+            siteMonitor: https://readarr.k3s.firekatt.ca
+            widget:
+              type: readarr
+              url: https://readarr.k3s.firekatt.ca
+              key: {{HOMEPAGE_VAR_API_READARR}}
         - Tautulli:
             href: https://tautulli.k3s.firekatt.ca/
             icon: "tautulli.png"
@@ -315,6 +352,41 @@ spec:
                 secretKeyRef:
                   name: media
                   key: apikey_plex
+            - name: HOMEPAGE_VAR_API_READARR
+              valueFrom:
+                secretKeyRef:
+                  name: media
+                  key: apikey_readarr
+            - name: HOMEPAGE_VAR_API_PROWLARR
+              valueFrom:
+                secretKeyRef:
+                  name: media
+                  key: apikey_prowlarr
+            - name: HOMEPAGE_VAR_API_MYLAR
+              valueFrom:
+                secretKeyRef:
+                  name: media
+                  key: apikey_mylar
+            - name: HOMEPAGE_VAR_API_OVERSEERR
+              valueFrom:
+                secretKeyRef:
+                  name: media
+                  key: apikey_overseerr
+            - name: HOMEPAGE_VAR_API_SABNZBD
+              valueFrom:
+                secretKeyRef:
+                  name: media
+                  key: apikey_sabnzbd
+            - name: HOMEPAGE_VAR_API_RADARR
+              valueFrom:
+                secretKeyRef:
+                  name: media
+                  key: apikey_radarr
+            - name: HOMEPAGE_VAR_API_SONARR
+              valueFrom:
+                secretKeyRef:
+                  name: media
+                  key: apikey_sonarr
             - name: HOMEPAGE_VAR_API_BAZARR
               valueFrom:
                 secretKeyRef:
