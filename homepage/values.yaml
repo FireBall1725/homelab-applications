@@ -1,9 +1,10 @@
 homepage:
   config:
-    title: FireBall - FireKatt3 Homepage
-    color: pink
-    theme: dark
-    headerStyle: boxed
+    settings:
+      title: FireBall - FireKatt3 Homepage
+      color: pink
+      theme: dark
+      headerStyle: boxed
     bookmarks:
       - Developer:
         - Github:
@@ -82,7 +83,6 @@ homepage:
           target: _blank
     kubernetes:
       mode: cluster
-    settings:
 
   # The service account is necessary to allow discovery of other services
   serviceAccount:
