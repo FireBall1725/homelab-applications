@@ -302,6 +302,13 @@ spec:
       containers:
         - name: homepage
           image: "ghcr.io/gethomepage/homepage:latest"
+          resources:
+            limits:
+              memory: 1024Mi
+              cpu: "1"
+            requests:
+              memory: 256Mi
+              cpu: "1"
           env:
             - name: HOMEPAGE_VAR_API_PLEX
               valueFrom:
