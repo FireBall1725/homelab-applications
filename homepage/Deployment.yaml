@@ -47,9 +47,15 @@ data:
               href: https://github.com/
   services.yaml: |
     - My First Group:
-        - My First Service:
-            href: http://localhost/
-            description: Homepage is awesome
+        - Bazarr:
+            href: https://bazarr.k3s.firekatt.ca
+            icon: "bazarr.png"
+            siteMonitor: https://bazarr.k3s.firekatt.ca
+            widget:
+              type: bazarr
+              url: https://bazarr.k3s.firekatt.ca
+              key: -
+                {{HOMEPAGE_VAR_API_BAZARR}}
 
     - My Second Group:
         - My Second Service:
@@ -190,6 +196,12 @@ spec:
       containers:
         - name: homepage
           image: "ghcr.io/gethomepage/homepage:latest"
+          env:
+            - name: HOMEPAGE_VAR_API_BAZARR
+              valueFrom:
+                secretKeyRef:
+                  name: bazarr
+                  key: apikey
           imagePullPolicy: Always
           ports:
             - name: http
