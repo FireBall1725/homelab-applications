@@ -2,10 +2,37 @@ homepage:
   config:
     bookmarks:
       - Developer:
-          - Github:
-              - abbr: GH
-                href: https://github.com/
+        - Github:
+          - abbr: GH
+            href: https://github.com/
     services:
+      - Storage:
+          - Longhorn:
+            href: https://longhorn.k3s.firekatt.ca
+      - Media:
+          - Plex:
+            href: https://plex.k3s.firekatt.ca
+          - Sonarr:
+            href: https://sonarr.k3s.firekatt.ca
+          - Radarr:
+            href: https://radarr.k3s.firekatt.ca
+          - SABnzbd:
+            href: https://sabnzbd.k3s.firekatt.ca
+          - Overseerr:
+            href: https://overseerr.k3s.firekatt.ca
+          - Mylar:
+            href: https://mylar.k3s.firekatt.ca
+          - Bazarr:
+            href: https://bazarr.k3s.firekatt.ca
+          - Prowlarr:
+            href: https://prowlarr.k3s.firekatt.ca
+          - Readarr:
+            href: https://readarr.k3s.firekatt.ca
+      - Home Automation:
+          - Home Assistant:
+            href: https://ha.k3s.firekatt.ca
+          - ESPHome:
+            href: https://esphome.k3s.firekatt.ca
       - My First Group:
           - My First Service:
               href: http://localhost/
