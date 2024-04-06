@@ -44,6 +44,7 @@ data:
     base: https://homepage.k3s.firekatt.ca/
     target: _self
     language: en-CA
+    useEqualHeights: true
     providers:
       longhorn:
         url: https://longhorn.k3s.firekatt.ca
