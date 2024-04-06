@@ -160,6 +160,7 @@ data:
         - Tautulli:
             href: https://tautulli.k3s.firekatt.ca/
             icon: "tautulli.png"
+            siteMonitor: https://tautulli.k3s.firekatt.ca/
 
     - Home Automation:
         - Home Assistant:
@@ -168,6 +169,10 @@ data:
         - ESPHome:
             href: https://esphome.k3s.firekatt.ca
             icon: "esphome.png"
+            siteMonitor: https://esphome.k3s.firekatt.ca
+            widget:
+              type: esphome
+              url: https://esphome.k3s.firekatt.ca
         - Node Red:
             href: https://nodered.k3s.firekatt.ca
             icon: "node-red.png"
@@ -180,20 +185,28 @@ data:
         - ESPHome (Old):
             href: https://esphome.erins.net/
             icon: "esphome.png"
+            siteMonitor: https://esphome.erins.net/
+            widget:
+              type: esphome
+              url: https://esphome.erins.net/
 
     - Home Lab:
         - Traefik:
             href: https://traefik.k3s.firekatt.ca/
             icon: "traefik.png"
+            siteMonitor: https://traefik.k3s.firekatt.ca/
             widget:
               type: traefik
               url: https://traefik.k3s.firekatt.ca/
         - Unifi:
             href: https://unifi.ui.com/
             icon: "unifi.png"
+            siteMonitor: https://unifi.ui.com/
         - Unifi (Local):
             href: http://10.0.1.254/
             icon: "unifi.png"
+            ping: 10.1.0.254
+            siteMonitor: http://10.0.1.254
         - Argo CD:
             href: https://argocd.k3s.firekatt.ca/
             icon: "argocd.png"
