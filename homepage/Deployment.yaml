@@ -185,6 +185,10 @@ data:
             href: https://tautulli.k3s.firekatt.ca
             icon: "tautulli.png"
             siteMonitor: https://tautulli.k3s.firekatt.ca/home
+            widget:
+              type: tautulli
+              url: https://tautulli.k3s.firekatt.ca
+              key: {{HOMEPAGE_VAR_API_TAUTULLI}}
 
     - Home Automation:
         - Home Assistant:
@@ -442,6 +446,11 @@ spec:
                 secretKeyRef:
                   name: media
                   key: apikey_bazarr
+            - name: HOMEPAGE_VAR_API_TAUTULLI
+              valueFrom:
+                secretKeyRef:
+                  name: media
+                  key: apikey_tautulli
             - name: HOMEPAGE_VAR_API_PTERODACTYL
               valueFrom:
                 secretKeyRef:
