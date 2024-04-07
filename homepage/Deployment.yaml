@@ -90,12 +90,17 @@ data:
         - Longhorn:
             href: https://longhorn.k3s.firekatt.ca
             icon: "longhorn.png"
+            siteMonitor: https://longhorn.k3s.firekatt.ca
         - Media Synology:
-            href: http://10.0.1.241:5000/
+            href: http://10.0.1.241:5000
             icon: "synology.png"
+            siteMonitor: http://10.0.1.241:5000
+            ping: 10.0.1.241
         - Backup Synology:
-            href: http://10.0.1.242:5000/
+            href: http://10.0.1.242:5000
             icon: "synology.png"
+            siteMonitor: http://10.0.1.242:5000
+            ping: 10.0.1.242
 
     - Media:
         - Plex:
@@ -173,14 +178,15 @@ data:
               url: https://readarr.k3s.firekatt.ca
               key: {{HOMEPAGE_VAR_API_READARR}}
         - Tautulli:
-            href: https://tautulli.k3s.firekatt.ca/
+            href: https://tautulli.k3s.firekatt.ca
             icon: "tautulli.png"
-            siteMonitor: https://tautulli.k3s.firekatt.ca/
+            siteMonitor: https://tautulli.k3s.firekatt.ca
 
     - Home Automation:
         - Home Assistant:
             href: https://ha.k3s.firekatt.ca
             icon: "home-assistant.png"
+            siteMonitor: https://ha.k3s.firekatt.ca
         - ESPHome:
             href: https://esphome.k3s.firekatt.ca
             icon: "esphome.png"
@@ -191,19 +197,22 @@ data:
         - Node Red:
             href: https://nodered.k3s.firekatt.ca
             icon: "node-red.png"
+            siteMonitor: https://nodered.k3s.firekatt.ca
         - ZWaveJS2MQTT:
             href: https://zwave.k3s.firekatt.ca/
             icon: "zwavejs2mqtt.png"
+            siteMonitor: https://zwave.k3s.firekatt.ca
         - Zigbee2MQTT:
-            href: https://zigbee.k3s.firekatt.ca/
+            href: https://zigbee.k3s.firekatt.ca
             icon: "zigbee2mqtt.png"
+            siteMonitor: https://zigbee.k3s.firekatt.ca
         - ESPHome (Old):
-            href: https://esphome.erins.net/
+            href: https://esphome.erins.net
             icon: "esphome.png"
-            siteMonitor: https://esphome.erins.net/
+            siteMonitor: https://esphome.erins.net
             widget:
               type: esphome
-              url: https://esphome.erins.net/
+              url: https://esphome.erins.net
 
     - Home Lab:
         - Traefik:
