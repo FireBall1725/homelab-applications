@@ -70,6 +70,10 @@ data:
         tab: Home Lab
         style: row
         columns: 4
+      Infrastructure:
+        tab: Home Lab
+        style: row
+        columns: 4
       Monitoring:
         tab: Monitoring
         style: row
@@ -234,6 +238,16 @@ data:
         - Argo CD:
             href: https://argocd.k3s.firekatt.ca/
             icon: "argocd.png"
+
+    - Infrastructure:
+        - Pterodactyl:
+          href: https://mcpanel.fireball1725.ca
+          icon: "pterodactyl.png"
+          siteMonitor: https://mcpanel.fireball1725.ca
+          widget:
+            type: pterodactyl
+            url: https://mcpanel.fireball1725.ca
+            key: {{HOMEPAGE_VAR_API_PTERODACTYL}}
 
     - Monitoring:
         - Grafana:
@@ -428,6 +442,11 @@ spec:
                 secretKeyRef:
                   name: media
                   key: apikey_bazarr
+            - name: HOMEPAGE_VAR_API_PTERODACTYL
+              valueFrom:
+                secretKeyRef:
+                  name: homelab
+                  key: apikey_pterodactyl
           imagePullPolicy: Always
           ports:
             - name: http
