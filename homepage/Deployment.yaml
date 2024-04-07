@@ -241,13 +241,13 @@ data:
 
     - Infrastructure:
         - Pterodactyl:
-          href: https://mcpanel.fireball1725.ca
-          icon: "pterodactyl.png"
-          siteMonitor: https://mcpanel.fireball1725.ca
-          widget:
-            type: pterodactyl
-            url: https://mcpanel.fireball1725.ca
-            key: {{HOMEPAGE_VAR_API_PTERODACTYL}}
+            href: https://mcpanel.fireball1725.ca
+            icon: "pterodactyl.png"
+            siteMonitor: https://mcpanel.fireball1725.ca
+            widget:
+              type: pterodactyl
+              url: https://mcpanel.fireball1725.ca
+              key: {{HOMEPAGE_VAR_API_PTERODACTYL}}
 
     - Monitoring:
         - Grafana:
