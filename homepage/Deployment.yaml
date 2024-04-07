@@ -180,7 +180,7 @@ data:
         - Tautulli:
             href: https://tautulli.k3s.firekatt.ca
             icon: "tautulli.png"
-            siteMonitor: https://tautulli.k3s.firekatt.ca
+            siteMonitor: https://tautulli.k3s.firekatt.ca/home
 
     - Home Automation:
         - Home Assistant:
