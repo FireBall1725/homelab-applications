@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: ha-fusion
-          image: ghcr.io/matt8707/ha-fusion
+          image: ghcr.io/matt8707/ha-fusion:2024.10.1
           ports:
             - containerPort: 5050
           env:
