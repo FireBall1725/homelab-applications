@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: ha-fusion
-          image: ghcr.io/matt8707/ha-fusion:2024.10.1
+          image: "{{ .Values.haFusionImage }}"
           ports:
             - containerPort: 5050
           env:
@@ -35,6 +35,22 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "500m"
+        - name: vscode-server
+          image: "{{ .Values.vscodeImage }}"
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: data
+              mountPath: /workspace
+          args:
+            - --auth=none
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1"
       volumes:
         - name: data
           persistentVolumeClaim:

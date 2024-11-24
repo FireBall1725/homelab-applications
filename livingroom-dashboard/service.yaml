@@ -9,7 +9,12 @@ spec:
   selector:
     app: living-room-dashboard
   ports:
-    - protocol: TCP
+    - name: ha-fusion
+      protocol: TCP
       port: 5050
       targetPort: 5050
+    - name: vscode-server
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
   type: ClusterIP
