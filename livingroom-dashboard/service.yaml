@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: living-room-dashboard
+  namespace: home-assistant
+  labels:
+    app: living-room-dashboard
+spec:
+  selector:
+    app: living-room-dashboard
+  ports:
+    - protocol: TCP
+      port: 5050
+      targetPort: 5050
+  type: ClusterIP

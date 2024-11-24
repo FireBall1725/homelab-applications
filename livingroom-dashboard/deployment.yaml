@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: living-room-dashboard
+  namespace: home-assistant
+  labels:
+    app: living-room-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: living-room-dashboard
+  template:
+    metadata:
+      labels:
+        app: living-room-dashboard
+    spec:
+      containers:
+        - name: ha-fusion
+          image: ghcr.io/matt8707/ha-fusion
+          ports:
+            - containerPort: 5050
+          env:
+            - name: TZ
+              value: "America/Toronto"
+            - name: HASS_URL
+              value: "https://ha.k3s.firekatt.ca"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: living-room-dashboard-data
