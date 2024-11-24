@@ -44,6 +44,13 @@ spec:
               mountPath: /workspace
           args:
             - --auth=none
+            - --user-data-dir=/workspace
+            - --extensions-dir=/workspace/.vscode/extensions
+          workingDir: /workspace
+          securityContext:
+            runAsUser: 1000       # Ensure this matches the user ID of the container process
+            runAsGroup: 1000      # Ensure this matches the group ID of the container process
+            fsGroup: 1000         # Allows shared access to mounted volumes
           resources:
             requests:
               memory: "256Mi"
