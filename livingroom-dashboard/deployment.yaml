@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: ha-fusion
-          image: "{{ .Values.haFusionImage }}"
+          image: ghcr.io/matt8707/ha-fusion:2024.10.1
           ports:
             - containerPort: 5050
           env:
@@ -36,7 +36,7 @@ spec:
               memory: "256Mi"
               cpu: "500m"
         - name: vscode-server
-          image: "{{ .Values.vscodeImage }}"
+          image: codercom/code-server:latest
           ports:
             - containerPort: 8080
           volumeMounts:
