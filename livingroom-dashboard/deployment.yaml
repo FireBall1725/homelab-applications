@@ -15,6 +15,8 @@ spec:
       labels:
         app: living-room-dashboard
     spec:
+      securityContext:
+        fsGroup: 1000         # Ensures volume permissions are writable for the container's group
       containers:
         - name: ha-fusion
           image: ghcr.io/matt8707/ha-fusion:2024.10.1
@@ -50,7 +52,6 @@ spec:
           securityContext:
             runAsUser: 1000       # Ensure this matches the user ID of the container process
             runAsGroup: 1000      # Ensure this matches the group ID of the container process
-            fsGroup: 1000         # Allows shared access to mounted volumes
           resources:
             requests:
               memory: "256Mi"
