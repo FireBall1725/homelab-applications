@@ -154,7 +154,7 @@ frigate:
             global_args: -an
 
           record:
-            enabled: true
+            enabled: false
             expire_interval: 60
             retain:
               days: 30
@@ -183,7 +183,7 @@ frigate:
             improve_contrast: true
 
           cameras:
-            dummy_camera: # <--- this will be changed to your actual camera later
+            package_camera:
               enabled: true
               ffmpeg:
                 inputs:
