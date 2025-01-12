@@ -65,7 +65,7 @@ frigate:
       size: 8Gi
       type: pvc
     media:
-      enabled: true
+      enabled: false
       mountPath: /media
       type: nfs
       server: 10.0.1.242
