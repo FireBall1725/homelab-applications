@@ -19,10 +19,15 @@ frigate:
   # @default -- See below
   env:
     # -- Set the container timezone
-    TZ: UTC
-    # -- Set a RTSP password
-    # @default -- empty
-    FRIGATE_RTSP_PASSWORD: ""
+    - name: TZ
+      value: "UTC"
+    - name: FRIGATE_RTSP_PASSWORD
+      value: ""
+    - name: PLUS_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: frigate-plus
+          key: apikey
 
   # -- Configures service settings for the chart.
   # @default -- See values.yaml
