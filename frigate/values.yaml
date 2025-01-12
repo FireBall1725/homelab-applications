@@ -148,12 +148,7 @@ frigate:
 
           objects:
             track:
-              - person
-              - bicycle
-              - car
-              - motorcycle
-              - cat
-              - dog
+              - package
 
           ffmpeg:
             global_args: -an
