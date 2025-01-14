@@ -190,3 +190,6 @@ frigate:
                   - path: rtsps://10.0.1.254:7441/hiFG6rafdixqK19L?enableSrtp
                     roles:
                       - detect
+              zones:
+                package_detection_zone:
+                  coordinates: 0.004,0.417,0.457,0.915,0.532,0.877,0.584,0.788,0.782,0.641,0.177,0.229
