@@ -150,6 +150,9 @@ frigate:
             track:
               - package
 
+          model:
+            path: plus://ade15f1264570bc9cdd9c4065b63e69f
+
           ffmpeg:
             global_args: -an
 
