@@ -1,14 +1,15 @@
-persistence:
-  enabled: true
-  accessMode: ReadWriteOnce
-  size: 100Gi
+home-assistant:
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 100Gi
 
-ingress:
-  enabled: true
-  ingress.hosts:
-    - host: ha.k8s.firekatt.ca
-      paths:
-        - path: /
-          pathType: Prefix
+  ingress:
+    enabled: true
+    ingress.hosts:
+      - host: ha.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
 
-hostNetwork: true
+  hostNetwork: true
