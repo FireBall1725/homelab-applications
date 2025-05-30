@@ -13,3 +13,35 @@ home-assistant:
             pathType: Prefix
 
   hostNetwork: true
+
+  configuration:
+    # Enable or disable the configuration setup for Home Assistant
+    enabled: true
+    # Force init will merge the current configuration file with the default configuration on every start
+    # This is useful when you want to ensure that the configuration file is always up to date
+    forceInit: true
+    # List of trusted proxies in the format of CIDR notation in a case of using a reverse proxy
+    # Here is the list of the most common private IP ranges, use your list of possible trusted proxies, usually, it's the IP of the reverse proxy
+    trusted_proxies:
+      - 10.0.1.0/24      # Add the IP address of your cluster CIDR
+    # Editing templateConfig allows you to customize the configuration.yaml file
+    # You can use Go template functions to customize the configuration
+    templateConfig: |-
+      # Loads default set of integrations. Do not remove.
+      default_config:
+
+      {{- if .Values.ingress.enabled }}
+      http:
+        use_x_forwarded_for: true
+        trusted_proxies:
+          {{- range .Values.configuration.trusted_proxies }}
+          - {{ . }}
+          {{- end }}
+      {{- end}}
+      # Load frontend themes from the themes folder
+      frontend:
+        themes: !include_dir_merge_named themes
+
+      automation: !include automations.yaml
+      script: !include scripts.yaml
+      scene: !include scenes.yaml
