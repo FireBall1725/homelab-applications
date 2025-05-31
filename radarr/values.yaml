@@ -7,7 +7,7 @@
 
 image:
   # -- image repository
-  repository: lscr.io/linuxserver/sabnzbd
+  repository: lscr.io/linuxserver/radarr
   # -- image tag
   tag: ""
   # -- image pull policy
@@ -25,7 +25,7 @@ service:
   main:
     ports:
       http:
-        port: 8080
+        port: 7878
 
 ingress:
   # -- Enable and configure ingress settings for the chart under this key.
@@ -33,7 +33,7 @@ ingress:
   main:
     enabled: true
     hosts:
-      - host: sabnzbd.k8s.firekatt.ca
+      - host: radarr.k8s.firekatt.ca
         paths:
           - path: /
             pathType: Prefix
