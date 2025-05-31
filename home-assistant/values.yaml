@@ -24,7 +24,7 @@ home-assistant:
     # Here is the list of the most common private IP ranges, use your list of possible trusted proxies, usually, it's the IP of the reverse proxy
     trusted_proxies:
       - 10.0.1.0/24   # Server Network
-      - 10.144.0.0/16 # Kubernetes Network
+      - 10.244.0.0/16 # Kubernetes Network
     # Editing templateConfig allows you to customize the configuration.yaml file
     # You can use Go template functions to customize the configuration
     templateConfig: |-
