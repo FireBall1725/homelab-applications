@@ -18,7 +18,7 @@ image:
 env:
   # -- Set the container timezone
   TZ: UTC
-  # HOST_WHITELIST_ENTRIES:
+  HOST_WHITELIST_ENTRIES: "sabnzbd.k8s.firekatt.ca, sabnzbd.app-media"
 
 # -- Configures service settings for the chart.
 # @default -- See values.yaml
@@ -43,12 +43,30 @@ ingress:
 # @default -- See values.yaml
 persistence:
   config:
-    enabled: false
+    enabled: true
+    mountPath: /config
+    accessMode: ReadWriteOnce
+    size: 2Gi
 
   media:
-    enabled: false
+    enabled: true
     mountPath: /media
+    type: nfs
+    server: 10.0.1.241
+    path: /volume2/media
 
   downloads:
     enabled: false
     mountPath: /downloads
+
+initContainers:
+  update-volume-permission:
+    name: update-volume-permission
+    image: busybox
+    command: ["sh", "-c", "chown -R 568:568 /config"]
+    volumeMounts:
+      - name: config
+        mountPath: /config
+    securityContext:
+      runAsUser: 0
+      
