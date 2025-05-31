@@ -32,7 +32,12 @@ ingress:
   # -- Enable and configure ingress settings for the chart under this key.
   # @default -- See values.yaml
   main:
-    enabled: false
+    enabled: true
+    hosts:
+      - host: sabnzbd.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
 
 # -- Configure persistence settings for the chart under this key.
 # @default -- See values.yaml
