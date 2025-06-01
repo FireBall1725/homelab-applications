@@ -38,8 +38,8 @@ ingress:
           - path: /
             pathType: Prefix
 
-common:
-  hostNetwork: true # Enable host networking
+#common:
+#  hostNetwork: true # Enable host networking
 
 # -- Configure persistence settings for the chart under this key.
 # @default -- See values.yaml
