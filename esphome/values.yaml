@@ -21,11 +21,11 @@ env:
 
 # -- Configures service settings for the chart.
 # @default -- See values.yaml
-service:
-  main:
-    ports:
-      http:
-        port: 6052
+# service:
+#   main:
+#     ports:
+#       http:
+#         port: 6052
 
 ingress:
   # -- Enable and configure ingress settings for the chart under this key.
