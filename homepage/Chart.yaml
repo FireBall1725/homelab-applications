@@ -1,0 +1,10 @@
+
+
+apiVersion: v2
+name: homepage
+version: 1.0.0
+appVersion: "1.0.0"
+dependencies:
+  - name: homepage
+    repository: https://m0nsterrr.github.io/helm-charts/
+    version: 0.1.5

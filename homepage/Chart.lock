@@ -1,0 +1,6 @@
+dependencies:
+- name: homepage
+  repository: https://m0nsterrr.github.io/helm-charts/
+  version: 0.1.5
+digest: sha256:fa4cdce20b7de7c6a49603226d3cad0480d897ff96d007ce0d50a707d958ea0f
+generated: "2025-06-01T14:31:53.1579-04:00"
