@@ -22,7 +22,7 @@ service:
     loadBalancerIP: 10.0.1.101
     ports:
       http:
-        enabled: true
+        enabled: false
       mqtt:
         enabled: true
         port: 1883
