@@ -1,0 +1,92 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/bjw-s/helm-charts/blob/a081de5/charts/library/common/values.yaml
+#
+
+image:
+  # -- image repository
+  repository: ghcr.io/bastienwirtz/homer
+  # -- image tag
+  tag: 
+  # -- image pull policy
+  pullPolicy: IfNotPresent
+
+controller:
+  # -- Set the controller upgrade strategy
+  strategy: RollingUpdate
+
+# -- environment variables.
+# @default -- See [values.yaml](./values.yaml)
+env: {}
+  # INIT_ASSETS: "0"
+
+service:
+  # -- Configures service settings for the chart.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    ports:
+      http:
+        port: 8080
+
+ingress:
+  # -- Enable and configure ingress settings for the chart under this key.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    enabled: true
+    hosts:
+      - host: homepage.k8s.firekatt.ca
+        paths:
+          - path: /
+    # tls:
+    #   - secretName: chart-example.local-tls
+    #     hosts:
+    #       - chart-example.local
+
+persistence:
+  # -- Configure persistence settings for the chart under this key.
+  # @default -- See [values.yaml](./values.yaml)
+  config:
+    enabled: false
+    mountPath: /www/assets
+    retain: true
+    # storageClass: ""
+    # accessMode: ReadWriteOnce
+    # size: 1Gi
+
+configMaps:
+  config:
+    # -- Store homer configuration as a ConfigMap
+    enabled: true
+    # -- Homer configuration. [[ref]](https://github.com/bastienwirtz/homer/blob/main/docs/configuration.md)
+    # @default -- See [values.yaml](./values.yaml)
+    data:
+      config.yml: |
+        externalConfig: https://raw.githubusercontent.com/bastienwirtz/homer/main/public/assets/config.yml.dist
+
+addons:
+  codeserver:
+    # -- Enable VS Code server addon.
+    #    This allows for easy access to assets.
+    enabled: false
+    # -- Enable and configure ingress settings for the VS Code server under this key.
+    # @default -- See [values.yaml](./values.yaml)
+    ingress:
+      enabled: false
+      # hosts:
+      #   - host: code.example.com
+      #     paths:
+      #       - path: /
+      # tls:
+      #   - secretName: code.example.com-tls
+      #     hosts:
+      #       - code.example.com
+    # @ignored
+    args:
+      - --auth=none
+      - --user-data-dir=/assets/.vscode
+    # @ignored
+    volumeMounts:
+      - name: assets
+        mountPath: /assets
