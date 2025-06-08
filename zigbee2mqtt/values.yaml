@@ -17,7 +17,7 @@ image:
 # @default -- See below
 env:
   # -- Set the data folder for Zigbee2MQTT.
-  ZIGBEE2MQTT_DATA: /app
+  ZIGBEE2MQTT_DATA: /data
 
 # -- Configures service settings for the chart. Normally this does not need to be modified.
 # @default -- See values.yaml
@@ -46,7 +46,7 @@ securityContext:
 # @default -- See values.yaml
 persistence:
   data:
-    enabled: false
+    enabled: true
     mountPath: /data
     accessMode: ReadWriteOnce
     size: 10Gi
@@ -74,55 +74,3 @@ affinity:
               operator: In
               values:
                 - talos-piwk-01
-
-# -- zigbee2mqtt configuration settings.
-# This will be copied into the container's persistent storage at first run only.
-# Further configuration should be done in the application itself!
-# See [project documentation](https://www.zigbee2mqtt.io/information/configuration.html) for more information.
-# @default -- See values.yaml
-config:
-  version: 4
-  mqtt:
-    base_topic: zigbee2mqtt
-    server: mqtt://10.0.1.101:1883
-  serial:
-    port: /dev/ttyUSB0
-    adapter: deconz
-    baudrate: 115200
-    rtscts: false
-  advanced:
-    log_level: info
-    channel: 11
-    network_key:
-      - 145
-      - 109
-      - 95
-      - 208
-      - 228
-      - 98
-      - 37
-      - 125
-      - 80
-      - 89
-      - 54
-      - 81
-      - 114
-      - 63
-      - 244
-      - 62
-    pan_id: 25815
-    ext_pan_id:
-      - 46
-      - 213
-      - 62
-      - 138
-      - 245
-      - 26
-      - 165
-      - 85
-  frontend:
-    enabled: true
-    port: 8080
-  homeassistant:
-    enabled: true
-  onboarding: false
