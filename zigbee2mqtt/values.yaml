@@ -46,7 +46,7 @@ securityContext:
 # @default -- See values.yaml
 persistence:
   data:
-    enabled: true
+    enabled: false
     mountPath: /data
     accessMode: ReadWriteOnce
     size: 10Gi
@@ -65,15 +65,15 @@ tolerations:
 
 # -- Affinity constraint rules to place the Pod on a specific node.
 # [[ref]](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)
-affinity: {}
-#   nodeAffinity:
-#     requiredDuringSchedulingIgnoredDuringExecution:
-#       nodeSelectorTerms:
-#       - matchExpressions:
-#         - key: app
-#           operator: In
-#           values:
-#           - zigbee-controller
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - talos-piwk-01
 
 # -- zigbee2mqtt configuration settings.
 # This will be copied into the container's persistent storage at first run only.
