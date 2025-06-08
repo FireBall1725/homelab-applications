@@ -17,7 +17,7 @@ image:
 # @default -- See below
 env:
   # -- Set the data folder for Zigbee2MQTT.
-  ZIGBEE2MQTT_DATA: /app
+  ZIGBEE2MQTT_DATA: /data
 
 # -- Configures service settings for the chart. Normally this does not need to be modified.
 # @default -- See values.yaml
@@ -31,18 +31,25 @@ ingress:
   # -- Enable and configure ingress settings for the chart under this key.
   # @default -- See values.yaml
   main:
-    enabled: false
+    enabled: true
+    hosts:
+      - host: zigbee2mqtt.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
 
 securityContext:
   # -- (bool) Privileged securityContext may be required if USB controller is accessed directly through the host machine
-  privileged:  # true
+  privileged: true
 
 # -- Configure persistence settings for the chart under this key.
 # @default -- See values.yaml
 persistence:
   data:
-    enabled: false
+    enabled: true
     mountPath: /data
+    accessMode: ReadWriteOnce
+    size: 10Gi
   # -- Configure a hostPathMount to mount a USB device in the container.
   # @default -- See values.yaml
   usb:
@@ -88,7 +95,7 @@ config:
     # MQTT base topic for zigbee2mqtt MQTT messages
     base_topic: zigbee2mqtt
     # MQTT server URL
-    server: "mqtt://10.0.1.100"
+    server: "mqtt://10.0.1.101"
     # MQTT server authentication, uncomment if required:
     # user: my_user
     # password: my_password
