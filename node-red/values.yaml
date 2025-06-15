@@ -61,7 +61,7 @@ initContainers:
   update-volume-permission:
     name: update-volume-permission
     image: busybox
-    command: ["sh", "-c", "chown -R 1880:1880 /data"]
+    command: ["sh", "-c", "chown -R 1000:1000 /data"]
     volumeMounts:
       - name: data
         mountPath: /data
