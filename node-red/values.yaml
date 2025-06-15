@@ -56,3 +56,14 @@ persistence:
     mountPath: /data
     accessMode: ReadWriteOnce
     size: 10Gi
+
+initContainers:
+  update-volume-permission:
+    name: update-volume-permission
+    image: busybox
+    command: ["sh", "-c", "chown -R 568:568 /data"]
+    volumeMounts:
+      - name: data
+        mountPath: /data
+    securityContext:
+      runAsUser: 0
