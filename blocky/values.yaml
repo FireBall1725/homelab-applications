@@ -192,7 +192,7 @@ config: |
     # definition of denylist groups. Can be external link (http/https) or local file
     denylists:
       ads:
-        - https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
+        # - https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
         - https://adaway.org/hosts.txt
         - https://www.malwaredomainlist.com/hostslist/hosts.txt
         - https://fanboy.co.nz/fanboy-annoyance.txt
