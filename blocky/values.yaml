@@ -343,30 +343,30 @@ config: |
     flushInterval: 30s
 
   # optional: Blocky can synchronize its cache and blocking state between multiple instances through redis.
-  redis:
-    # Server address and port or master name if sentinel is used
-    address: redismaster
-    # Username if necessary
-    username: usrname
-    # Password if necessary
-    password: passwd
-    # Database, default: 0
-    database: 2
-    # Connection is required for blocky to start. Default: false
-    required: true
-    # Max connection attempts, default: 3
-    connectionAttempts: 10
-    # Time between the connection attempts, default: 1s
-    connectionCooldown: 3s
-    # Sentinal username if necessary
-    sentinelUsername: usrname
-    # Sentinal password if necessary
-    sentinelPassword: passwd
-    # List with address and port of sentinel hosts(sentinel is activated if at least one sentinel address is configured)
-    sentinelAddresses:
-      - redis-sentinel1:26379
-      - redis-sentinel2:26379
-      - redis-sentinel3:26379
+  # redis:
+  #   # Server address and port or master name if sentinel is used
+  #   address: redismaster
+  #   # Username if necessary
+  #   username: usrname
+  #   # Password if necessary
+  #   password: passwd
+  #   # Database, default: 0
+  #   database: 2
+  #   # Connection is required for blocky to start. Default: false
+  #   required: true
+  #   # Max connection attempts, default: 3
+  #   connectionAttempts: 10
+  #   # Time between the connection attempts, default: 1s
+  #   connectionCooldown: 3s
+  #   # Sentinal username if necessary
+  #   sentinelUsername: usrname
+  #   # Sentinal password if necessary
+  #   sentinelPassword: passwd
+  #   # List with address and port of sentinel hosts(sentinel is activated if at least one sentinel address is configured)
+  #   sentinelAddresses:
+  #     - redis-sentinel1:26379
+  #     - redis-sentinel2:26379
+  #     - redis-sentinel3:26379
 
   # optional: Mininal TLS version that the DoH and DoT server will use
   minTlsServeVersion: 1.3
