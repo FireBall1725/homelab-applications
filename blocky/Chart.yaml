@@ -1,7 +1,7 @@
 apiVersion: v2
 name: blocky
-version: 0.26.2
-appVersion: "0.26.2"
+version: v0.26.2
+appVersion: "v0.26.2"
 dependencies:
   - name: common
     repository: https://library-charts.k8s-at-home.com
