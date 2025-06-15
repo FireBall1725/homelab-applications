@@ -234,13 +234,13 @@ config: |
     prefetchMaxItemsCount: 0
 
   #  optional: configuration of client name resolution
-  #clientLookup:
+  clientLookup:
     # optional: this DNS resolver will be used to perform reverse DNS lookup (typically local router)
-    #upstream: 10.0.1.254
+    upstream: 10.0.1.254
     # optional: some routers return multiple names for client (host name and user defined name). Define which single name should be used.
     # Example: take second name if present, if not take first name
-    #singleNameOrder:
-    #  - 1 min
+    singleNameOrder:
+      - 1
 
   # optional: configuration for prometheus metrics endpoint
   prometheus:
@@ -269,7 +269,7 @@ config: |
   #certFile: server.crt
   #keyFile: server.key
   # optional: use  this DNS server to resolve blacklist urls and upstream DNS servers. Useful if no  DNS resolver is configured and blocky needs to resolve a host name. Format net:IP:port,  net must be udp or tcp
-  bootstrapDns: tcp:1.1.1.1
+  bootstrapDns: 1.1.1.1
   # optional: Drop all AAAA query  if set to true. Default: false
   disableIPv6: false
   # optional: Log level (one from  debug, info, warn, error). Default: info
