@@ -23,7 +23,7 @@ home-assistant:
     # List of trusted proxies in the format of CIDR notation in a case of using a reverse proxy
     # Here is the list of the most common private IP ranges, use your list of possible trusted proxies, usually, it's the IP of the reverse proxy
     trusted_proxies:
-      - 127.0.0.1/32  # Localhost
+      - 127.0.0.1     # Localhost
       - 10.0.1.0/23   # Server Network
       - 10.244.0.0/16 # Kubernetes Network
     # Editing templateConfig allows you to customize the configuration.yaml file
