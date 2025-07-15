@@ -59,4 +59,14 @@ initContainers:
         mountPath: /config
     securityContext:
       runAsUser: 0
-      
+
+addons:
+  codeserver:
+    enabled: true
+    ingress:
+      enabled: true
+      hosts:
+        - host: hacode.k8s.firekatt.ca
+          paths:
+            - path: /
+              pathType: Prefix      
