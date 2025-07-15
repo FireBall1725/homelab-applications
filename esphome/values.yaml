@@ -63,6 +63,9 @@ initContainers:
 addons:
   codeserver:
     enabled: true
+    volumeMounts:
+      - name: config
+        mountPath: /config
     ingress:
       enabled: true
       hosts:
