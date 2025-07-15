@@ -66,7 +66,7 @@ addons:
     ingress:
       enabled: true
       hosts:
-        - host: hacode.k8s.firekatt.ca
+        - host: esphomecode.k8s.firekatt.ca
           paths:
             - path: /
               pathType: Prefix      
