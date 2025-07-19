@@ -5,6 +5,7 @@ homarr:
   persistence:
     homarrDatabase:
       enabled: true
+      storageClassName: "longhorn"
 
   ingress:
     enabled: true
