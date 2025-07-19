@@ -1,0 +1,15 @@
+homarr:
+  env:
+    TZ: "America/Toronto"
+
+  persistence:
+    homarrDatabase:
+      enabled: true
+
+  ingress:
+    enabled: true
+    hosts:
+      - host: home.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
