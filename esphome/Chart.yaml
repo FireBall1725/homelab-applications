@@ -1,7 +1,7 @@
 apiVersion: v2
 name: esphome
-version: 2025.5.1
-appVersion: "2025.5.1"
+version: 2025.7.5
+appVersion: "2025.7.5"
 dependencies:
   - name: common
     repository: https://library-charts.k8s-at-home.com
