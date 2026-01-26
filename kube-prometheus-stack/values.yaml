@@ -1,7 +1,9 @@
 kube-prometheus-stack:
   # Install Prometheus Operator CRDs
+  # Disabled because CRDs are too large for ArgoCD client-side apply
+  # CRDs are pre-installed manually with server-side apply
   crds:
-    enabled: true
+    enabled: false
 
   # Grafana configuration
   grafana:
