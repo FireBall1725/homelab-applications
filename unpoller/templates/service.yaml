@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: unpoller
+  namespace: app-unpoller
+  labels:
+    app: unpoller
+spec:
+  ports:
+    - name: http
+      port: 9130
+      targetPort: 9130
+      protocol: TCP
+  selector:
+    app: unpoller
