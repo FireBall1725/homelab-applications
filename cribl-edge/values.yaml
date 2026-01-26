@@ -1,9 +1,5 @@
 edge:
-  # Leader connection string - referenced from sealed secret
-  # The actual token is encrypted in templates/sealed-secret.yaml
-  env:
-    - name: CRIBL_EDGE_LEADER
-      valueFrom:
-        secretKeyRef:
-          name: cribl-edge-leader
-          key: leader
+  cribl:
+    # Use the sealed secret instead of hardcoding the leader URL
+    # The actual token is encrypted in templates/sealed-secret.yaml
+    existingSecretForLeader: cribl-edge-leader
