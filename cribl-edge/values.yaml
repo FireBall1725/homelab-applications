@@ -5,6 +5,5 @@ edge:
     existingSecretForLeader: cribl-edge-leader
 
   # Add environment variable to accept self-signed Kubernetes API certificates
-  env:
-    - name: NODE_TLS_REJECT_UNAUTHORIZED
-      value: "0"
+  extraEnv:
+    NODE_TLS_REJECT_UNAUTHORIZED: "0"
