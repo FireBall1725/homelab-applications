@@ -1,0 +1,49 @@
+argocd-image-updater:
+  # Run in the ArgoCD namespace to access ArgoCD
+  config:
+    # Configure how to connect to ArgoCD
+    argocd:
+      # Use in-cluster connection
+      grpcWeb: false
+      serverAddress: "argocd-server.core-argocd.svc.cluster.local"
+      insecure: true
+      plaintext: true
+
+  # Configure registries
+  # By default, it can pull from public registries like Docker Hub, ghcr.io, etc.
+  # No authentication needed for public images
+  authScripts:
+    enabled: false
+
+  # Configure update strategies
+  # Options: semver, latest-tag, name, digest
+  # Default is to NOT auto-update, but to create annotations showing available updates
+  updateStrategy: semver
+
+  # Log level
+  logLevel: info
+
+  # Metrics
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: core-argocd
+      labels:
+        release: kube-prometheus-stack
+
+  # Service account
+  serviceAccount:
+    create: true
+
+  # RBAC
+  rbac:
+    enabled: true
+
+  # Resources
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
