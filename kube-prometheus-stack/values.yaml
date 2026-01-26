@@ -1,4 +1,8 @@
 kube-prometheus-stack:
+  # Install Prometheus Operator CRDs
+  crds:
+    enabled: true
+
   # Grafana configuration
   grafana:
     enabled: true
