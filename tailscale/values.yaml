@@ -1,7 +1,9 @@
 tailscale-operator:
   # OAuth credentials are provided via sealed secret
   # The operator will use the operator-oauth secret
-  operatorConfig: {}
+  operatorConfig:
+    # Explicitly set empty tags - OAuth client doesn't have permission for defaultTags
+    defaultTags: []
 
 # Subnet router configuration
 # This will be deployed as a separate Connector resource
