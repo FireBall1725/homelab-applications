@@ -58,17 +58,9 @@ uptime-kuma:
     limits:
       memory: 512Mi
 
-  # Security context
-  podSecurityContext:
-    fsGroup: 1000
-    fsGroupChangePolicy: "OnRootMismatch"
-
-  securityContext:
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - ALL
-    readOnlyRootFilesystem: false
+  # Security context - Leave default to allow container to manage its own permissions
+  podSecurityContext: {}
+  securityContext: {}
 
   # Prometheus monitoring
   serviceMonitor:
