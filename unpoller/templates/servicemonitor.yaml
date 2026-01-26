@@ -9,7 +9,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: unpoller
+      app.kubernetes.io/name: unpoller
   endpoints:
     - port: http
       interval: 30s
