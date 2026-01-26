@@ -59,6 +59,14 @@ common:
         configMap:
           name: '{{ include "common.names.fullname" . }}-tv'
 
+    media:
+      enabled: true
+      type: nfs
+      mountPath: /media
+      readOnly: true
+      server: 10.0.1.241
+      path: /volume2/media
+
   # Resource limits for homelab
   resources:
     requests:
@@ -73,9 +81,11 @@ common:
 config: |
   libraries:
     Movies:
+      library_name: Movies  # Name of your Movies library in Plex
       collection_files:
         - file: /config/movies.yaml
     TV Shows:
+      library_name: TV Shows  # Name of your TV Shows library in Plex
       collection_files:
         - file: /config/tv.yaml
 
@@ -89,24 +99,70 @@ config: |
   settings:
     cache: true
     cache_expiration: 60
-    asset_directory: config/assets
+    asset_directory: /config/assets
+    asset_folders: true
+    asset_depth: 0
+    create_asset_folders: false
+    prioritize_assets: false
+    dimensional_asset_rename: false
+    download_url_assets: false
+    show_missing_season_assets: false
+    show_missing_episode_assets: false
+    show_asset_not_needed: true
+    sync_mode: append
+    minimum_items: 1
+    delete_below_minimum: false
+    delete_not_scheduled: false
     run_order:
       - operations
       - metadata
       - collections
       - overlays
+    verify_ssl: true
+    check_nightly: false
 
 movieConfig: |
   collections:
-    Trakt Popular:
-      trakt_popular: 200
-      sort_title: "!010_Trakt Popular"
+    Trending:
+      trakt_trending: 30
+      sort_title: "!001_Trending"
       sync_mode: sync
       collection_order: custom
+      summary: Movies trending on Trakt right now
+
+    Popular:
+      trakt_popular: 50
+      sort_title: "!002_Popular"
+      sync_mode: sync
+      collection_order: custom
+      summary: Most popular movies on Trakt
+
+    Top Rated:
+      imdb_chart: top_movies
+      sort_title: "!003_Top Rated"
+      sync_mode: sync
+      collection_order: custom
+      summary: Top rated movies on IMDb
 
 tvConfig: |
   collections:
-    Most Popular:
-      smart_label: originally_available.desc
-      sort_title: "!010_Most Popular"
+    Trending:
+      trakt_trending: 30
+      sort_title: "!001_Trending"
       sync_mode: sync
+      collection_order: custom
+      summary: TV shows trending on Trakt right now
+
+    Popular:
+      trakt_popular: 50
+      sort_title: "!002_Popular"
+      sync_mode: sync
+      collection_order: custom
+      summary: Most popular TV shows on Trakt
+
+    Top Rated:
+      imdb_chart: top_shows
+      sort_title: "!003_Top Rated"
+      sync_mode: sync
+      collection_order: custom
+      summary: Top rated TV shows on IMDb
