@@ -71,46 +71,18 @@ config: |
 
 movieConfig: |
   collections:
-    Trending:
-      trakt_trending: 30
-      sort_title: "!001_Trending"
-      sync_mode: sync
-      collection_order: custom
-      summary: Movies trending on Trakt right now
-
-    Popular:
-      trakt_popular: 50
-      sort_title: "!002_Popular"
-      sync_mode: sync
-      collection_order: custom
-      summary: Most popular movies on Trakt
-
     Top Rated:
       imdb_chart: top_movies
-      sort_title: "!003_Top Rated"
+      sort_title: "!001_Top Rated"
       sync_mode: sync
       collection_order: custom
       summary: Top rated movies on IMDb
 
 tvConfig: |
   collections:
-    Trending:
-      trakt_trending: 30
-      sort_title: "!001_Trending"
-      sync_mode: sync
-      collection_order: custom
-      summary: TV shows trending on Trakt right now
-
-    Popular:
-      trakt_popular: 50
-      sort_title: "!002_Popular"
-      sync_mode: sync
-      collection_order: custom
-      summary: Most popular TV shows on Trakt
-
     Top Rated:
       imdb_chart: top_shows
-      sort_title: "!003_Top Rated"
+      sort_title: "!001_Top Rated"
       sync_mode: sync
       collection_order: custom
       summary: Top rated TV shows on IMDb
