@@ -6,8 +6,9 @@ metadata:
   labels:
     grafana_dashboard: "1"
 data:
-  FILEunpoller-network-sites: |-
-{{`{
+  unpoller-network-sites.json: |
+{{- \` 
+{
   "__inputs": [
     {
       "name": "DS_PROMETHEUS",
@@ -3686,4 +3687,4 @@ data:
   "title": "UniFi-Poller: UAP Insights - Prometheus",
   "uid": "g5wFWqxZk",
   "version": 24
-}`}}
+}\` | nindent 4 }}

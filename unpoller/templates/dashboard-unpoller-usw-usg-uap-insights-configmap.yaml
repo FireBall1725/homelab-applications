@@ -6,8 +6,9 @@ metadata:
   labels:
     grafana_dashboard: "1"
 data:
-  FILEunpoller-usw-usg-uap-insights: |-
-{{`{
+  unpoller-usw-usg-uap-insights.json: |
+{{- \` 
+{
   "__inputs": [
     {
       "name": "DS_PROMETHEUS",
@@ -1528,4 +1529,4 @@ data:
   "title": "UniFi-Poller: Network Sites - Prometheus",
   "uid": "9WaGWZaZk",
   "version": 9
-}`}}
+}\` | nindent 4 }}

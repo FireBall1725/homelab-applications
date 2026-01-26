@@ -6,8 +6,9 @@ metadata:
   labels:
     grafana_dashboard: "1"
 data:
-  FILEunpoller-usg-insights: |-
-{{`{
+  unpoller-usg-insights.json: |
+{{- \` 
+{
   "__inputs": [
     {
       "name": "DS_PROMETHEUS",
@@ -30603,4 +30604,4 @@ data:
   "title": "UniFi-Poller: Client DPI - Prometheus",
   "uid": "w3usaHLZk",
   "version": 50
-}`}}
+}\` | nindent 4 }}
