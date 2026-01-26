@@ -1,0 +1,37 @@
+{{- if .Values.connector.enabled }}
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: {{ .Values.connector.hostname }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  # Use existing secret for auth
+  auth:
+    type: secret
+    secret: operator-oauth
+
+  # Hostname for this connector on Tailscale network
+  hostname: {{ .Values.connector.hostname }}
+
+  # Subnet routes to advertise
+  {{- if .Values.connector.subnetRoutes }}
+  subnetRouter:
+    advertiseRoutes:
+      {{- range .Values.connector.subnetRoutes }}
+      - {{ . | quote }}
+      {{- end }}
+  {{- end }}
+
+  # Accept routes from other subnet routers
+  {{- if .Values.connector.acceptRoutes }}
+  acceptRoutes: {{ .Values.connector.acceptRoutes }}
+  {{- end }}
+
+  # Tags for this connector
+  {{- if .Values.connector.tags }}
+  tags:
+    {{- range .Values.connector.tags }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+{{- end }}
