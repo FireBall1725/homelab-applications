@@ -1,10 +1,7 @@
 tailscale-operator:
   # OAuth credentials are provided via sealed secret
-  # The operator will use the tailscale-operator-oauth secret
-  operatorConfig:
-    defaultTags:
-      - "tag:k8s-operator"
-      - "tag:homelab"
+  # The operator will use the operator-oauth secret
+  operatorConfig: {}
 
 # Subnet router configuration
 # This will be deployed as a separate Connector resource
