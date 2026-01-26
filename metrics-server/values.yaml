@@ -1,7 +1,8 @@
 metrics-server:
-  # API service configuration
-  apiService:
-    create: true
+  # Arguments for metrics-server
+  args:
+    - --kubelet-insecure-tls
+    - --kubelet-preferred-address-types=InternalIP
 
   # Resource configuration
   resources:
@@ -11,27 +12,25 @@ metrics-server:
     limits:
       memory: 256Mi
 
-  # Extra arguments for metrics-server
-  extraArgs:
-    - --kubelet-insecure-tls
-    - --kubelet-preferred-address-types=InternalIP
-
   # Number of replicas
-  replicaCount: 1
+  replicas: 1
 
   # Pod security context
-  podSecurityContext:
-    enabled: true
-    runAsNonRoot: true
-    runAsUser: 1001
-    fsGroup: 1001
+  podSecurityContext: {}
 
-  containerSecurityContext:
-    enabled: true
-    runAsNonRoot: true
-    runAsUser: 1001
+  # Container security context
+  securityContext:
     allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
     capabilities:
       drop:
         - ALL
-    readOnlyRootFilesystem: true
+
+  # API service configuration
+  apiService:
+    create: true
+    insecureSkipTLSVerify: true
