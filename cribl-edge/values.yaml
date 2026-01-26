@@ -3,3 +3,8 @@ edge:
     # Use the sealed secret instead of hardcoding the leader URL
     # The actual token is encrypted in templates/sealed-secret.yaml
     existingSecretForLeader: cribl-edge-leader
+
+  # Add environment variable to accept self-signed Kubernetes API certificates
+  env:
+    - name: NODE_TLS_REJECT_UNAUTHORIZED
+      value: "0"
