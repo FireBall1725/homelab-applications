@@ -1,79 +1,27 @@
-common:
-  # Use CronJob controller type
-  controller:
-    type: cronjob
-    cronjob:
-      schedule: "0 0 * * *"  # Daily at midnight UTC
-      successfulJobsHistory: 3
-      failedJobsHistory: 3
+# Schedule for CronJob (daily at midnight UTC)
+schedule: "0 0 * * *"
 
-  # Container image
-  image:
-    repository: kometateam/kometa
-    tag: v2.1.0
-    pullPolicy: IfNotPresent
+# Container image
+image:
+  repository: kometateam/kometa
+  tag: v2.1.0
+  pullPolicy: IfNotPresent
 
-  # Command and args
-  command:
-    - "/scripts/run.sh"
+# Persistence configuration
+persistence:
+  media:
+    enabled: true
+    mountPath: /media
+    server: 10.0.1.241
+    path: /volume2/media
 
-  args:
-    - "--run"
-    - "--read-only-config"
-
-  # Pod security context
-  podSecurityContext:
-    runAsUser: 1000
-    runAsGroup: 1000
-    fsGroup: 1000
-
-  # Mount ConfigMaps as files
-  persistence:
-    config:
-      enabled: true
-      type: custom
-      mountPath: /config/config.yml
-      subPath: config.yml
-      readOnly: true
-      volumeSpec:
-        configMap:
-          name: '{{ include "common.names.fullname" . }}-config'
-
-    movies:
-      enabled: true
-      type: custom
-      mountPath: /config/movies.yaml
-      subPath: movies.yaml
-      readOnly: true
-      volumeSpec:
-        configMap:
-          name: '{{ include "common.names.fullname" . }}-movies'
-
-    tv:
-      enabled: true
-      type: custom
-      mountPath: /config/tv.yaml
-      subPath: tv.yaml
-      readOnly: true
-      volumeSpec:
-        configMap:
-          name: '{{ include "common.names.fullname" . }}-tv'
-
-    media:
-      enabled: true
-      type: nfs
-      mountPath: /media
-      readOnly: true
-      server: 10.0.1.241
-      path: /volume2/media
-
-  # Resource limits for homelab
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      memory: 512Mi
+# Resource limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
 
 # Kometa configuration files
 # IMPORTANT: Replace YOUR_*_HERE values with actual tokens
