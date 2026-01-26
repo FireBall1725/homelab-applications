@@ -4,6 +4,8 @@ kind: Connector
 metadata:
   name: {{ .Values.connector.hostname }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
 spec:
   # Use existing secret for auth
   auth:
