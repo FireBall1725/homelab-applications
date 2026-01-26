@@ -1,0 +1,11 @@
+{{- if .Values.movieConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.names.fullname" . }}-movies
+  labels:
+    {{ include "common.labels.standard" . | indent 4 }}
+data:
+  movies.yaml: |
+{{ .Values.movieConfig | indent 4 }}
+{{- end }}

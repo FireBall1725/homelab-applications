@@ -1,0 +1,112 @@
+common:
+  # Use CronJob controller type
+  controller:
+    type: cronjob
+    cronjob:
+      schedule: "0 0 * * *"  # Daily at midnight UTC
+      successfulJobsHistory: 3
+      failedJobsHistory: 3
+
+  # Container image
+  image:
+    repository: kometateam/kometa
+    tag: v2.1.0
+    pullPolicy: IfNotPresent
+
+  # Command and args
+  command:
+    - "/scripts/run.sh"
+
+  args:
+    - "--run"
+    - "--read-only-config"
+
+  # Pod security context
+  podSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+
+  # Mount ConfigMaps as files
+  persistence:
+    config:
+      enabled: true
+      type: custom
+      mountPath: /config/config.yml
+      subPath: config.yml
+      readOnly: true
+      volumeSpec:
+        configMap:
+          name: '{{ include "common.names.fullname" . }}-config'
+
+    movies:
+      enabled: true
+      type: custom
+      mountPath: /config/movies.yaml
+      subPath: movies.yaml
+      readOnly: true
+      volumeSpec:
+        configMap:
+          name: '{{ include "common.names.fullname" . }}-movies'
+
+    tv:
+      enabled: true
+      type: custom
+      mountPath: /config/tv.yaml
+      subPath: tv.yaml
+      readOnly: true
+      volumeSpec:
+        configMap:
+          name: '{{ include "common.names.fullname" . }}-tv'
+
+  # Resource limits for homelab
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+# Kometa configuration files
+# IMPORTANT: Replace YOUR_*_HERE values with actual tokens
+# For production, use Sealed Secrets for sensitive data (see SECRETS.md)
+config: |
+  libraries:
+    Movies:
+      collection_files:
+        - file: /config/movies.yaml
+    TV Shows:
+      collection_files:
+        - file: /config/tv.yaml
+
+  plex:
+    url: http://plex.default.svc.cluster.local:32400
+    token: YOUR_PLEX_TOKEN_HERE  # TODO: Replace or use sealed secret
+
+  tmdb:
+    apikey: YOUR_TMDB_API_KEY_HERE  # TODO: Replace or use sealed secret
+
+  settings:
+    cache: true
+    cache_expiration: 60
+    asset_directory: config/assets
+    run_order:
+      - operations
+      - metadata
+      - collections
+      - overlays
+
+movieConfig: |
+  collections:
+    Trakt Popular:
+      trakt_popular: 200
+      sort_title: "!010_Trakt Popular"
+      sync_mode: sync
+      collection_order: custom
+
+tvConfig: |
+  collections:
+    Most Popular:
+      smart_label: originally_available.desc
+      sort_title: "!010_Most Popular"
+      sync_mode: sync
