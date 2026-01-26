@@ -28,12 +28,12 @@ spec:
                 - "--run"
                 - "--read-only-config"
               env:
-                - name: PLEX_TOKEN
+                - name: KOMETA_PLEXTOKEN
                   valueFrom:
                     secretKeyRef:
                       name: kometa-secrets
                       key: plex-token
-                - name: TMDB_APIKEY
+                - name: KOMETA_TMDBKEY
                   valueFrom:
                     secretKeyRef:
                       name: kometa-secrets
