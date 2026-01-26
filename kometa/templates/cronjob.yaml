@@ -28,6 +28,8 @@ spec:
                 - "--run"
                 - "--read-only-config"
               volumeMounts:
+                - name: config-workdir
+                  mountPath: /config
                 - name: config
                   mountPath: /config/config.yml
                   subPath: config.yml
@@ -48,6 +50,8 @@ spec:
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
           volumes:
+            - name: config-workdir
+              emptyDir: {}
             - name: config
               configMap:
                 name: {{ include "kometa.fullname" . }}-config
