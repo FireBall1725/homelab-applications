@@ -27,6 +27,17 @@ spec:
               args:
                 - "--run"
                 - "--read-only-config"
+              env:
+                - name: PLEX_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: kometa-secrets
+                      key: plex-token
+                - name: TMDB_APIKEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: kometa-secrets
+                      key: tmdb-apikey
               volumeMounts:
                 - name: config-workdir
                   mountPath: /config
