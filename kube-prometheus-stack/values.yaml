@@ -1,0 +1,147 @@
+kube-prometheus-stack:
+  # Grafana configuration
+  grafana:
+    enabled: true
+    adminPassword: admin  # Change this! See SECRETS.md for sealing
+
+    ingress:
+      enabled: true
+      hosts:
+        - grafana.k8s.firekatt.ca
+      path: /
+      pathType: Prefix
+
+    # Persist Grafana dashboards and data
+    persistence:
+      enabled: true
+      storageClassName: longhorn
+      size: 10Gi
+
+    # Pre-load Kubernetes dashboards
+    defaultDashboardsEnabled: true
+    defaultDashboardsTimezone: America/Toronto
+
+    # Reasonable resource limits for homelab
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+
+  # Prometheus configuration
+  prometheus:
+    ingress:
+      enabled: true
+      hosts:
+        - prometheus.k8s.firekatt.ca
+      paths:
+        - /
+      pathType: Prefix
+
+    prometheusSpec:
+      # Data retention
+      retention: 30d
+      retentionSize: "45GB"
+
+      # Persistent storage for metrics
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 50Gi
+
+      # Resource limits
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          memory: 2Gi
+
+      # Scrape interval
+      scrapeInterval: 30s
+      evaluationInterval: 30s
+
+      # Enable pod and service monitors across all namespaces
+      podMonitorSelectorNilUsesHelmValues: false
+      serviceMonitorSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+
+  # Alertmanager configuration
+  alertmanager:
+    enabled: true
+
+    ingress:
+      enabled: true
+      hosts:
+        - alertmanager.k8s.firekatt.ca
+      paths:
+        - /
+      pathType: Prefix
+
+    alertmanagerSpec:
+      # Persist Alertmanager data
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 5Gi
+
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+
+  # Prometheus Operator configuration
+  prometheusOperator:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+
+  # Node Exporter - collects host metrics from all nodes
+  nodeExporter:
+    enabled: true
+
+  # kube-state-metrics - exposes cluster-level metrics
+  kubeStateMetrics:
+    enabled: true
+
+  # Default rules for alerting
+  defaultRules:
+    create: true
+    rules:
+      alertmanager: true
+      etcd: true
+      configReloaders: true
+      general: true
+      k8s: true
+      kubeApiserverAvailability: true
+      kubeApiserverSlos: true
+      kubelet: true
+      kubeProxy: true
+      kubePrometheusGeneral: true
+      kubePrometheusNodeRecording: true
+      kubernetesApps: true
+      kubernetesResources: true
+      kubernetesStorage: true
+      kubernetesSystem: true
+      kubeScheduler: true
+      kubeStateMetrics: true
+      network: true
+      node: true
+      nodeExporterAlerting: true
+      nodeExporterRecording: true
+      prometheus: true
+      prometheusOperator: true
