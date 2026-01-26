@@ -5,4 +5,4 @@ headlamp:
       - host: headlamp.k8s.firekatt.ca
         paths:
           - path: /
-            pathType: Prefix
+            type: Prefix
