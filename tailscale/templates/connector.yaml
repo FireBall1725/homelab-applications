@@ -4,14 +4,7 @@ kind: Connector
 metadata:
   name: {{ .Values.connector.hostname }}
   namespace: {{ .Release.Namespace }}
-  annotations:
-    argocd.argoproj.io/sync-options: ServerSideApply=true
 spec:
-  # Use existing secret for auth
-  auth:
-    type: secret
-    secret: operator-oauth
-
   # Hostname for this connector on Tailscale network
   hostname: {{ .Values.connector.hostname }}
 
@@ -22,11 +15,6 @@ spec:
       {{- range .Values.connector.subnetRoutes }}
       - {{ . | quote }}
       {{- end }}
-  {{- end }}
-
-  # Accept routes from other subnet routers
-  {{- if .Values.connector.acceptRoutes }}
-  acceptRoutes: {{ .Values.connector.acceptRoutes }}
   {{- end }}
 
   # Tags for this connector
