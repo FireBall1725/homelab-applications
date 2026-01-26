@@ -1,0 +1,8 @@
+apiVersion: v2
+name: unpoller
+type: application
+version: 1.0.0
+dependencies:
+  - name: unpoller
+    version: 0.1.0
+    repository: https://charts.visonneau.fr

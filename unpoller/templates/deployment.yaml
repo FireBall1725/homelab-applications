@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unpoller
+  namespace: app-unpoller
+  labels:
+    app: unpoller
+spec:
+  replicas: {{ .Values.unpoller.replicas }}
+  selector:
+    matchLabels:
+      app: unpoller
+  template:
+    metadata:
+      labels:
+        app: unpoller
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9130"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: unpoller
+          image: "{{ .Values.unpoller.image.repository }}:{{ .Values.unpoller.image.tag }}"
+          imagePullPolicy: {{ .Values.unpoller.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 9130
+              protocol: TCP
+          volumeMounts:
+            - name: secrets
+              mountPath: /secrets
+              readOnly: true
+          resources:
+            {{- toYaml .Values.unpoller.resources | nindent 12 }}
+      volumes:
+        - name: secrets
+          secret:
+            secretName: unpoller-credentials

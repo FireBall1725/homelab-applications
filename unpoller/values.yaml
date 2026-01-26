@@ -1,0 +1,68 @@
+unpoller:
+  replicas: 1
+
+  image:
+    repository: docker.io/golift/unifi-poller
+    tag: "v2.11.2"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+  podLabels:
+    app: unpoller
+
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9130"
+    prometheus.io/path: "/metrics"
+
+  # Use ConfigMap for config instead of inline TOML
+  # The config will be loaded from the ConfigMap we created
+  existingSecret: ""
+
+  # We'll override the command to load env vars from secret
+  config: |
+    [poller]
+      debug = false
+      quiet = false
+      plugins = []
+
+    [prometheus]
+      disable = false
+      http_listen = "0.0.0.0:9130"
+      report_errors = false
+
+    [influxdb]
+      disable = true
+
+    [loki]
+      url = ""
+
+    [datadog]
+      disable = true
+
+    [webserver]
+      enable = false
+
+    [unifi]
+      dynamic = false
+
+    [unifi.defaults]
+      url = "https://10.0.1.254"
+      user = "k8s"
+      pass = "file:///secrets/password"
+      sites = ["all"]
+      save_sites = true
+      hash_pii = false
+      save_ids = false
+      save_events = false
+      save_alarms = false
+      save_anomalies = false
+      save_dpi = true
+      save_rogue = false
+      verify_ssl = false

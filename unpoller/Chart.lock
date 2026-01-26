@@ -1,0 +1,6 @@
+dependencies:
+- name: unpoller
+  repository: https://charts.visonneau.fr
+  version: 0.1.0
+digest: sha256:5715c623c2e4d3e47ea78af82d708dcc21bc02220728c90b83f5265f716adaec
+generated: "2026-01-26T15:49:19.096112-05:00"
