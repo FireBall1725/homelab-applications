@@ -48,7 +48,9 @@ uptime-kuma:
   securityContext: {}
 
   # Prometheus monitoring
+  # NOTE: Uptime Kuma doesn't expose a /metrics endpoint for scraping
+  # It only supports pushing metrics to Prometheus Pushgateway
   serviceMonitor:
-    enabled: true
+    enabled: false
     interval: 30s
     scrapeTimeout: 10s
