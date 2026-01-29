@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kuma-ingress-watcher.fullname" . }}
+  labels:
+    {{- include "kuma-ingress-watcher.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "kuma-ingress-watcher.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kuma-ingress-watcher.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "kuma-ingress-watcher.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            # Uptime Kuma connection
+            - name: UPTIME_KUMA_URL
+              value: {{ .Values.uptimeKuma.url | quote }}
+            - name: UPTIME_KUMA_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.uptimeKuma.existingSecret }}
+                  key: username
+            - name: UPTIME_KUMA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.uptimeKuma.existingSecret }}
+                  key: password
+            # Controller settings
+            - name: WATCH_INGRESS
+              value: {{ .Values.controller.watchIngress | quote }}
+            - name: WATCH_INGRESSROUTES
+              value: {{ .Values.controller.watchIngressRoutes | quote }}
+            - name: WATCH_INTERVAL
+              value: {{ .Values.controller.watchInterval | quote }}
+            - name: USE_TRAEFIK_V3_CRD_GROUP
+              value: {{ .Values.controller.useTraefikV3CrdGroup | quote }}
+            - name: ENABLE_FILE_MONITOR
+              value: {{ .Values.controller.enableFileMonitor | quote }}
+            # Timezone
+            - name: TZ
+              value: {{ .Values.env.TZ | quote }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,49 @@
+{{- if .Values.rbac.create -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kuma-ingress-watcher.fullname" . }}
+  labels:
+    {{- include "kuma-ingress-watcher.labels" . | nindent 4 }}
+rules:
+  # Core permissions to watch Ingress resources
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+  # Watch events for debugging
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+  # Read namespaces for context
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list"]
+  {{- if .Values.controller.watchIngressRoutes }}
+  # Traefik IngressRoute support (v2)
+  - apiGroups: ["traefik.containo.us"]
+    resources: ["ingressroutes"]
+    verbs: ["get", "list", "watch"]
+  {{- if .Values.controller.useTraefikV3CrdGroup }}
+  # Traefik IngressRoute support (v3)
+  - apiGroups: ["traefik.io"]
+    resources: ["ingressroutes"]
+    verbs: ["get", "list", "watch"]
+  {{- end }}
+  {{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "kuma-ingress-watcher.fullname" . }}
+  labels:
+    {{- include "kuma-ingress-watcher.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "kuma-ingress-watcher.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "kuma-ingress-watcher.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
