@@ -2,6 +2,9 @@
 # https://docs.requarks.io/
 # https://charts.js.wiki
 
+# Namespace for the deployment
+namespace: app-wikijs
+
 wiki:
   # Image configuration
   image:
@@ -55,3 +58,40 @@ wiki:
 
   # Affinity (optional)
   affinity: {}
+
+# WikiJS MCP Server configuration
+# Model Context Protocol server for AI integration (Jarvis-like assistant)
+# DISABLED: Requires building custom Docker image first
+# See: https://github.com/heAdz0r/wikijs-mcp-server
+mcpServer:
+  enabled: false
+
+  image:
+    # TODO: Build and push custom image from heAdz0r/wikijs-mcp-server
+    repository: ghcr.io/YOUR-ORG/wikijs-mcp-server
+    tag: latest
+    pullPolicy: Always
+
+  # MCP server port (HTTP transport)
+  port: 3200
+
+  # WikiJS URL (internal service)
+  wikiUrl: "http://wikijs:80"
+
+  # API token secret (sealed secret created separately)
+  apiTokenSecret: wikijs-mcp-api-token
+
+  # Health check path
+  healthPath: "/health"
+
+  # Additional environment variables
+  env: {}
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
