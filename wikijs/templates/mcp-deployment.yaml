@@ -26,9 +26,9 @@ spec:
               containerPort: {{ .Values.mcpServer.port }}
               protocol: TCP
           env:
-            - name: WIKI_URL
+            - name: WIKIJS_BASE_URL
               value: {{ .Values.mcpServer.wikiUrl | quote }}
-            - name: WIKI_API_TOKEN
+            - name: WIKIJS_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.mcpServer.apiTokenSecret }}

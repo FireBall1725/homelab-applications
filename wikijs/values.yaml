@@ -61,14 +61,12 @@ wiki:
 
 # WikiJS MCP Server configuration
 # Model Context Protocol server for AI integration (Jarvis-like assistant)
-# DISABLED: Requires building custom Docker image first
-# See: https://github.com/heAdz0r/wikijs-mcp-server
+# Built from: https://github.com/heAdz0r/wikijs-mcp-server
 mcpServer:
-  enabled: false
+  enabled: true
 
   image:
-    # TODO: Build and push custom image from heAdz0r/wikijs-mcp-server
-    repository: ghcr.io/YOUR-ORG/wikijs-mcp-server
+    repository: fireball1725/wikijs-mcp-server
     tag: latest
     pullPolicy: Always
 
