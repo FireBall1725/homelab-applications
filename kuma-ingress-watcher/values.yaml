@@ -41,14 +41,12 @@ resources:
     memory: 256Mi
 
 # Pod security context
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
+# Note: The upstream image runs as root and uses poetry from /root/.local
+# We cannot use runAsNonRoot without a custom image
+podSecurityContext: {}
 
 securityContext:
   allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
   capabilities:
     drop:
       - ALL
