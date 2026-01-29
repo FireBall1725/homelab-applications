@@ -18,7 +18,7 @@ bookstack:
   image:
     repository: solidnerd/bookstack
     pullPolicy: IfNotPresent
-    tag: "25.02"  # Match chart appVersion
+    tag: "25.12.1"  # Latest stable version
 
   # Service configuration
   service:
@@ -83,8 +83,9 @@ bookstack:
 
 # BookStack MCP Server configuration
 # This provides AI integration capabilities for tools like Claude
+# DISABLED: Need to build Docker image first - see https://github.com/ttpears/bookstack-mcp
 mcpServer:
-  enabled: true
+  enabled: false
 
   image:
     # Built from https://github.com/ttpears/bookstack-mcp
