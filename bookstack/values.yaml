@@ -1,0 +1,125 @@
+# BookStack Documentation Platform
+# https://www.bookstackapp.com/
+#
+# This chart deploys BookStack for documentation and AI memory system
+# along with the bookstack-mcp server for AI integration (Jarvis-like assistant)
+
+bookstack:
+  # Application configuration
+  app:
+    # Laravel app key - used as encryption salt
+    # NOTE: For homelab use, this key is committed to git. For production,
+    # consider using external secrets management.
+    # Generate with: openssl rand -base64 32
+    key: "base64:9b43KMOxe1OGadNCzclC9ApR7Dcr90QZ1PUzFXXnNl0="
+    url: "https://docs.k8s.firekatt.ca"
+
+  # Container image
+  image:
+    repository: solidnerd/bookstack
+    pullPolicy: IfNotPresent
+    tag: "25.02"  # Match chart appVersion
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 80
+
+  # Ingress configuration
+  ingress:
+    enabled: true
+    className: internal
+    annotations: {}
+    path: /
+    hosts:
+      - docs.k8s.firekatt.ca
+    tls:
+      - hosts:
+          - docs.k8s.firekatt.ca
+
+  # Persistence configuration - uses Longhorn storage
+  persistence:
+    uploads:
+      enabled: true
+      size: 10Gi
+      storageClass: longhorn
+      accessMode: ReadWriteOnce
+    storage:
+      enabled: true
+      size: 10Gi
+      storageClass: longhorn
+      accessMode: ReadWriteOnce
+
+  # MariaDB database (included with chart)
+  mariadb:
+    enabled: true
+    architecture: standalone
+    auth:
+      # Database name
+      database: bookstack
+      # Username for bookstack
+      username: bookstack
+      # Password will be auto-generated if not set
+      # password: ""
+      # Root password will be auto-generated if not set
+      # rootPassword: ""
+    primary:
+      persistence:
+        enabled: true
+        size: 10Gi
+        storageClass: longhorn
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+  # Security context
+  securityContext:
+    fsGroup: 33
+
+# BookStack MCP Server configuration
+# This provides AI integration capabilities for tools like Claude
+mcpServer:
+  enabled: true
+
+  image:
+    # Built from https://github.com/ttpears/bookstack-mcp
+    repository: ghcr.io/ttpears/bookstack-mcp
+    tag: latest
+    pullPolicy: Always
+
+  # Number of replicas
+  replicas: 1
+
+  # Service port (SSE transport)
+  port: 8007
+
+  # Environment configuration
+  # BOOKSTACK_BASE_URL points to internal service
+  bookstackUrl: "http://bookstack:80"
+
+  # Enable write operations (create/update/delete)
+  enableWrite: true
+
+  # Secret name containing BOOKSTACK_TOKEN_ID and BOOKSTACK_TOKEN_SECRET
+  # This will be created as a sealed secret - update after BookStack deployment
+  existingSecret: bookstack-mcp-api-credentials
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+  # Health check configuration
+  healthCheck:
+    path: /health
+    initialDelaySeconds: 40
+    periodSeconds: 30
+    timeoutSeconds: 10

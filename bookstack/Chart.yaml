@@ -1,0 +1,10 @@
+apiVersion: v2
+name: bookstack
+type: application
+version: 1.0.0
+appVersion: "25.2"
+description: BookStack documentation platform with MCP server for AI integration
+dependencies:
+  - name: bookstack
+    version: "1.6.1"
+    repository: "https://stellarhosted.github.io/helm-charts"

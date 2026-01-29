@@ -1,0 +1,20 @@
+{{- if .Values.mcpServer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bookstack.fullname" . }}-mcp
+  labels:
+    app.kubernetes.io/name: {{ include "bookstack.name" . }}-mcp
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: mcp-server
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.mcpServer.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "bookstack.name" . }}-mcp
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

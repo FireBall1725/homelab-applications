@@ -1,0 +1,6 @@
+dependencies:
+- name: bookstack
+  repository: https://stellarhosted.github.io/helm-charts
+  version: 1.6.1
+digest: sha256:9b0fac20be93935f7ebe8e1bcf11a87f306703055892296c4eba3bf520987746
+generated: "2026-01-29T10:43:57.919244-05:00"
