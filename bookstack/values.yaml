@@ -54,6 +54,8 @@ bookstack:
   mariadb:
     enabled: true
     architecture: standalone
+    image:
+      tag: 11.6.2-debian-12-r4  # Use latest stable version
     auth:
       # Database name
       database: bookstack
