@@ -3,7 +3,7 @@
 
 image:
   repository: squent/kuma-ingress-watcher
-  tag: "v1.7.1"
+  tag: "1.4.1"
   pullPolicy: IfNotPresent
 
 # Uptime Kuma connection settings
