@@ -6,19 +6,6 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-# MariaDB sidecar configuration
-mariadb:
-  image:
-    repository: lscr.io/linuxserver/mariadb
-    tag: latest
-    pullPolicy: IfNotPresent
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 512Mi
-
 # Namespace for the deployment
 namespace: app-bookstack
 
@@ -45,22 +32,12 @@ env:
   APP_KEY: "base64:Vo9D8mBCHfL+SYveo+YRpoxF9TIF2hjLF5p0JxcwB90="
   # BookStack application URL
   APP_URL: "https://docs.k8s.firekatt.ca"
-  # Database configuration (connects to MariaDB sidecar via localhost)
-  DB_HOST: "127.0.0.1"
-  DB_PORT: "3306"
-  DB_DATABASE: "bookstackapp"
-  DB_USERNAME: "bookstack"
-  DB_PASSWORD: "bookstack"
-
-# MariaDB environment variables
-mariadbEnv:
-  PUID: "1000"
-  PGID: "1000"
-  TZ: "America/Edmonton"
-  MYSQL_ROOT_PASSWORD: "bookstack-root"
-  MYSQL_DATABASE: "bookstackapp"
-  MYSQL_USER: "bookstack"
-  MYSQL_PASSWORD: "bookstack"
+  # Database configuration (connects to CloudNativePG PostgreSQL cluster)
+  DB_CONNECTION: "pgsql"
+  DB_HOST: "bookstack-postgres-rw"
+  DB_PORT: "5432"
+  DB_DATABASE: "bookstack"
+  # DB_USERNAME and DB_PASSWORD are loaded from bookstack-postgres-app secret
 
 # Service configuration
 service:

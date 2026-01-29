@@ -26,10 +26,22 @@ spec:
               containerPort: 80
               protocol: TCP
           env:
+            # Standard environment variables
             {{- range $key, $value := .Values.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            # PostgreSQL credentials from CloudNativePG operator secret
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: bookstack-postgres-app
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bookstack-postgres-app
+                  key: password
           {{- if .Values.persistence.enabled }}
           volumeMounts:
             - name: config
@@ -52,49 +64,6 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 3
           {{- with .Values.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-        # MariaDB sidecar container
-        - name: mariadb
-          image: "{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}"
-          imagePullPolicy: {{ .Values.mariadb.image.pullPolicy }}
-          ports:
-            - name: mysql
-              containerPort: 3306
-              protocol: TCP
-          env:
-            {{- range $key, $value := .Values.mariadbEnv }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
-          {{- if .Values.persistence.enabled }}
-          volumeMounts:
-            - name: config
-              mountPath: /config
-              subPath: mariadb
-          {{- end }}
-          livenessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - "mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD"
-            initialDelaySeconds: 60
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 5
-          readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - "mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD"
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          {{- with .Values.mariadb.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
