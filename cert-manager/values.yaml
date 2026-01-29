@@ -57,7 +57,15 @@ clusterIssuers:
     enabled: true
     name: letsencrypt-production
 
-  # HTTP-01 solver configuration
-  http01:
-    # Ingress class to use for solving challenges
-    ingressClassName: internal
+  # DNS-01 solver configuration (for internal-only domains)
+  dns01:
+    # Cloudflare DNS provider configuration
+    cloudflare:
+      # Name of the secret containing the Cloudflare API token
+      apiTokenSecretName: cloudflare-api-token-secret
+      # Key in the secret that contains the API token
+      apiTokenSecretKey: api-token
+    # Optional: restrict solver to specific DNS zones
+    selector:
+      dnsZones:
+        - "firekatt.ca"

@@ -18,7 +18,16 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-staging-account-key
     solvers:
-      - http01:
-          ingress:
-            ingressClassName: {{ .Values.clusterIssuers.http01.ingressClassName }}
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: {{ .Values.clusterIssuers.dns01.cloudflare.apiTokenSecretName }}
+              key: {{ .Values.clusterIssuers.dns01.cloudflare.apiTokenSecretKey }}
+        {{- if .Values.clusterIssuers.dns01.selector }}
+        selector:
+          dnsZones:
+            {{- range .Values.clusterIssuers.dns01.selector.dnsZones }}
+            - {{ . | quote }}
+            {{- end }}
+        {{- end }}
 {{- end }}
