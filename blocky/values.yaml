@@ -167,7 +167,7 @@ config: |
     customTTL: 1h
     # optional: if true (default), return empty result for unmapped query types (for example TXT, MX or AAAA if only IPv4 address is defined).
     # if false, queries with unmapped types will be forwarded to the upstream resolver
-    filterUnmappedTypes: true
+    filterUnmappedTypes: false
     # optional: replace domain in the query with other domain before resolver lookup in the mapping
     # rewrite:
       # example.com: printer.lan
