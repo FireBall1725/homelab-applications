@@ -1,0 +1,10 @@
+apiVersion: v2
+name: traefik
+description: Traefik ingress controller for the homelab cluster
+type: application
+version: 1.0.0
+appVersion: "3.4.0"
+dependencies:
+  - name: traefik
+    version: 35.4.0
+    repository: https://traefik.github.io/charts
