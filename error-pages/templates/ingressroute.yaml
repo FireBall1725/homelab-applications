@@ -1,0 +1,20 @@
+# Catch-all IngressRoute to handle Traefik's own 404 errors
+# This route has the lowest priority (highest priority value) and matches
+# all requests that don't match any other route, returning the 404 error page.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "error-pages.fullname" . }}-catchall
+  labels:
+    {{- include "error-pages.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: PathPrefix(`/`)
+      kind: Rule
+      priority: 1
+      services:
+        - name: {{ include "error-pages.fullname" . }}
+          port: {{ .Values.service.port }}
