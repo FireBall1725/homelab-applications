@@ -1,0 +1,57 @@
+# WikiJS configuration
+# https://docs.requarks.io/
+# https://charts.js.wiki
+
+wiki:
+  # Image configuration
+  image:
+    repository: ghcr.io/requarks/wiki
+    tag: "2"
+    imagePullPolicy: IfNotPresent
+
+  # Replica count
+  replicaCount: 1
+
+  # Ingress configuration
+  # Disabled - using custom ingress template with proper ingressClassName
+  ingress:
+    enabled: false
+
+  # PostgreSQL configuration
+  # Disable bundled PostgreSQL - we use CloudNativePG external database
+  postgresql:
+    enabled: false
+    # External PostgreSQL connection to CloudNativePG cluster
+    # The wikijs-postgres-rw service is created by CloudNativePG
+    postgresqlHost: wikijs-postgres-rw
+    postgresqlPort: 5432
+    postgresqlDatabase: wikijs
+    postgresqlUser: wikijs
+    # SSL disabled for internal cluster communication
+    ssl: false
+    # Use the secret created by CloudNativePG operator
+    # CloudNativePG creates wikijs-postgres-app secret with 'password' key
+    existingSecret: wikijs-postgres-app
+    existingSecretKey: password
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 80
+
+  # Resource limits (reasonable for homelab)
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+  # Node selector (optional)
+  nodeSelector: {}
+
+  # Tolerations (optional)
+  tolerations: []
+
+  # Affinity (optional)
+  affinity: {}

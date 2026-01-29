@@ -1,0 +1,10 @@
+apiVersion: v2
+name: wikijs
+description: Wiki.js documentation platform with CloudNativePG PostgreSQL
+type: application
+version: 1.0.0
+appVersion: "2.5.x"
+dependencies:
+  - name: wiki
+    version: "2.2.0"
+    repository: "https://charts.js.wiki"
