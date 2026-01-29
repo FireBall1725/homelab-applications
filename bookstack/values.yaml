@@ -41,6 +41,8 @@ env:
   PUID: "1000"
   PGID: "1000"
   TZ: "America/Edmonton"
+  # BookStack application key (encryption salt)
+  APP_KEY: "base64:Vo9D8mBCHfL+SYveo+YRpoxF9TIF2hjLF5p0JxcwB90="
   # BookStack application URL
   APP_URL: "https://docs.k8s.firekatt.ca"
   # Database configuration (connects to MariaDB sidecar via localhost)
