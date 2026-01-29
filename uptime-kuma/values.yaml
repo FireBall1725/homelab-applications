@@ -16,16 +16,14 @@ uptime-kuma:
   ingress:
     enabled: true
     className: internal
-    annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-production
+    annotations: {}
     hosts:
       - host: status.k8s.firekatt.ca
         paths:
           - path: /
             pathType: Prefix
     tls:
-      - secretName: uptime-kuma-tls
-        hosts:
+      - hosts:
           - status.k8s.firekatt.ca
 
   # Persistent storage
