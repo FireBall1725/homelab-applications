@@ -1,12 +1,8 @@
 # Certificate for Traefik default TLS
-# This certificate covers common subdomains and is used as the default
-# for ingresses that don't specify their own TLS secret
+# This wildcard certificate covers all *.k8s.firekatt.ca subdomains
+# and is used as the default for ingresses that don't specify their own TLS secret
 #
-# Note: HTTP-01 challenge cannot issue wildcard certificates.
-# Each subdomain needs to be listed individually, OR use DNS-01 challenge.
-# For per-ingress automatic certificates, add these annotations to your ingress:
-#   cert-manager.io/cluster-issuer: letsencrypt-production
-#   And configure tls section with a secretName
+# Note: Wildcard certificates require DNS-01 challenge validation
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -17,27 +13,7 @@ spec:
   issuerRef:
     name: letsencrypt-production
     kind: ClusterIssuer
-  # Common subdomains - add more as needed
-  # Each subdomain requires a separate HTTP-01 challenge
+  # Wildcard certificate covers all subdomains
   dnsNames:
-    - k8s.firekatt.ca
-    - ha.k8s.firekatt.ca
-    - hacode.k8s.firekatt.ca
-    - argocd.k8s.firekatt.ca
-    - grafana.k8s.firekatt.ca
-    - prometheus.k8s.firekatt.ca
-    - alertmanager.k8s.firekatt.ca
-    - longhorn.k8s.firekatt.ca
-    - status.k8s.firekatt.ca
-    - headlamp.k8s.firekatt.ca
-    - home.k8s.firekatt.ca
-    - homepage.k8s.firekatt.ca
-    - nodered.k8s.firekatt.ca
-    - esphome.k8s.firekatt.ca
-    - esphomecode.k8s.firekatt.ca
-    - zigbee2mqtt.k8s.firekatt.ca
-    - ma.k8s.firekatt.ca
-    - radarr.k8s.firekatt.ca
-    - sonarr.k8s.firekatt.ca
-    - prowlarr.k8s.firekatt.ca
-    - sabnzbd.k8s.firekatt.ca
+    - "*.k8s.firekatt.ca"
+    - k8s.firekatt.ca  # Also include the apex if needed
