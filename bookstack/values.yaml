@@ -1,128 +1,86 @@
-# BookStack Documentation Platform
-# https://www.bookstackapp.com/
-#
-# This chart deploys BookStack for documentation and AI memory system
-# along with the bookstack-mcp server for AI integration (Jarvis-like assistant)
+# BookStack configuration
+# https://hub.docker.com/r/linuxserver/bookstack
 
-bookstack:
-  # Application configuration
-  app:
-    # Laravel app key - used as encryption salt
-    # NOTE: For homelab use, this key is committed to git. For production,
-    # consider using external secrets management.
-    # Generate with: openssl rand -base64 32
-    key: "base64:9b43KMOxe1OGadNCzclC9ApR7Dcr90QZ1PUzFXXnNl0="
-    url: "https://docs.k8s.firekatt.ca"
+image:
+  repository: lscr.io/linuxserver/bookstack
+  tag: latest
+  pullPolicy: IfNotPresent
 
-  # Container image
+# MariaDB sidecar configuration
+mariadb:
   image:
-    repository: solidnerd/bookstack
-    pullPolicy: IfNotPresent
-    tag: "25.12.1"  # Latest stable version
-
-  # Service configuration
-  service:
-    type: ClusterIP
-    port: 80
-
-  # Ingress configuration
-  ingress:
-    enabled: true
-    className: internal
-    annotations: {}
-    path: /
-    hosts:
-      - docs.k8s.firekatt.ca
-    tls:
-      - hosts:
-          - docs.k8s.firekatt.ca
-
-  # Persistence configuration - uses Longhorn storage
-  persistence:
-    uploads:
-      enabled: true
-      size: 10Gi
-      storageClass: longhorn
-      accessMode: ReadWriteOnce
-    storage:
-      enabled: true
-      size: 10Gi
-      storageClass: longhorn
-      accessMode: ReadWriteOnce
-
-  # MariaDB database (included with chart)
-  mariadb:
-    enabled: true
-    architecture: standalone
-    image:
-      tag: 11.6.2-debian-12-r4  # Use latest stable version
-    auth:
-      # Database name
-      database: bookstack
-      # Username for bookstack
-      username: bookstack
-      # Password will be auto-generated if not set
-      # password: ""
-      # Root password will be auto-generated if not set
-      # rootPassword: ""
-    primary:
-      persistence:
-        enabled: true
-        size: 10Gi
-        storageClass: longhorn
-
-  # Resource limits
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      memory: 512Mi
-
-  # Security context
-  securityContext:
-    fsGroup: 33
-
-# BookStack MCP Server configuration
-# This provides AI integration capabilities for tools like Claude
-# DISABLED: Need to build Docker image first - see https://github.com/ttpears/bookstack-mcp
-mcpServer:
-  enabled: false
-
-  image:
-    # Built from https://github.com/ttpears/bookstack-mcp
-    repository: ghcr.io/ttpears/bookstack-mcp
+    repository: lscr.io/linuxserver/mariadb
     tag: latest
-    pullPolicy: Always
-
-  # Number of replicas
-  replicas: 1
-
-  # Service port (SSE transport)
-  port: 8007
-
-  # Environment configuration
-  # BOOKSTACK_BASE_URL points to internal service
-  bookstackUrl: "http://bookstack:80"
-
-  # Enable write operations (create/update/delete)
-  enableWrite: true
-
-  # Secret name containing BOOKSTACK_TOKEN_ID and BOOKSTACK_TOKEN_SECRET
-  # This will be created as a sealed secret - update after BookStack deployment
-  existingSecret: bookstack-mcp-api-credentials
-
-  # Resource limits
+    pullPolicy: IfNotPresent
   resources:
     requests:
       cpu: 50m
       memory: 128Mi
     limits:
-      memory: 256Mi
+      memory: 512Mi
 
-  # Health check configuration
-  healthCheck:
-    path: /health
-    initialDelaySeconds: 40
-    periodSeconds: 30
-    timeoutSeconds: 10
+# Namespace for the deployment
+namespace: app-bookstack
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: internal
+  host: docs.k8s.firekatt.ca
+
+# Persistence configuration
+persistence:
+  enabled: true
+  storageClass: longhorn
+  size: 20Gi
+  accessMode: ReadWriteOnce
+
+# Environment variables for linuxserver/bookstack
+env:
+  # LinuxServer.io standard variables
+  PUID: "1000"
+  PGID: "1000"
+  TZ: "America/Edmonton"
+  # BookStack application URL
+  APP_URL: "https://docs.k8s.firekatt.ca"
+  # Database configuration (connects to MariaDB sidecar via localhost)
+  DB_HOST: "127.0.0.1"
+  DB_PORT: "3306"
+  DB_DATABASE: "bookstackapp"
+  DB_USERNAME: "bookstack"
+  DB_PASSWORD: "bookstack"
+
+# MariaDB environment variables
+mariadbEnv:
+  PUID: "1000"
+  PGID: "1000"
+  TZ: "America/Edmonton"
+  MYSQL_ROOT_PASSWORD: "bookstack-root"
+  MYSQL_DATABASE: "bookstackapp"
+  MYSQL_USER: "bookstack"
+  MYSQL_PASSWORD: "bookstack"
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Resource limits (adjust as needed for homelab)
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 1Gi
+
+# Replica count
+replicaCount: 1
+
+# Node selector (optional)
+nodeSelector: {}
+
+# Tolerations (optional)
+tolerations: []
+
+# Affinity (optional)
+affinity: {}
