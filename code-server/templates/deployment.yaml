@@ -71,7 +71,7 @@ spec:
               value: {{ .Values.extensions | join "|" | quote }}
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: /
               port: http
             initialDelaySeconds: 300
             periodSeconds: 10
@@ -79,7 +79,7 @@ spec:
             failureThreshold: 6
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: /
               port: http
             initialDelaySeconds: 300
             periodSeconds: 10
