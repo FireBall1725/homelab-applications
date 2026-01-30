@@ -41,13 +41,17 @@ spec:
               # Update apt and install tools
               apt-get update
               apt-get install -y --no-install-recommends \
-                ttyd \
                 curl \
                 git \
                 zsh \
                 vim \
                 wget \
                 ca-certificates
+
+              # Install ttyd from GitHub releases
+              TTYD_VERSION=1.7.7
+              curl -Lo /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/${TTYD_VERSION}/ttyd.x86_64
+              chmod +x /usr/local/bin/ttyd
 
               # Install kubectl
               curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
