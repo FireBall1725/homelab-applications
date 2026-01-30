@@ -38,17 +38,11 @@ spec:
             - |
               set -e  # Exit on error
 
-              # Update apt and install tools
+              # Update apt and install packages from ConfigMap
               apt-get update
-              apt-get install -y --no-install-recommends \
-                curl \
-                git \
-                zsh \
-                vim \
-                wget \
-                ca-certificates \
-                build-essential \
-                neofetch
+              echo "Installing packages from ConfigMap..."
+              # Read packages from ConfigMap, filter out comments and empty lines
+              grep -v '^#' /config/packages.txt | grep -v '^$' | xargs apt-get install -y --no-install-recommends
 
               # Install ttyd from GitHub releases
               TTYD_VERSION=1.7.7
@@ -153,6 +147,9 @@ spec:
           volumeMounts:
             - name: home
               mountPath: /root
+            - name: packages-config
+              mountPath: /config
+              readOnly: true
             {{- if .Values.rbac.create }}
             - name: kube-api-access
               mountPath: /var/run/secrets/kubernetes.io/serviceaccount
@@ -166,6 +163,9 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        - name: packages-config
+          configMap:
+            name: {{ include "ttyd.fullname" . }}-packages
         {{- if .Values.rbac.create }}
         - name: kube-api-access
           projected:
