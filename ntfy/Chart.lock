@@ -1,6 +1,0 @@
-dependencies:
-- name: ntfy
-  repository: https://helm-charts.rm3l.org
-  version: 0.1.1
-digest: sha256:4f647d4e50f908ea52da4d34ec9196c25acc6b82b96c700402b7d2e9a42781d9
-generated: "2026-01-30T07:49:59.526019-05:00"

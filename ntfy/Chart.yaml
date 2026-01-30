@@ -1,9 +1,0 @@
-apiVersion: v2
-name: ntfy
-version: 1.0.0
-appVersion: "2.11.0"
-description: ntfy - Simple HTTP-based pub-sub notification service
-dependencies:
-  - name: ntfy
-    version: 0.1.1
-    repository: https://helm-charts.rm3l.org
