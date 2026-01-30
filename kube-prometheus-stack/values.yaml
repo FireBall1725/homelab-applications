@@ -107,10 +107,11 @@ kube-prometheus-stack:
         limits:
           memory: 256Mi
 
-    # Alertmanager configuration for routing alerts to ntfy
+    # Alertmanager configuration for routing alerts to Discord
     config:
       global:
         resolve_timeout: 5m
+        slack_api_url: "https://discord.com/api/webhooks"  # Base URL for Discord webhooks
 
       # Inhibition rules to prevent redundant alerts
       inhibit_rules:
@@ -143,28 +144,52 @@ kube-prometheus-stack:
         - name: "null"
 
         # Critical alerts - backup failures, cluster issues
-        - name: "ntfy-critical"
-          webhook_configs:
-            - url: "http://ntfy.app-ntfy.svc.cluster.local/firekatt_homelab_critical"
+        - name: "discord-critical"
+          slack_configs:
+            - api_url: "https://discord.com/api/webhooks/1466791793856348352/iCMiwvmAxMphaYZgE8ZSGrnOQxs-x62sZ_NG45xftVrq47vCi0Htm0N3gPFI4Sg0pV5y/slack"
               send_resolved: true
-              http_config:
-                follow_redirects: true
+              title: "🚨 {{ .GroupLabels.alertname }}"
+              text: |-
+                {{ range .Alerts }}
+                **Alert:** {{ .Labels.alertname }}
+                **Severity:** {{ .Labels.severity }}
+                {{ if .Labels.namespace }}**Namespace:** {{ .Labels.namespace }}{{ end }}
+                {{ if .Labels.pod }}**Pod:** {{ .Labels.pod }}{{ end }}
+                {{ if .Annotations.summary }}**Summary:** {{ .Annotations.summary }}{{ end }}
+                {{ if .Annotations.description }}**Description:** {{ .Annotations.description }}{{ end }}
+                {{ end }}
 
         # Warning alerts - high resource usage, degraded state
-        - name: "ntfy-warning"
-          webhook_configs:
-            - url: "http://ntfy.app-ntfy.svc.cluster.local/firekatt_homelab_warning"
+        - name: "discord-warning"
+          slack_configs:
+            - api_url: "https://discord.com/api/webhooks/1466791987293196300/K6_S24GSrBRiXABYBLCoCfoU4R1PERcAv69Xr6FuHD48tbNuItoUA5jFj8nxux2yHAz2/slack"
               send_resolved: true
-              http_config:
-                follow_redirects: true
+              title: "⚠️ {{ .GroupLabels.alertname }}"
+              text: |-
+                {{ range .Alerts }}
+                **Alert:** {{ .Labels.alertname }}
+                **Severity:** {{ .Labels.severity }}
+                {{ if .Labels.namespace }}**Namespace:** {{ .Labels.namespace }}{{ end }}
+                {{ if .Labels.pod }}**Pod:** {{ .Labels.pod }}{{ end }}
+                {{ if .Annotations.summary }}**Summary:** {{ .Annotations.summary }}{{ end }}
+                {{ if .Annotations.description }}**Description:** {{ .Annotations.description }}{{ end }}
+                {{ end }}
 
         # Info alerts - backup completed, routine notifications
-        - name: "ntfy-info"
-          webhook_configs:
-            - url: "http://ntfy.app-ntfy.svc.cluster.local/firekatt_homelab_info"
+        - name: "discord-info"
+          slack_configs:
+            - api_url: "https://discord.com/api/webhooks/1466792107560931369/-Q_BmypW6fm3Y6wW7uIMXFyS7MtWso8yOtZFk9QzNiqzhaLxRYwfqFhCaVofnXICtAro/slack"
               send_resolved: true
-              http_config:
-                follow_redirects: true
+              title: "ℹ️ {{ .GroupLabels.alertname }}"
+              text: |-
+                {{ range .Alerts }}
+                **Alert:** {{ .Labels.alertname }}
+                **Severity:** {{ .Labels.severity }}
+                {{ if .Labels.namespace }}**Namespace:** {{ .Labels.namespace }}{{ end }}
+                {{ if .Labels.pod }}**Pod:** {{ .Labels.pod }}{{ end }}
+                {{ if .Annotations.summary }}**Summary:** {{ .Annotations.summary }}{{ end }}
+                {{ if .Annotations.description }}**Description:** {{ .Annotations.description }}{{ end }}
+                {{ end }}
 
       # Routing tree for alerts
       route:
@@ -174,7 +199,7 @@ kube-prometheus-stack:
         group_wait: 30s
         group_interval: 5m
         repeat_interval: 4h
-        receiver: "ntfy-warning"  # Default receiver
+        receiver: "discord-warning"  # Default receiver
 
         routes:
           # Silence Watchdog alerts (used for testing alertmanager is alive)
@@ -190,19 +215,19 @@ kube-prometheus-stack:
           # Critical severity alerts
           - matchers:
               - severity = critical
-            receiver: "ntfy-critical"
+            receiver: "discord-critical"
             continue: false
 
           # Warning severity alerts
           - matchers:
               - severity = warning
-            receiver: "ntfy-warning"
+            receiver: "discord-warning"
             continue: false
 
           # Info severity alerts
           - matchers:
               - severity = info
-            receiver: "ntfy-info"
+            receiver: "discord-info"
             continue: false
 
       # Templates for alert formatting
