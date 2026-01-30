@@ -146,7 +146,7 @@ kube-prometheus-stack:
         # Critical alerts - backup failures, cluster issues
         - name: "discord-critical"
           slack_configs:
-            - api_url: "https://discord.com/api/webhooks/1466791793856348352/iCMiwvmAxMphaYZgE8ZSGrnOQxs-x62sZ_NG45xftVrq47vCi0Htm0N3gPFI4Sg0pV5y/slack"
+            - api_url: "https://discord.com/api/webhooks/1466795538396745805/0cuQTcggLYgESQgpOc-vxTlSBZWhZBayLkzGGKfmrJ7_Oes8AveAMbRUoinNUbVNWLgs/slack"
               send_resolved: true
               title: "🚨 {{ .GroupLabels.alertname }}"
               text: |-
@@ -162,7 +162,7 @@ kube-prometheus-stack:
         # Warning alerts - high resource usage, degraded state
         - name: "discord-warning"
           slack_configs:
-            - api_url: "https://discord.com/api/webhooks/1466791987293196300/K6_S24GSrBRiXABYBLCoCfoU4R1PERcAv69Xr6FuHD48tbNuItoUA5jFj8nxux2yHAz2/slack"
+            - api_url: "https://discord.com/api/webhooks/1466795674455642307/luZXjQIaLQKa8w-OaMoFFow4ljUlyiph2k9wTb6IR4suQT7e1XZaVDslvHGG_dJC3-Pk/slack"
               send_resolved: true
               title: "⚠️ {{ .GroupLabels.alertname }}"
               text: |-
@@ -178,7 +178,7 @@ kube-prometheus-stack:
         # Info alerts - backup completed, routine notifications
         - name: "discord-info"
           slack_configs:
-            - api_url: "https://discord.com/api/webhooks/1466792107560931369/-Q_BmypW6fm3Y6wW7uIMXFyS7MtWso8yOtZFk9QzNiqzhaLxRYwfqFhCaVofnXICtAro/slack"
+            - api_url: "https://discord.com/api/webhooks/1466795853988499657/5EgLUVunDCexAiwfGgHLUfEkPqztzVg-pzAgqqz0aiR1xMphQCDVJ6ktu53ecS8iFzxy/slack"
               send_resolved: true
               title: "ℹ️ {{ .GroupLabels.alertname }}"
               text: |-
