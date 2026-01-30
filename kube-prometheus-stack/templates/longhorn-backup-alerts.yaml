@@ -17,10 +17,10 @@ spec:
           labels:
             severity: critical
           annotations:
-            summary: "Longhorn backup failed for volume {{ $labels.volume }}"
+            summary: "Longhorn backup failed for volume {{ "{{" }} $labels.volume {{ "}}" }}"
             description: |
-              Backup {{ $labels.backup }} for volume {{ $labels.volume }} is in error state.
-              Recurring job: {{ $labels.recurring_job }}
+              Backup {{ "{{" }} $labels.backup {{ "}}" }} for volume {{ "{{" }} $labels.volume {{ "}}" }} is in error state.
+              Recurring job: {{ "{{" }} $labels.recurring_job {{ "}}" }}
               Check Longhorn UI for details and resolve the issue.
             runbook_url: "https://docs.k8s.firekatt.ca/homelab/applications/longhorn#troubleshooting-backup-failures"
 
@@ -31,11 +31,11 @@ spec:
           labels:
             severity: warning
           annotations:
-            summary: "Longhorn backup stuck for volume {{ $labels.volume }}"
+            summary: "Longhorn backup stuck for volume {{ "{{" }} $labels.volume {{ "}}" }}"
             description: |
-              Backup {{ $labels.backup }} for volume {{ $labels.volume }} has been in progress for over 2 hours.
+              Backup {{ "{{" }} $labels.backup {{ "}}" }} for volume {{ "{{" }} $labels.volume {{ "}}" }} has been in progress for over 2 hours.
               This may indicate a problem with the backup target or network connectivity.
-              Recurring job: {{ $labels.recurring_job }}
+              Recurring job: {{ "{{" }} $labels.recurring_job {{ "}}" }}
             runbook_url: "https://docs.k8s.firekatt.ca/homelab/applications/longhorn#troubleshooting-backup-failures"
 
         # Alert when no backups exist for volumes that should have them
@@ -82,11 +82,11 @@ spec:
           labels:
             severity: warning
           annotations:
-            summary: "Longhorn volume {{ $labels.pvc }} is degraded"
+            summary: "Longhorn volume {{ "{{" }} $labels.pvc {{ "}}" }} is degraded"
             description: |
-              Volume {{ $labels.volume }} (PVC: {{ $labels.pvc }}) in namespace {{ $labels.pvc_namespace }} is in degraded state.
+              Volume {{ "{{" }} $labels.volume {{ "}}" }} (PVC: {{ "{{" }} $labels.pvc {{ "}}" }}) in namespace {{ "{{" }} $labels.pvc_namespace {{ "}}" }} is in degraded state.
               Some replicas may be unhealthy. Check Longhorn UI for replica status.
-              Node: {{ $labels.node }}
+              Node: {{ "{{" }} $labels.node {{ "}}" }}
 
         # Alert on faulted volumes (critical - data may be at risk)
         - alert: LonghornVolumeFaulted
@@ -95,12 +95,12 @@ spec:
           labels:
             severity: critical
           annotations:
-            summary: "Longhorn volume {{ $labels.pvc }} is FAULTED"
+            summary: "Longhorn volume {{ "{{" }} $labels.pvc {{ "}}" }} is FAULTED"
             description: |
-              CRITICAL: Volume {{ $labels.volume }} (PVC: {{ $labels.pvc }}) in namespace {{ $labels.pvc_namespace }} is FAULTED.
+              CRITICAL: Volume {{ "{{" }} $labels.volume {{ "}}" }} (PVC: {{ "{{" }} $labels.pvc {{ "}}" }}) in namespace {{ "{{" }} $labels.pvc_namespace {{ "}}" }} is FAULTED.
               Data may be at risk. Immediate attention required.
               Check Longhorn UI immediately and consider restoring from backup.
-              Node: {{ $labels.node }}
+              Node: {{ "{{" }} $labels.node {{ "}}" }}
             runbook_url: "https://docs.k8s.firekatt.ca/homelab/applications/longhorn#disaster-recovery"
 
         # Alert when total backup size is growing too fast (cost control)
@@ -112,7 +112,7 @@ spec:
           annotations:
             summary: "Longhorn backup storage exceeds 8GB"
             description: |
-              Total backup storage is {{ $value | humanize1024 }}.
+              Total backup storage is {{ "{{" }} $value | humanize1024 {{ "}}" }}.
               This is approaching the 10GB free tier limit for Cloudflare R2.
               Consider reviewing backup retention policies or cleaning up old backups.
 
@@ -125,9 +125,9 @@ spec:
           labels:
             severity: warning
           annotations:
-            summary: "Longhorn node {{ $labels.node }} is not ready"
+            summary: "Longhorn node {{ "{{" }} $labels.node {{ "}}" }} is not ready"
             description: |
-              Longhorn node {{ $labels.node }} has been not ready for more than 5 minutes.
+              Longhorn node {{ "{{" }} $labels.node {{ "}}" }} has been not ready for more than 5 minutes.
               This may affect volume scheduling and data availability.
 
         # Alert on low disk space on Longhorn nodes
@@ -139,8 +139,7 @@ spec:
           labels:
             severity: warning
           annotations:
-            summary: "Longhorn node {{ $labels.node }} disk space low"
+            summary: "Longhorn node {{ "{{" }} $labels.node {{ "}}" }} disk space low"
             description: |
-              Longhorn node {{ $labels.node }} has less than 15% disk space remaining.
-              Capacity: {{ with printf "longhorn_node_storage_capacity_bytes{node='%s'}" $labels.node | query }}{{ . | first | value | humanize1024 }}{{ end }}
+              Longhorn node {{ "{{" }} $labels.node {{ "}}" }} has less than 15% disk space remaining.
               Consider expanding storage or cleaning up unused volumes.

@@ -1021,7 +1021,7 @@ data:
               "expr": "sort_desc(longhorn_backup_actual_size_bytes)",
               "format": "time_series",
               "instant": true,
-              "legendFormat": "{{volume}}",
+              "legendFormat": "{{ "{{" }}volume{{ "}}" }}",
               "refId": "A"
             }
           ],
@@ -1216,7 +1216,7 @@ data:
                 "uid": "${datasource}"
               },
               "expr": "longhorn_backup_actual_size_bytes",
-              "legendFormat": "{{volume}}",
+              "legendFormat": "{{ "{{" }}volume{{ "}}" }}",
               "refId": "A"
             }
           ],
