@@ -9,7 +9,7 @@ image:
   # -- image repository
   repository: ghcr.io/kieraneglin/pinchflat
   # -- image tag
-  tag: "v2025.9.26"
+  tag: "latest"
   # -- image pull policy
   pullPolicy: IfNotPresent
 
