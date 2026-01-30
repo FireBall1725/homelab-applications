@@ -1,0 +1,194 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ttyd.fullname" . }}
+  namespace: {{ include "ttyd.namespace" . }}
+  labels:
+    {{- include "ttyd.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "ttyd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.pod.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "ttyd.selectorLabels" . | nindent 8 }}
+        {{- with .Values.pod.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "ttyd.serviceAccountName" . }}
+      {{- end }}
+      initContainers:
+        # Install Claude Code CLI and tools
+        - name: install-tools
+          image: node:20-alpine
+          command:
+            - sh
+            - -c
+            - |
+              # Install Claude Code CLI globally
+              npm install -g @anthropic-ai/claude-code
+
+              # Install additional tools
+              apk add --no-cache curl kubectl helm git zsh zsh-vcs
+
+              # Copy installed node_modules to shared volume
+              cp -r /usr/local/lib/node_modules /shared/
+              cp -r /usr/local/bin/* /shared/bin/
+
+              # Setup zsh as default shell
+              echo "Installing oh-my-zsh..."
+              sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended || true
+              cp -r /root/.oh-my-zsh /shared/ || true
+
+              echo "Setup complete"
+          volumeMounts:
+            - name: shared
+              mountPath: /shared
+            - name: home
+              mountPath: /root
+      containers:
+        - name: ttyd
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Setup environment
+              export PATH="/shared/bin:$PATH"
+              export NODE_PATH="/shared/node_modules"
+              export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
+
+              # Setup zsh
+              if [ -d "/shared/.oh-my-zsh" ]; then
+                cp -r /shared/.oh-my-zsh /root/ || true
+              fi
+
+              # Create .zshrc with Claude Code aliases
+              cat > /root/.zshrc <<'EOF'
+              export ZSH="$HOME/.oh-my-zsh"
+              ZSH_THEME="robbyrussell"
+              plugins=(git kubectl helm)
+              source $ZSH/oh-my-zsh.sh
+
+              # Claude Code aliases
+              alias cc='claude-code'
+              alias claude='claude-code'
+
+              # Show welcome message
+              echo "🤖 Claude Code Terminal Ready"
+              echo "Type 'claude-code' or 'cc' to start"
+              EOF
+
+              # Start ttyd with basic auth
+              exec ttyd \
+                --port 7681 \
+                --credential {{ .Values.auth.username }}:${PASSWORD} \
+                {{- if not .Values.ttyd.readonly }}
+                --writable \
+                {{- end }}
+                {{- if not .Values.ttyd.checkOrigin }}
+                --check-origin \
+                {{- end }}
+                --max-clients {{ .Values.ttyd.maxClients }} \
+                --terminal-type {{ .Values.ttyd.terminalType }} \
+                {{ .Values.shell }}
+          ports:
+            - name: http
+              containerPort: 7681
+              protocol: TCP
+          env:
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.secretName }}
+                  key: PASSWORD
+            {{- if .Values.claudeCode.enabled }}
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.claudeCode.apiKeySecret }}
+                  key: ANTHROPIC_API_KEY
+            {{- end }}
+            - name: TERM
+              value: {{ .Values.ttyd.terminalType }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: home
+              mountPath: /root
+            - name: shared
+              mountPath: /shared
+            {{- if .Values.rbac.create }}
+            - name: kube-api-access
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: home
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "ttyd.fullname" . }}-home
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: shared
+          emptyDir: {}
+        {{- if .Values.rbac.create }}
+        - name: kube-api-access
+          projected:
+            defaultMode: 420
+            sources:
+              - serviceAccountToken:
+                  expirationSeconds: 3607
+                  path: token
+              - configMap:
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+                  name: kube-root-ca.crt
+              - downwardAPI:
+                  items:
+                    - fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+                      path: namespace
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

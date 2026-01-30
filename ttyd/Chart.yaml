@@ -1,0 +1,16 @@
+apiVersion: v2
+name: ttyd
+description: Lightweight web terminal with Claude Code CLI for homelab management
+type: application
+version: 1.0.0
+appVersion: "1.7.7"
+keywords:
+  - ttyd
+  - terminal
+  - claude-code
+  - web-terminal
+home: https://github.com/tsl0922/ttyd
+sources:
+  - https://github.com/tsl0922/ttyd
+maintainers:
+  - name: areed
