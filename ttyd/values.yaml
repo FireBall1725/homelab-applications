@@ -34,7 +34,7 @@ persistence:
 # Ingress configuration
 ingress:
   enabled: true
-  host: claude.k8s.firekatt.ca
+  host: terminal.k8s.firekatt.ca
   ingressClassName: internal
   annotations: {}
 
