@@ -145,7 +145,7 @@ kube-prometheus-stack:
         # Critical alerts - backup failures, cluster issues
         - name: "ntfy-critical"
           webhook_configs:
-            - url: "http://ntfy.app-ntfy.svc.cluster.local/homelab-critical"
+            - url: "http://ntfy.app-ntfy.svc.cluster.local/firekatt_homelab_x7k2m9p4"
               send_resolved: true
               http_config:
                 follow_redirects: true
@@ -153,7 +153,7 @@ kube-prometheus-stack:
         # Warning alerts - high resource usage, degraded state
         - name: "ntfy-warning"
           webhook_configs:
-            - url: "http://ntfy.app-ntfy.svc.cluster.local/homelab-warning"
+            - url: "http://ntfy.app-ntfy.svc.cluster.local/firekatt_homelab_j3n8q5w1"
               send_resolved: true
               http_config:
                 follow_redirects: true
@@ -161,7 +161,7 @@ kube-prometheus-stack:
         # Info alerts - backup completed, routine notifications
         - name: "ntfy-info"
           webhook_configs:
-            - url: "http://ntfy.app-ntfy.svc.cluster.local/homelab-info"
+            - url: "http://ntfy.app-ntfy.svc.cluster.local/firekatt_homelab_a9f4t2h6"
               send_resolved: true
               http_config:
                 follow_redirects: true
