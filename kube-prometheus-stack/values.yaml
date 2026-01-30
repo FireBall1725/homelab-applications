@@ -107,6 +107,127 @@ kube-prometheus-stack:
         limits:
           memory: 256Mi
 
+    # Alertmanager configuration for routing alerts to ntfy
+    config:
+      global:
+        resolve_timeout: 5m
+
+      # Inhibition rules to prevent redundant alerts
+      inhibit_rules:
+        - source_matchers:
+            - severity = critical
+          target_matchers:
+            - severity =~ warning|info
+          equal:
+            - namespace
+            - alertname
+        - source_matchers:
+            - severity = warning
+          target_matchers:
+            - severity = info
+          equal:
+            - namespace
+            - alertname
+        - source_matchers:
+            - alertname = InfoInhibitor
+          target_matchers:
+            - severity = info
+          equal:
+            - namespace
+        - target_matchers:
+            - alertname = InfoInhibitor
+
+      # Receivers for different notification channels
+      receivers:
+        # Null receiver for alerts we want to silence
+        - name: "null"
+
+        # Critical alerts - backup failures, cluster issues
+        - name: "ntfy-critical"
+          webhook_configs:
+            - url: "http://ntfy.app-ntfy.svc.cluster.local/homelab-critical"
+              send_resolved: true
+              http_config:
+                follow_redirects: true
+
+        # Warning alerts - high resource usage, degraded state
+        - name: "ntfy-warning"
+          webhook_configs:
+            - url: "http://ntfy.app-ntfy.svc.cluster.local/homelab-warning"
+              send_resolved: true
+              http_config:
+                follow_redirects: true
+
+        # Info alerts - backup completed, routine notifications
+        - name: "ntfy-info"
+          webhook_configs:
+            - url: "http://ntfy.app-ntfy.svc.cluster.local/homelab-info"
+              send_resolved: true
+              http_config:
+                follow_redirects: true
+
+      # Routing tree for alerts
+      route:
+        group_by:
+          - namespace
+          - alertname
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+        receiver: "ntfy-warning"  # Default receiver
+
+        routes:
+          # Silence Watchdog alerts (used for testing alertmanager is alive)
+          - matchers:
+              - alertname = "Watchdog"
+            receiver: "null"
+
+          # Silence InfoInhibitor
+          - matchers:
+              - alertname = "InfoInhibitor"
+            receiver: "null"
+
+          # Critical severity alerts
+          - matchers:
+              - severity = critical
+            receiver: "ntfy-critical"
+            continue: false
+
+          # Warning severity alerts
+          - matchers:
+              - severity = warning
+            receiver: "ntfy-warning"
+            continue: false
+
+          # Info severity alerts
+          - matchers:
+              - severity = info
+            receiver: "ntfy-info"
+            continue: false
+
+      # Templates for alert formatting
+      templates:
+        - /etc/alertmanager/config/*.tmpl
+
+    # Custom template for better ntfy notification formatting
+    templateFiles:
+      ntfy.tmpl: |-
+        {{ define "ntfy.title" -}}
+        [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}
+        {{- end }}
+
+        {{ define "ntfy.text" -}}
+        {{ range .Alerts }}
+        Alert: {{ .Labels.alertname }}
+        Severity: {{ .Labels.severity }}
+        {{ if .Labels.namespace }}Namespace: {{ .Labels.namespace }}{{ end }}
+        {{ if .Labels.pod }}Pod: {{ .Labels.pod }}{{ end }}
+        {{ if .Labels.volume }}Volume: {{ .Labels.volume }}{{ end }}
+        {{ if .Annotations.summary }}Summary: {{ .Annotations.summary }}{{ end }}
+        {{ if .Annotations.description }}Description: {{ .Annotations.description }}{{ end }}
+        {{ end }}
+        {{- end }}
+
   # Prometheus Operator configuration
   prometheusOperator:
     resources:
