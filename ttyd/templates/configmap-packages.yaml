@@ -18,6 +18,7 @@ data:
     # User-requested packages
     build-essential
     neofetch
+    nano
 
     # Add more packages below (one per line)
     # Example:

@@ -61,6 +61,18 @@ spec:
               echo "Installing Claude Code CLI..."
               npm install -g @anthropic-ai/claude-code
 
+              # Download and serve MapleMono Nerd Font for browser
+              echo "Setting up MapleMono Nerd Font..."
+              mkdir -p /var/www/fonts
+              cd /tmp
+              wget -q https://github.com/subframe7536/Maple-font/releases/download/v7.0-beta31/MapleMono-NF.zip
+              unzip -q MapleMono-NF.zip -d MapleMono-NF
+              cp MapleMono-NF/MapleMono-NF-Regular.ttf /var/www/fonts/
+              cd -
+
+              # Start a simple HTTP server for fonts in background
+              cd /var/www && python3 -m http.server 8000 &
+
               # Setup zsh with oh-my-zsh
               export RUNZSH=no
               export CHSH=no
@@ -97,7 +109,7 @@ spec:
               echo ""
               EOF
 
-              # Start ttyd with Solarized Dark theme (no auth - internal ingress only)
+              # Start ttyd with Solarized Dark theme and MapleMono font (no auth - internal ingress only)
               exec ttyd \
                 --port 7681 \
                 {{- if not .Values.ttyd.readonly }}
@@ -109,6 +121,8 @@ spec:
                 --max-clients {{ .Values.ttyd.maxClients }} \
                 --terminal-type {{ .Values.ttyd.terminalType }} \
                 --client-option theme='{"background":"#002b36","foreground":"#839496","cursor":"#839496","cursorAccent":"#002b36","selectionBackground":"#073642","black":"#073642","red":"#dc322f","green":"#859900","yellow":"#b58900","blue":"#268bd2","magenta":"#d33682","cyan":"#2aa198","white":"#eee8d5","brightBlack":"#002b36","brightRed":"#cb4b16","brightGreen":"#586e75","brightYellow":"#657b83","brightBlue":"#839496","brightMagenta":"#6c71c4","brightCyan":"#93a1a1","brightWhite":"#fdf6e3"}' \
+                --client-option 'fontFamily="MapleMono NF, monospace"' \
+                --client-option fontSize=16 \
                 /bin/zsh
           ports:
             - name: http
