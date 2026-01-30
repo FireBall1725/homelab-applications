@@ -61,18 +61,6 @@ spec:
               echo "Installing Claude Code CLI..."
               npm install -g @anthropic-ai/claude-code
 
-              # Download and serve MapleMono Nerd Font for browser
-              echo "Setting up MapleMono Nerd Font..."
-              mkdir -p /var/www/fonts
-              cd /tmp
-              wget -q https://github.com/subframe7536/Maple-font/releases/download/v7.0-beta31/MapleMono-NF.zip
-              unzip -q MapleMono-NF.zip -d MapleMono-NF
-              cp MapleMono-NF/MapleMono-NF-Regular.ttf /var/www/fonts/
-              cd -
-
-              # Start a simple HTTP server for fonts in background
-              cd /var/www && python3 -m http.server 8000 &
-
               # Setup zsh with oh-my-zsh
               export RUNZSH=no
               export CHSH=no
