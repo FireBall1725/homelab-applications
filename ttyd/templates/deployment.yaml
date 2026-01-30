@@ -84,37 +84,37 @@ spec:
               # Create default .zshrc for areed only if it doesn't exist (preserve user customizations)
               if [ ! -f /home/areed/.zshrc ]; then
                 cat > /home/areed/.zshrc <<'ZSHRC_EOF'
-export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="robbyrussell"
-plugins=(git kubectl helm)
+              export ZSH="$HOME/.oh-my-zsh"
+              ZSH_THEME="robbyrussell"
+              plugins=(git kubectl helm)
 
-# Locale settings (fix Unicode character issues)
-export LANG=C.UTF-8
-export LC_ALL=C.UTF-8
+              # Locale settings (fix Unicode character issues)
+              export LANG=C.UTF-8
+              export LC_ALL=C.UTF-8
 
-# Load oh-my-zsh
-if [ -f "$ZSH/oh-my-zsh.sh" ]; then
-  source $ZSH/oh-my-zsh.sh
-fi
+              # Load oh-my-zsh
+              if [ -f "$ZSH/oh-my-zsh.sh" ]; then
+                source $ZSH/oh-my-zsh.sh
+              fi
 
-# Homebrew
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+              # Homebrew
+              eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-# Environment
-export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
-export PATH="/usr/local/bin:$PATH"
+              # Environment
+              export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
+              export PATH="/usr/local/bin:$PATH"
 
-# Claude Code alias
-alias cc="claude"
+              # Claude Code alias
+              alias cc="claude"
 
-# Welcome message
-echo ""
-echo "🤖 Claude Code Terminal (Debian)"
-echo "• Type 'claude' or 'cc' to start Claude Code"
-echo "• Use 'brew' to install packages (or apt-get with sudo)"
-echo "• kubectl and helm are pre-installed"
-echo ""
-ZSHRC_EOF
+              # Welcome message
+              echo ""
+              echo "🤖 Claude Code Terminal (Debian)"
+              echo "• Type 'claude' or 'cc' to start Claude Code"
+              echo "• Use 'brew' to install packages (or apt-get with sudo)"
+              echo "• kubectl and helm are pre-installed"
+              echo ""
+              ZSHRC_EOF
                 chown areed:areed /home/areed/.zshrc
               fi
 
