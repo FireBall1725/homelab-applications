@@ -66,10 +66,9 @@ spec:
               echo ""
               EOF
 
-              # Start ttyd
+              # Start ttyd (no auth - internal ingress only)
               exec ttyd \
                 --port 7681 \
-                --credential {{ .Values.auth.username }}:${PASSWORD} \
                 {{- if not .Values.ttyd.readonly }}
                 --writable \
                 {{- end }}
