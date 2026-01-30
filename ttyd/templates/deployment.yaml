@@ -70,8 +70,9 @@ spec:
               echo "Configuring Wiki.js MCP server..."
               claude mcp add --transport http wikijs http://wikijs-mcp.app-wikijs.svc.cluster.local:3200/mcp || true
 
-              # Create .zshrc with Claude Code setup
-              cat > /root/.zshrc <<'EOF'
+              # Create default .zshrc only if it doesn't exist (preserve user customizations)
+              if [ ! -f /root/.zshrc ]; then
+                cat > /root/.zshrc <<'EOF'
               export ZSH="$HOME/.oh-my-zsh"
               ZSH_THEME="robbyrussell"
               plugins=(git kubectl helm)
@@ -96,6 +97,7 @@ spec:
               echo "• kubectl and helm are pre-installed"
               echo ""
               EOF
+              fi
 
               # Start ttyd with Solarized Dark theme and MapleMono font (no auth - internal ingress only)
               exec ttyd \
