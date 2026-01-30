@@ -72,7 +72,7 @@ spec:
 
               # Configure Wiki.js MCP server using Claude CLI
               echo "Configuring Wiki.js MCP server..."
-              claude mcp add --transport http wikijs http://wikijs-mcp.app-wikijs.svc.cluster.local:3200 || true
+              claude mcp add --transport http wikijs http://wikijs-mcp.app-wikijs.svc.cluster.local:3200/mcp || true
 
               # Create .zshrc with Claude Code setup
               cat > /root/.zshrc <<'EOF'
