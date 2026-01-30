@@ -44,6 +44,14 @@ spec:
               # Read packages from ConfigMap, filter out comments and empty lines
               grep -v '^#' /config/packages.txt | grep -v '^$' | xargs apt-get install -y --no-install-recommends
 
+              # Create areed user with home directory
+              echo "Creating user areed..."
+              useradd -m -s /bin/zsh areed
+
+              # Configure passwordless sudo for areed
+              echo "areed ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/areed
+              chmod 0440 /etc/sudoers.d/areed
+
               # Install ttyd from GitHub releases
               TTYD_VERSION=1.7.7
               curl -Lo /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/${TTYD_VERSION}/ttyd.x86_64
@@ -61,46 +69,53 @@ spec:
               echo "Installing Claude Code CLI..."
               npm install -g @anthropic-ai/claude-code
 
-              # Setup zsh with oh-my-zsh
-              export RUNZSH=no
-              export CHSH=no
-              sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended || true
+              # Setup zsh with oh-my-zsh for areed user
+              echo "Setting up oh-my-zsh for areed..."
+              su - areed -c 'export RUNZSH=no CHSH=no && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended || true'
 
-              # Configure Wiki.js MCP server using Claude CLI
+              # Install Homebrew for areed user
+              echo "Installing Homebrew for areed..."
+              su - areed -c 'NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+
+              # Configure Wiki.js MCP server using Claude CLI (as areed)
               echo "Configuring Wiki.js MCP server..."
-              claude mcp add --transport http wikijs http://wikijs-mcp.app-wikijs.svc.cluster.local:3200/mcp || true
+              su - areed -c 'claude mcp add --transport http wikijs http://wikijs-mcp.app-wikijs.svc.cluster.local:3200/mcp || true'
 
-              # Create default .zshrc only if it doesn't exist (preserve user customizations)
-              if [ ! -f /root/.zshrc ]; then
-                cat > /root/.zshrc <<'EOF'
-              export ZSH="$HOME/.oh-my-zsh"
-              ZSH_THEME="robbyrussell"
-              plugins=(git kubectl helm)
+              # Create default .zshrc for areed only if it doesn't exist (preserve user customizations)
+              if [ ! -f /home/areed/.zshrc ]; then
+                su - areed -c 'cat > /home/areed/.zshrc <<'"'"'EOF'"'"'
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
+plugins=(git kubectl helm)
 
-              # Locale settings (fix Unicode character issues)
-              export LANG=C.UTF-8
-              export LC_ALL=C.UTF-8
+# Locale settings (fix Unicode character issues)
+export LANG=C.UTF-8
+export LC_ALL=C.UTF-8
 
-              # Load oh-my-zsh
-              if [ -f "$ZSH/oh-my-zsh.sh" ]; then
-                source $ZSH/oh-my-zsh.sh
-              fi
+# Load oh-my-zsh
+if [ -f "$ZSH/oh-my-zsh.sh" ]; then
+  source $ZSH/oh-my-zsh.sh
+fi
 
-              # Environment
-              export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
-              export PATH="/usr/local/bin:$PATH"
+# Homebrew
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-              # Claude Code alias
-              alias cc='claude'
+# Environment
+export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
+export PATH="/usr/local/bin:$PATH"
 
-              # Welcome message
-              echo ""
-              echo "🤖 Claude Code Terminal (Debian)"
-              echo "• Type 'claude' or 'cc' to start Claude Code"
-              echo "• Use 'apt-get' to install packages"
-              echo "• kubectl and helm are pre-installed"
-              echo ""
-              EOF
+# Claude Code alias
+alias cc="claude"
+
+# Welcome message
+echo ""
+echo "🤖 Claude Code Terminal (Debian)"
+echo "• Type '"'"'claude'"'"' or '"'"'cc'"'"' to start Claude Code"
+echo "• Use '"'"'brew'"'"' to install packages (or apt-get with sudo)"
+echo "• kubectl and helm are pre-installed"
+echo ""
+EOF
+'"'"'
               fi
 
               # Start ttyd with Solarized Dark theme and MapleMono font (no auth - internal ingress only)
@@ -118,7 +133,7 @@ spec:
                 --client-option 'fontFamily="MapleMono NF, monospace"' \
                 --client-option fontSize=16 \
                 --client-option fontLigatures=true \
-                /bin/zsh
+                su - areed
           ports:
             - name: http
               containerPort: 7681
@@ -156,7 +171,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: home
-              mountPath: /root
+              mountPath: /home/areed
             - name: packages-config
               mountPath: /config
               readOnly: true

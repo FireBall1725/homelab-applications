@@ -14,6 +14,7 @@ data:
     vim
     wget
     ca-certificates
+    sudo
 
     # User-requested packages
     build-essential
