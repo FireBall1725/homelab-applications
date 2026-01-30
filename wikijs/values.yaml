@@ -67,8 +67,8 @@ mcpServer:
 
   image:
     repository: fireball1725/wikijs-mcp-server
-    tag: english-locale
-    pullPolicy: Never
+    tag: latest
+    pullPolicy: Always
 
   # MCP server port (HTTP transport)
   port: 3200
@@ -88,8 +88,7 @@ mcpServer:
     host: wikijs-mcp.k8s.firekatt.ca
 
   # Additional environment variables
-  env:
-    WIKIJS_LOCALE: "en"
+  env: {}
 
   # Resource limits
   resources:
