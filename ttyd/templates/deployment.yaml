@@ -77,6 +77,10 @@ spec:
               ZSH_THEME="robbyrussell"
               plugins=(git kubectl helm)
 
+              # Locale settings (fix Unicode character issues)
+              export LANG=C.UTF-8
+              export LC_ALL=C.UTF-8
+
               # Load oh-my-zsh
               if [ -f "$ZSH/oh-my-zsh.sh" ]; then
                 source $ZSH/oh-my-zsh.sh
