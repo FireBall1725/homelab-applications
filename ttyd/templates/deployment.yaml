@@ -46,7 +46,9 @@ spec:
                 zsh \
                 vim \
                 wget \
-                ca-certificates
+                ca-certificates \
+                build-essential \
+                neofetch
 
               # Install ttyd from GitHub releases
               TTYD_VERSION=1.7.7
