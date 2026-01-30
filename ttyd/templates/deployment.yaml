@@ -65,11 +65,6 @@ spec:
               echo "Installing Claude Code CLI..."
               npm install -g @anthropic-ai/claude-code
 
-              # Verify installation
-              which claude-code || echo "WARNING: claude-code not found in PATH"
-              ls -la /usr/local/bin/ | grep claude || echo "Not in /usr/local/bin"
-              ls -la /usr/local/lib/node_modules/@anthropic-ai/ || echo "Not in node_modules"
-
               # Setup zsh with oh-my-zsh
               export RUNZSH=no
               export CHSH=no
@@ -90,14 +85,13 @@ spec:
               export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
               export PATH="/usr/local/bin:$PATH"
 
-              # Claude Code aliases
-              alias cc='claude-code'
-              alias claude='claude-code'
+              # Claude Code alias
+              alias cc='claude'
 
               # Welcome message
               echo ""
               echo "🤖 Claude Code Terminal (Debian)"
-              echo "• Type 'claude-code' or 'cc' to start Claude Code"
+              echo "• Type 'claude' or 'cc' to start Claude Code"
               echo "• Use 'apt-get' to install packages"
               echo "• kubectl and helm are pre-installed"
               echo ""
