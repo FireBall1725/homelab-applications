@@ -48,6 +48,9 @@ spec:
               echo "Creating user areed..."
               useradd -m -s /bin/zsh areed
 
+              # Ensure home directory has correct ownership
+              chown -R areed:areed /home/areed
+
               # Configure passwordless sudo for areed
               echo "areed ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/areed
               chmod 0440 /etc/sudoers.d/areed
