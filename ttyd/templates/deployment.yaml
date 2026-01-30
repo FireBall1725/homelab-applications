@@ -70,18 +70,9 @@ spec:
               export CHSH=no
               sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended || true
 
-              # Create Claude Code config directory and MCP server configuration
-              mkdir -p /root/.config/claude
-              cat > /root/.config/claude/claude_desktop_config.json <<'EOF'
-{
-  "mcpServers": {
-    "wikijs": {
-      "url": "http://wikijs-mcp.app-wikijs.svc.cluster.local:3200",
-      "transport": "http"
-    }
-  }
-}
-EOF
+              # Configure Wiki.js MCP server using Claude CLI
+              echo "Configuring Wiki.js MCP server..."
+              claude mcp add --transport http wikijs http://wikijs-mcp.app-wikijs.svc.cluster.local:3200 || true
 
               # Create .zshrc with Claude Code setup
               cat > /root/.zshrc <<'EOF'
