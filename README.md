@@ -22,8 +22,21 @@ Each application has its own top-level folder. Applications must be lowercase an
 ├── Chart.yaml          # Helm chart with upstream dependency
 ├── Chart.lock          # Generated lock file (after helm dependency update)
 ├── values.yaml         # Configuration overrides
+├── templates/          # Custom resources (optional)
 └── charts/             # Downloaded chart dependencies (gitignored)
 ```
+
+### Helm Common Library
+
+Many applications use the **[FireLabs Helm Common Library](https://github.com/FireBall1725/firelabs-helm-common)** (v5.0.3+), a rebranded fork of the k8s-at-home common library. This provides reusable templates for deployments, services, ingresses, and persistence, reducing boilerplate.
+
+**Benefits:**
+- DRY principle - define once, reuse everywhere
+- Built-in add-ons (VPN, code-server, netshoot, promtail)
+- Consistent patterns across applications
+- Less maintenance overhead
+
+**Migration Note:** Some legacy applications still use k8s-at-home common library v4.5.2. New applications should use FireLabs common library v5.x.
 
 ## Categories & Apps
 
@@ -156,21 +169,44 @@ git push
 
 ArgoCD will automatically detect and sync the new application (if `selfHeal: true` is enabled).
 
-## Example Helm Chart
+## Example Helm Charts
 
-In the application folder, create `Chart.yaml`, use this as an example for what is required.
+### Using an Upstream Chart
 
 ```yaml
 apiVersion: v2
-name: web-server
+name: app-name
 type: application
 version: 1.0.0
 appVersion: "1.0.0"
 dependencies:
-  - name: nginx-php
-    version: 1.2.2
-    repository: https://k8s-at-home.com/charts/
+  - name: upstream-chart-name
+    version: 1.2.3
+    repository: https://helm-repo-url.com/
 ```
+
+### Using FireLabs Common Library
+
+For simple applications, use the common library pattern:
+
+```yaml
+apiVersion: v2
+name: app-name
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://firelabs-helm.pages.dev/
+```
+
+Then create `templates/common.yaml`:
+```yaml
+{{ include "common.all" . }}
+```
+
+All configuration goes in `values.yaml` using the common library schema. See the [FireLabs common library docs](https://github.com/FireBall1725/firelabs-helm-common) for available options.
 
 ## Managing Helm Dependencies
 
@@ -219,6 +255,14 @@ helm search repo <chart-name> --versions | head -10
 
 # Or check GitHub releases
 curl -sL https://api.github.com/repos/<org>/<repo>/releases/latest | jq -r '.tag_name'
+```
+
+### Add FireLabs Common Library
+
+```bash
+helm repo add firelabs https://firelabs-helm.pages.dev/
+helm repo update
+helm search repo firelabs/common --versions
 ```
 
 ### Ingress Configuration
