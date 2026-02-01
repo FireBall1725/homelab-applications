@@ -28,31 +28,48 @@ Each application has its own top-level folder. Applications must be lowercase an
 ## Categories & Apps
 
 ### Home Automation
-- [**Home Assistant**](home-assistant/) – Main smart home hub
-- [**Node-RED**](node-red/) – Logic/automation layer
-- [**ESPHome**](esphome/) – Sensor/device integration
+- [**Home Assistant**](home-assistant/) – Smart home hub
+- [**Node-RED**](node-red/) – Automation logic engine
+- [**ESPHome**](esphome/) – ESP device firmware management
+- [**Zigbee2MQTT**](zigbee2mqtt/) – Zigbee device integration
+- [**Mosquitto**](mosquitto/) – MQTT broker
+- [**Music Assistant**](music-assistant/) – Multi-room audio
 
 ### Monitoring & Observability
-- [**Prometheus**](prometheus/) – Metrics backend
-- [**Grafana**](grafana/) – Dashboards
-- [**Alertmanager**](alertmanager/) – Notifications
-- [**Cribl Edge**](cribl-edge/) – Lightweight log and metric collector
+- [**Kube Prometheus Stack**](kube-prometheus-stack/) – Prometheus, Grafana, Alertmanager
+- [**Uptime Kuma**](uptime-kuma/) – Status monitoring
+- [**Kuma Ingress Watcher**](kuma-ingress-watcher/) – Automatic ingress monitoring
+- [**Unpoller**](unpoller/) – UniFi metrics exporter
+- [**Cribl Edge**](cribl-edge/) – Log and metric collector
 
 ### Media Management
-- [**Radarr**](radarr/) – Movies
-- [**Sonarr**](sonarr/) – TV shows
-- [**Bazarr**](bazarr/) – Subtitles
-- [**Prowlarr**](prowlarr/) – Indexer management
-- [**SABnzbd**](sabnzbd/) – NZB downloader
+- [**Radarr**](radarr/) – Movie management
+- [**Sonarr**](sonarr/) – TV show management
+- [**Prowlarr**](prowlarr/) – Indexer aggregator
+- [**SABnzbd**](sabnzbd/) – Usenet downloader
+- [**Pinchflat**](pinchflat/) – YouTube archival
 - [**Tautulli**](tautulli/) – Plex analytics
+- [**Kometa**](kometa/) – Plex metadata management
+
+### Infrastructure & Core Services
+- [**CloudNativePG**](cloudnative-pg/) – PostgreSQL operator
+- [**Cert Manager**](cert-manager/) – Certificate automation
+- [**Traefik**](traefik/) – Ingress controller
+- [**Tailscale**](tailscale/) – VPN mesh network
+- [**Metrics Server**](metrics-server/) – Kubernetes resource metrics
 
 ### Networking & DNS
-- [**Blocky**](blocky/) – DNS filtering
+- [**Blocky**](blocky/) – DNS-based ad blocking
 
 ### Dashboards & Management
-- [**Headlamp**](headlamp/) – Kubernetes dashboard
-- [**Homarr**](homarr/) – Application dashboard
+- [**Headlamp**](headlamp/) – Kubernetes web UI
+- [**Homarr**](homarr/) – Service dashboard
 - [**Homer**](homer/) – Static homepage
+- [**Wiki.js**](wikijs/) – Documentation wiki
+- [**ttyd**](ttyd/) – Web-based terminal
+
+### Utilities
+- [**Error Pages**](error-pages/) – Custom error pages for Traefik
 
 ## Adding a New Application
 
@@ -118,9 +135,9 @@ Create `apps/<app-name>/app-config.json`:
 ```
 
 **Namespace Conventions:**
-- Most apps: `app-<app-name>`
-- Core infrastructure: `core-<app-name>` (e.g., `core-longhorn`, `core-argocd`)
-- System apps: `kube-system` (for cluster management tools like headlamp)
+- **ArgoCD-managed apps**: `app-<app-name>` (e.g., `app-wikijs`, `app-traefik`)
+- **Tofu-managed infrastructure**: `core-<app-name>` (e.g., `core-argocd`, `core-longhorn`)
+- **System components**: Standard namespaces (e.g., `cert-manager`, `kube-system`)
 
 ### Step 3: Commit & Push
 
@@ -337,16 +354,3 @@ kubectl get pods --all-namespaces --field-selector status.phase!=Running,status.
 kubectl get applications -n core-argocd
 ```
 
-## Notes for AI Assistants
-
-When helping with this homelab:
-
-- **Always verify** upstream chart structure before configuring (especially ingress paths)
-- **Test** `helm dependency update` succeeds before committing
-- **Update both repos**: homelab-applications (chart) + homelab-config (metadata)
-- **Never auto-push**: User handles git commits and PRs
-- **Use pbcopy** for copying tokens/secrets on macOS
-- **Timezone**: America/Toronto
-- **Storage class**: longhorn
-- **Domain pattern**: `<app-name>.k8s.firekatt.ca`
-- **Check ArgoCD** application status if deployment fails
