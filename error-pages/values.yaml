@@ -1,0 +1,53 @@
+# error-pages configuration
+# https://github.com/tarampampam/error-pages
+
+image:
+  repository: ghcr.io/tarampampam/error-pages
+  tag: "3"
+  pullPolicy: IfNotPresent
+
+# Theme configuration
+# Available themes: app-down, cats, connection, ghost, hacker-terminal,
+#                   l7, lost-in-space, noise, orient, shuffle, win98
+templateName: "lost-in-space"
+
+# Show additional details on error pages (useful for debugging)
+showDetails: false
+
+# Service configuration
+service:
+  port: 8080
+  type: ClusterIP
+
+# Resource limits
+resources:
+  requests:
+    cpu: 10m
+    memory: 16Mi
+  limits:
+    memory: 64Mi
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Replicas for high availability
+replicaCount: 2
+
+# Middleware configuration
+middleware:
+  # Name of the middleware (will be prefixed with release name)
+  name: error-pages
+  # HTTP status codes to intercept
+  # Common ranges: 400-599 (all client and server errors)
+  errorStatusCodes: "400-599"

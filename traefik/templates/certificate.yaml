@@ -1,0 +1,19 @@
+# Certificate for Traefik default TLS
+# This wildcard certificate covers all *.k8s.firekatt.ca subdomains
+# and is used as the default for ingresses that don't specify their own TLS secret
+#
+# Note: Wildcard certificates require DNS-01 challenge validation
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-default-cert
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: tls-cert
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  # Wildcard certificate covers all subdomains
+  dnsNames:
+    - "*.k8s.firekatt.ca"
+    - k8s.firekatt.ca  # Also include the apex if needed

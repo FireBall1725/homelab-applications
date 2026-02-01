@@ -1,0 +1,26 @@
+{{- if .Values.mcpServer.enabled }}
+{{- if .Values.mcpServer.ingress.enabled }}
+# Ingress for WikiJS MCP Server
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "wikijs.fullname" . }}-mcp
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "wikijs.fullname" . }}-mcp
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  ingressClassName: internal
+  rules:
+    - host: {{ .Values.mcpServer.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "wikijs.fullname" . }}-mcp
+                port:
+                  number: {{ .Values.mcpServer.port }}
+{{- end }}
+{{- end }}

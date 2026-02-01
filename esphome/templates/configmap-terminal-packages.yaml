@@ -1,0 +1,32 @@
+---
+# ConfigMap containing packages to install for the terminal sidecar
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: esphome-terminal-packages
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  packages.txt: |
+    # Core tools (always installed)
+    curl
+    git
+    zsh
+    vim
+    wget
+    ca-certificates
+    sudo
+
+    # Python tools for ESPHome development
+    python3-pip
+    python3-venv
+
+    # Development tools
+    build-essential
+    nano
+
+    # Useful utilities
+    htop
+    jq

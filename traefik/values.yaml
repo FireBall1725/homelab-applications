@@ -1,0 +1,44 @@
+# Traefik ingress controller configuration
+# https://github.com/traefik/traefik-helm-chart
+
+traefik:
+  # Deployment configuration
+  deployment:
+    replicas: 2
+
+  # Image configuration
+  image:
+    tag: v3.4.0
+
+  # IngressClass configuration
+  ingressClass:
+    enabled: true
+    isDefaultClass: true
+    name: internal
+
+  # Logging configuration
+  logs:
+    general:
+      level: INFO
+    access:
+      enabled: true
+
+  # Metrics configuration
+  metrics:
+    prometheus:
+      enabled: true
+
+  # Service configuration
+  service:
+    annotations: {}
+    spec:
+      externalTrafficPolicy: Local
+      loadBalancerIP: 10.0.1.100
+
+  # Additional CLI arguments for Traefik
+  # Apply error-pages middleware globally to all entrypoints
+  # This ensures custom error pages are shown for all HTTP errors (400-599)
+  # Reference format: namespace-middlewarename@kubernetescrd
+  additionalArguments:
+    - "--entryPoints.web.http.middlewares=core-traefik-ingress-error-pages@kubernetescrd"
+    - "--entryPoints.websecure.http.middlewares=core-traefik-ingress-error-pages@kubernetescrd"

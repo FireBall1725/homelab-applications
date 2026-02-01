@@ -1,0 +1,8 @@
+headlamp:
+  ingress:
+    enabled: true
+    hosts:
+      - host: headlamp.k8s.firekatt.ca
+        paths:
+          - path: /
+            type: Prefix

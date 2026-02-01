@@ -1,0 +1,71 @@
+# cert-manager configuration
+# https://cert-manager.io/docs/installation/helm/
+
+cert-manager:
+  # Install CRDs with Helm
+  crds:
+    enabled: true
+    keep: true
+
+  # Prometheus metrics
+  prometheus:
+    enabled: true
+    servicemonitor:
+      enabled: true
+
+  # Resource limits for homelab environment
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+  # Webhook configuration
+  webhook:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+  # CA injector configuration
+  cainjector:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 256Mi
+
+# ClusterIssuer configuration (used by templates)
+clusterIssuers:
+  # Email for Let's Encrypt notifications (REQUIRED)
+  email: "fireball@fireball1725.ca"
+
+  # Staging issuer for testing (uses Let's Encrypt staging environment)
+  staging:
+    enabled: true
+    name: letsencrypt-staging
+
+  # Production issuer for real certificates
+  production:
+    enabled: true
+    name: letsencrypt-production
+
+  # DNS-01 solver configuration (for internal-only domains)
+  dns01:
+    # Cloudflare DNS provider configuration
+    cloudflare:
+      # Name of the secret containing the Cloudflare API token
+      apiTokenSecretName: cloudflare-api-token-secret
+      # Key in the secret that contains the API token
+      apiTokenSecretKey: api-token
+    # Optional: restrict solver to specific DNS zones
+    selector:
+      dnsZones:
+        - "firekatt.ca"

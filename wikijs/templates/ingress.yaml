@@ -1,0 +1,22 @@
+# Custom Ingress for WikiJS with proper ingressClassName
+# This overrides the wiki chart's ingress (we disable it in values.yaml)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wikijs
+  labels:
+    app.kubernetes.io/name: wiki
+    app.kubernetes.io/instance: wikijs
+spec:
+  ingressClassName: internal
+  rules:
+    - host: docs.k8s.firekatt.ca
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wikijs
+                port:
+                  number: 80

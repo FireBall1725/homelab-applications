@@ -1,0 +1,80 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "kometa.fullname" . }}
+  labels:
+    {{- include "kometa.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "kometa.selectorLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          containers:
+            - name: kometa
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              args:
+                - "--run"
+                - "--read-only-config"
+              env:
+                - name: KOMETA_PLEXTOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: kometa-secrets
+                      key: plex-token
+                - name: KOMETA_TMDBKEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: kometa-secrets
+                      key: tmdb-apikey
+              volumeMounts:
+                - name: config-workdir
+                  mountPath: /config
+                - name: config
+                  mountPath: /config/config.yml
+                  subPath: config.yml
+                  readOnly: true
+                - name: movies
+                  mountPath: /config/movies.yaml
+                  subPath: movies.yaml
+                  readOnly: true
+                - name: tv
+                  mountPath: /config/tv.yaml
+                  subPath: tv.yaml
+                  readOnly: true
+                {{- if .Values.persistence.media.enabled }}
+                - name: media
+                  mountPath: {{ .Values.persistence.media.mountPath }}
+                  readOnly: true
+                {{- end }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+          volumes:
+            - name: config-workdir
+              emptyDir: {}
+            - name: config
+              configMap:
+                name: {{ include "kometa.fullname" . }}-config
+            - name: movies
+              configMap:
+                name: {{ include "kometa.fullname" . }}-movies
+            - name: tv
+              configMap:
+                name: {{ include "kometa.fullname" . }}-tv
+            {{- if .Values.persistence.media.enabled }}
+            - name: media
+              nfs:
+                server: {{ .Values.persistence.media.server }}
+                path: {{ .Values.persistence.media.path }}
+            {{- end }}

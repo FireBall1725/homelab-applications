@@ -1,0 +1,8 @@
+apiVersion: v2
+name: homer
+version: v25.05.2
+appVersion: "v25.05.2"
+dependencies:
+  - name: common
+    repository: https://library-charts.k8s-at-home.com
+    version: 4.5.2

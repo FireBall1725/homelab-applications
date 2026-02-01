@@ -1,0 +1,6 @@
+dependencies:
+- name: homarr
+  repository: https://homarr-labs.github.io/charts/
+  version: 5.3.0
+digest: sha256:df0f93fb04a28092e153ce20502620c8c93d708b668dbdb11f21888646f17a88
+generated: "2025-07-19T19:53:39.982782-04:00"

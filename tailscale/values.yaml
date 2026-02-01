@@ -1,0 +1,26 @@
+tailscale-operator:
+  # OAuth credentials are provided via sealed secret
+  # The operator will use the operator-oauth secret
+  operatorConfig:
+    # Explicitly set empty tags - OAuth client doesn't have permission for defaultTags
+    defaultTags: []
+
+# Subnet router configuration
+# This will be deployed as a separate Connector resource
+connector:
+  enabled: true
+  hostname: "homelab-k8s-router"
+
+  # Advertise these routes to Tailscale network
+  subnetRoutes:
+    - "10.244.0.0/16"  # Pod CIDR
+    - "10.0.1.0/24"    # Node network (includes K8s API)
+    - "10.96.0.0/12"   # Service CIDR (default)
+
+  # Accept routes from other subnet routers
+  acceptRoutes: true
+
+  # Tags for this connector
+  tags:
+    - "tag:k8s-connector"
+    - "tag:homelab"

@@ -1,0 +1,8 @@
+homepage:
+  ingress:
+    enabled: true
+    hosts:
+      - host: homepage.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix

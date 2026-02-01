@@ -1,0 +1,29 @@
+# CloudNativePG Operator Configuration
+# https://cloudnative-pg.io/documentation/current/
+
+cloudnative-pg:
+  # Install CRDs with Helm
+  crds:
+    create: true
+
+  # Cluster-wide operator (watches all namespaces)
+  config:
+    clusterWide: true
+
+  # Resource limits appropriate for homelab
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  # Prometheus monitoring - PodMonitor for operator metrics
+  monitoring:
+    podMonitorEnabled: true
+    # Enable Grafana dashboard ConfigMap (auto-discovered by Grafana sidecar)
+    grafanaDashboard:
+      create: true
+      sidecarLabel: grafana_dashboard
+      sidecarLabelValue: "1"

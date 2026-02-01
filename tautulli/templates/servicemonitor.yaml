@@ -1,0 +1,23 @@
+{{- if and .Values.metrics .Values.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "common.names.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.labels.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      interval: 60s
+      path: /api/v2
+      params:
+        cmd:
+          - get_server_info
+      # Note: Tautulli doesn't have native Prometheus metrics
+      # Consider using tautulli-exporter for full metrics
+{{- end }}

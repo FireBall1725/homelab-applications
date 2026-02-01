@@ -1,0 +1,54 @@
+# PostgreSQL Cluster for WikiJS
+# Managed by CloudNativePG operator
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: wikijs-postgres
+spec:
+  # Single instance for homelab (can scale to 2-3 for HA)
+  instances: 1
+
+  # PostgreSQL version
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-3
+
+  # Storage configuration
+  storage:
+    storageClass: longhorn
+    size: 10Gi
+
+  # Bootstrap configuration
+  bootstrap:
+    initdb:
+      database: wikijs
+      owner: wikijs
+      # Set locale for better text handling
+      localeCollate: 'en_US.UTF-8'
+      localeCType: 'en_US.UTF-8'
+
+  # Enable monitoring
+  monitoring:
+    enablePodMonitor: true
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Automatic minor version updates
+  primaryUpdateStrategy: unsupervised
+
+  # Backup configuration (optional - can add later)
+  # backup:
+  #   barmanObjectStore:
+  #     destinationPath: s3://bucket-name/path
+  #     s3Credentials:
+  #       accessKeyId:
+  #         name: backup-s3-creds
+  #         key: ACCESS_KEY_ID
+  #       secretAccessKey:
+  #         name: backup-s3-creds
+  #         key: SECRET_ACCESS_KEY

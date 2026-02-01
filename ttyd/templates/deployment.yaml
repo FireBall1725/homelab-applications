@@ -1,0 +1,228 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ttyd.fullname" . }}
+  namespace: {{ include "ttyd.namespace" . }}
+  labels:
+    {{- include "ttyd.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "ttyd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.pod.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "ttyd.selectorLabels" . | nindent 8 }}
+        {{- with .Values.pod.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "ttyd.serviceAccountName" . }}
+      {{- end }}
+      containers:
+        # Use node:20 (Debian-based) for apt-get support
+        - name: ttyd
+          image: node:20-bookworm
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e  # Exit on error
+
+              # Update apt and install packages from ConfigMap
+              apt-get update
+              echo "Installing packages from ConfigMap..."
+              # Read packages from ConfigMap, filter out comments and empty lines
+              grep -v '^#' /config/packages.txt | grep -v '^$' | xargs apt-get install -y --no-install-recommends
+
+              # Create areed user with home directory
+              echo "Creating user areed..."
+              useradd -m -s /bin/zsh areed
+
+              # Ensure home directory has correct ownership
+              chown -R areed:areed /home/areed
+
+              # Configure passwordless sudo for areed
+              echo "areed ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/areed
+              chmod 0440 /etc/sudoers.d/areed
+
+              # Install ttyd from GitHub releases
+              TTYD_VERSION=1.7.7
+              curl -Lo /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/${TTYD_VERSION}/ttyd.x86_64
+              chmod +x /usr/local/bin/ttyd
+
+              # Install kubectl
+              curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+              chmod +x kubectl
+              mv kubectl /usr/local/bin/
+
+              # Install helm
+              curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+              # Install Claude Code CLI globally
+              echo "Installing Claude Code CLI..."
+              npm install -g @anthropic-ai/claude-code
+
+              # Setup zsh with oh-my-zsh for areed user
+              echo "Setting up oh-my-zsh for areed..."
+              su - areed -c 'export RUNZSH=no CHSH=no && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended || true'
+
+              # Install Homebrew for areed user
+              echo "Installing Homebrew for areed..."
+              su - areed -c 'NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+
+              # Configure Wiki.js MCP server using Claude CLI (as areed)
+              echo "Configuring Wiki.js MCP server..."
+              su - areed -c 'claude mcp add --transport http wikijs http://wikijs-mcp.app-wikijs.svc.cluster.local:3200/mcp || true'
+
+              # Create default .zshrc for areed only if it doesn't exist (preserve user customizations)
+              if [ ! -f /home/areed/.zshrc ]; then
+                cat > /home/areed/.zshrc <<'ZSHRC_EOF'
+              export ZSH="$HOME/.oh-my-zsh"
+              ZSH_THEME="robbyrussell"
+              plugins=(git kubectl helm)
+
+              # Locale settings (fix Unicode character issues)
+              export LANG=C.UTF-8
+              export LC_ALL=C.UTF-8
+
+              # Load oh-my-zsh
+              if [ -f "$ZSH/oh-my-zsh.sh" ]; then
+                source $ZSH/oh-my-zsh.sh
+              fi
+
+              # Homebrew
+              eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+              # Environment
+              export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
+              export PATH="/usr/local/bin:$PATH"
+
+              # Claude Code alias
+              alias cc="claude"
+
+              # Welcome message
+              echo ""
+              echo "🤖 Claude Code Terminal (Debian)"
+              echo "• Type 'claude' or 'cc' to start Claude Code"
+              echo "• Use 'brew' to install packages (or apt-get with sudo)"
+              echo "• kubectl and helm are pre-installed"
+              echo ""
+              ZSHRC_EOF
+                chown areed:areed /home/areed/.zshrc
+              fi
+
+              # Start ttyd with Solarized Dark theme and MapleMono font (no auth - internal ingress only)
+              exec ttyd \
+                --port 7681 \
+                {{- if not .Values.ttyd.readonly }}
+                --writable \
+                {{- end }}
+                {{- if not .Values.ttyd.checkOrigin }}
+                --check-origin \
+                {{- end }}
+                --max-clients {{ .Values.ttyd.maxClients }} \
+                --terminal-type {{ .Values.ttyd.terminalType }} \
+                --client-option theme='{"background":"#002b36","foreground":"#839496","cursor":"#839496","cursorAccent":"#002b36","selectionBackground":"#073642","black":"#073642","red":"#dc322f","green":"#859900","yellow":"#b58900","blue":"#268bd2","magenta":"#d33682","cyan":"#2aa198","white":"#eee8d5","brightBlack":"#002b36","brightRed":"#cb4b16","brightGreen":"#586e75","brightYellow":"#657b83","brightBlue":"#839496","brightMagenta":"#6c71c4","brightCyan":"#93a1a1","brightWhite":"#fdf6e3"}' \
+                --client-option 'fontFamily="MapleMono NF, monospace"' \
+                --client-option fontSize=16 \
+                --client-option fontLigatures=true \
+                su - areed
+          ports:
+            - name: http
+              containerPort: 7681
+              protocol: TCP
+          env:
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.secretName }}
+                  key: PASSWORD
+            {{- if .Values.claudeCode.enabled }}
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.claudeCode.apiKeySecret }}
+                  key: ANTHROPIC_API_KEY
+            {{- end }}
+            - name: TERM
+              value: {{ .Values.ttyd.terminalType }}
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 300
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 300
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: home
+              mountPath: /home/areed
+            - name: packages-config
+              mountPath: /config
+              readOnly: true
+            {{- if .Values.rbac.create }}
+            - name: kube-api-access
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: home
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "ttyd.fullname" . }}-home
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: packages-config
+          configMap:
+            name: {{ include "ttyd.fullname" . }}-packages
+        {{- if .Values.rbac.create }}
+        - name: kube-api-access
+          projected:
+            defaultMode: 420
+            sources:
+              - serviceAccountToken:
+                  expirationSeconds: 3607
+                  path: token
+              - configMap:
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+                  name: kube-root-ca.crt
+              - downwardAPI:
+                  items:
+                    - fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+                      path: namespace
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ttyd.fullname" . }}-packages
+  namespace: {{ include "ttyd.namespace" . }}
+  labels:
+    {{- include "ttyd.labels" . | nindent 4 }}
+data:
+  packages.txt: |
+    # Core tools (always installed)
+    curl
+    git
+    zsh
+    vim
+    wget
+    ca-certificates
+    sudo
+
+    # User-requested packages
+    build-essential
+    neofetch
+    nano
+
+    # Add more packages below (one per line)
+    # Example:
+    # python3-pip
+    # htop
+    # tmux

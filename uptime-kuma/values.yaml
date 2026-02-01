@@ -1,0 +1,54 @@
+uptime-kuma:
+  # Use Deployment mode for easier management
+  useDeploy: true
+
+  image:
+    repository: louislam/uptime-kuma
+    tag: "1.23.17-debian"
+    pullPolicy: IfNotPresent
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 3001
+
+  # Ingress configuration
+  ingress:
+    enabled: true
+    className: internal
+    annotations: {}
+    hosts:
+      - host: status.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - status.k8s.firekatt.ca
+
+  # Persistent storage
+  volume:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 4Gi
+    storageClassName: longhorn
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+  # Security context - Leave default to allow container to manage its own permissions
+  podSecurityContext: {}
+  securityContext: {}
+
+  # Prometheus monitoring
+  # NOTE: Uptime Kuma doesn't expose a /metrics endpoint for scraping
+  # It only supports pushing metrics to Prometheus Pushgateway
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s

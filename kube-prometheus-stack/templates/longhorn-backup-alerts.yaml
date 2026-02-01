@@ -1,0 +1,145 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: longhorn-backup-alerts
+  namespace: app-monitoring
+  labels:
+    app: kube-prometheus-stack
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: longhorn-backup
+      rules:
+        # Alert when a backup is in error state (state == 4)
+        - alert: LonghornBackupFailed
+          expr: longhorn_backup_state == 4
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Longhorn backup failed for volume {{ "{{" }} $labels.volume {{ "}}" }}"
+            description: |
+              Backup {{ "{{" }} $labels.backup {{ "}}" }} for volume {{ "{{" }} $labels.volume {{ "}}" }} is in error state.
+              Recurring job: {{ "{{" }} $labels.recurring_job {{ "}}" }}
+              Check Longhorn UI for details and resolve the issue.
+            runbook_url: "https://docs.k8s.firekatt.ca/homelab/applications/longhorn#troubleshooting-backup-failures"
+
+        # Alert when backup is stuck in progress for too long
+        - alert: LonghornBackupStuck
+          expr: longhorn_backup_state == 2
+          for: 2h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn backup stuck for volume {{ "{{" }} $labels.volume {{ "}}" }}"
+            description: |
+              Backup {{ "{{" }} $labels.backup {{ "}}" }} for volume {{ "{{" }} $labels.volume {{ "}}" }} has been in progress for over 2 hours.
+              This may indicate a problem with the backup target or network connectivity.
+              Recurring job: {{ "{{" }} $labels.recurring_job {{ "}}" }}
+            runbook_url: "https://docs.k8s.firekatt.ca/homelab/applications/longhorn#troubleshooting-backup-failures"
+
+        # Alert when no backups exist for volumes that should have them
+        # This checks if volumes with the backup label haven't had a successful backup recently
+        - alert: LonghornBackupMissing
+          expr: |
+            (
+              count(longhorn_volume_state{pvc=~".+"} * on(volume) group_left()
+                label_replace(kube_persistentvolume_labels{label_recurring_job_longhorn_io_daily_backup_r2="enabled"}, "volume", "$1", "persistentvolume", "(.+)")
+              ) or vector(0)
+            )
+            >
+            (count(longhorn_backup_state == 3) or vector(0))
+          for: 30h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Some volumes configured for backup may be missing recent backups"
+            description: |
+              The number of volumes configured for daily backups exceeds the number of completed backups.
+              Check Longhorn UI to verify all expected volumes have recent backups.
+              Expected backup schedule: Daily at 2:00 AM UTC
+            runbook_url: "https://docs.k8s.firekatt.ca/homelab/applications/longhorn#troubleshooting-backup-failures"
+
+        # Alert when backup target is unreachable (no backup metrics at all)
+        - alert: LonghornBackupTargetUnreachable
+          expr: absent(longhorn_backup_state)
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Longhorn backup metrics unavailable"
+            description: |
+              No Longhorn backup metrics are being reported.
+              This could indicate the backup target (Cloudflare R2) is unreachable,
+              or there are no backups configured.
+              Check Longhorn settings and verify R2 connectivity.
+            runbook_url: "https://docs.k8s.firekatt.ca/homelab/applications/longhorn#troubleshooting-backup-failures"
+
+        # Alert on degraded volumes (robustness != healthy)
+        - alert: LonghornVolumeDegraded
+          expr: longhorn_volume_robustness{pvc=~".+"} == 2
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn volume {{ "{{" }} $labels.pvc {{ "}}" }} is degraded"
+            description: |
+              Volume {{ "{{" }} $labels.volume {{ "}}" }} (PVC: {{ "{{" }} $labels.pvc {{ "}}" }}) in namespace {{ "{{" }} $labels.pvc_namespace {{ "}}" }} is in degraded state.
+              Some replicas may be unhealthy. Check Longhorn UI for replica status.
+              Node: {{ "{{" }} $labels.node {{ "}}" }}
+
+        # Alert on faulted volumes (critical - data may be at risk)
+        - alert: LonghornVolumeFaulted
+          expr: longhorn_volume_robustness{pvc=~".+"} == 3
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Longhorn volume {{ "{{" }} $labels.pvc {{ "}}" }} is FAULTED"
+            description: |
+              CRITICAL: Volume {{ "{{" }} $labels.volume {{ "}}" }} (PVC: {{ "{{" }} $labels.pvc {{ "}}" }}) in namespace {{ "{{" }} $labels.pvc_namespace {{ "}}" }} is FAULTED.
+              Data may be at risk. Immediate attention required.
+              Check Longhorn UI immediately and consider restoring from backup.
+              Node: {{ "{{" }} $labels.node {{ "}}" }}
+            runbook_url: "https://docs.k8s.firekatt.ca/homelab/applications/longhorn#disaster-recovery"
+
+        # Alert when total backup size is growing too fast (cost control)
+        - alert: LonghornBackupSizeHigh
+          expr: sum(longhorn_backup_actual_size_bytes) > 8e9
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn backup storage exceeds 8GB"
+            description: |
+              Total backup storage is {{ "{{" }} $value | humanize1024 {{ "}}" }}.
+              This is approaching the 10GB free tier limit for Cloudflare R2.
+              Consider reviewing backup retention policies or cleaning up old backups.
+
+    - name: longhorn-health
+      rules:
+        # Alert when Longhorn node is not ready
+        - alert: LonghornNodeNotReady
+          expr: longhorn_node_status{condition="ready"} != 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn node {{ "{{" }} $labels.node {{ "}}" }} is not ready"
+            description: |
+              Longhorn node {{ "{{" }} $labels.node {{ "}}" }} has been not ready for more than 5 minutes.
+              This may affect volume scheduling and data availability.
+
+        # Alert on low disk space on Longhorn nodes
+        - alert: LonghornNodeDiskSpaceLow
+          expr: |
+            (longhorn_node_storage_capacity_bytes - longhorn_node_storage_usage_bytes)
+            / longhorn_node_storage_capacity_bytes < 0.15
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn node {{ "{{" }} $labels.node {{ "}}" }} disk space low"
+            description: |
+              Longhorn node {{ "{{" }} $labels.node {{ "}}" }} has less than 15% disk space remaining.
+              Consider expanding storage or cleaning up unused volumes.

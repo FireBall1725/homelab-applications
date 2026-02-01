@@ -1,0 +1,19 @@
+homarr:
+  image:
+    tag: v1.51.0
+
+  env:
+    TZ: "America/Toronto"
+
+  persistence:
+    homarrDatabase:
+      enabled: true
+      storageClassName: "longhorn"
+
+  ingress:
+    enabled: true
+    hosts:
+      - host: home.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix

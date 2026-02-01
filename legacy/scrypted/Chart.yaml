@@ -1,0 +1,11 @@
+---
+apiVersion: v2
+description: Scrypted
+name: scrypted
+version: 1.0.0
+appVersion: 1.0.0
+kubeVersion: ">=1.16.0-0"
+dependencies:
+  - name: scrypted
+    repository: https://k8s-at-home.com/charts/
+    version: 0.3.2

@@ -1,0 +1,88 @@
+# Schedule for CronJob (daily at midnight UTC)
+schedule: "0 0 * * *"
+
+# Container image
+image:
+  repository: kometateam/kometa
+  tag: v2.1.0
+  pullPolicy: IfNotPresent
+
+# Persistence configuration
+persistence:
+  media:
+    enabled: true
+    mountPath: /media
+    server: 10.0.1.241
+    path: /volume2/media
+
+# Resource limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+# Kometa configuration files
+# IMPORTANT: Replace YOUR_*_HERE values with actual tokens
+# For production, use Sealed Secrets for sensitive data (see SECRETS.md)
+config: |
+  libraries:
+    Movies:
+      library_name: Movies  # Name of your Movies library in Plex
+      collection_files:
+        - file: /config/movies.yaml
+    TV Shows:
+      library_name: TV Shows  # Name of your TV Shows library in Plex
+      collection_files:
+        - file: /config/tv.yaml
+
+  plex:
+    url: http://10.0.0.126:32400
+    token: <<plextoken>>
+
+  tmdb:
+    apikey: <<tmdbkey>>
+
+  settings:
+    cache: true
+    cache_expiration: 60
+    asset_directory: /config/assets
+    asset_folders: true
+    asset_depth: 0
+    create_asset_folders: false
+    prioritize_assets: false
+    dimensional_asset_rename: false
+    download_url_assets: false
+    show_missing_season_assets: false
+    show_missing_episode_assets: false
+    show_asset_not_needed: true
+    sync_mode: append
+    minimum_items: 1
+    delete_below_minimum: false
+    delete_not_scheduled: false
+    run_order:
+      - operations
+      - metadata
+      - collections
+      - overlays
+    verify_ssl: true
+    check_nightly: false
+
+movieConfig: |
+  collections:
+    Top Rated:
+      imdb_chart: top_movies
+      sort_title: "!001_Top Rated"
+      sync_mode: sync
+      collection_order: custom
+      summary: Top rated movies on IMDb
+
+tvConfig: |
+  collections:
+    Top Rated:
+      imdb_chart: top_shows
+      sort_title: "!001_Top Rated"
+      sync_mode: sync
+      collection_order: custom
+      summary: Top rated TV shows on IMDb

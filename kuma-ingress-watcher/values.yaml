@@ -1,0 +1,64 @@
+# kuma-ingress-watcher configuration
+# https://github.com/SQuent/kuma-ingress-watcher
+
+image:
+  repository: squent/kuma-ingress-watcher
+  tag: "1.4.1"
+  pullPolicy: IfNotPresent
+
+# Uptime Kuma connection settings
+# URL should point to the internal service endpoint
+uptimeKuma:
+  # Internal cluster service URL for Uptime Kuma
+  url: "http://uptime-kuma.app-uptime-kuma.svc.cluster.local:3001"
+  # Credentials are stored in a sealed secret
+  existingSecret: "kuma-ingress-watcher-credentials"
+
+# Controller settings
+controller:
+  # Watch standard Kubernetes Ingress resources
+  watchIngress: true
+  # Watch Traefik IngressRoute CRDs (this cluster uses Traefik)
+  watchIngressRoutes: false
+  # Interval in seconds between checks
+  watchInterval: 30
+  # Use Traefik v3 CRD API group
+  useTraefikV3CrdGroup: false
+  # Enable file-based monitor configuration
+  enableFileMonitor: false
+
+# Environment variables
+# TZ should match the homelab timezone
+env:
+  TZ: "America/Toronto"
+
+# Resource limits
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+# Pod security context
+# Note: The upstream image runs as root and uses poetry from /root/.local
+# We cannot use runAsNonRoot without a custom image
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Service account configuration
+serviceAccount:
+  # Create a dedicated service account
+  create: true
+  name: "kuma-ingress-watcher"
+  annotations: {}
+
+# RBAC configuration
+rbac:
+  # Create ClusterRole and ClusterRoleBinding for watching ingresses
+  create: true

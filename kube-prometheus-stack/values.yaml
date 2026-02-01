@@ -1,0 +1,299 @@
+kube-prometheus-stack:
+  # Install Prometheus Operator CRDs
+  # Disabled because CRDs are too large for ArgoCD client-side apply
+  # CRDs are pre-installed manually with server-side apply
+  crds:
+    enabled: false
+
+  # Grafana configuration
+  grafana:
+    enabled: true
+    adminPassword: admin  # Change this! See SECRETS.md for sealing
+
+    ingress:
+      enabled: true
+      hosts:
+        - grafana.k8s.firekatt.ca
+      path: /
+      pathType: Prefix
+
+    # Persist Grafana dashboards and data
+    persistence:
+      enabled: true
+      storageClassName: longhorn
+      size: 10Gi
+
+    # Pre-load Kubernetes dashboards
+    defaultDashboardsEnabled: true
+    defaultDashboardsTimezone: America/Toronto
+
+    # Reasonable resource limits for homelab
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+
+  # Prometheus configuration
+  prometheus:
+    ingress:
+      enabled: true
+      hosts:
+        - prometheus.k8s.firekatt.ca
+      paths:
+        - /
+      pathType: Prefix
+
+    prometheusSpec:
+      # Data retention
+      retention: 30d
+      retentionSize: "45GB"
+
+      # Persistent storage for metrics
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 50Gi
+
+      # Resource limits
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          memory: 2Gi
+
+      # Scrape interval
+      scrapeInterval: 30s
+      evaluationInterval: 30s
+
+      # Enable pod and service monitors across all namespaces
+      podMonitorSelectorNilUsesHelmValues: false
+      serviceMonitorSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+
+  # Alertmanager configuration
+  alertmanager:
+    enabled: true
+
+    ingress:
+      enabled: true
+      hosts:
+        - alertmanager.k8s.firekatt.ca
+      paths:
+        - /
+      pathType: Prefix
+
+    alertmanagerSpec:
+      # Persist Alertmanager data
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 5Gi
+
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+
+    # Alertmanager configuration for routing alerts to Discord
+    config:
+      global:
+        resolve_timeout: 5m
+        slack_api_url: "https://discord.com/api/webhooks"  # Base URL for Discord webhooks
+
+      # Inhibition rules to prevent redundant alerts
+      inhibit_rules:
+        - source_matchers:
+            - severity = critical
+          target_matchers:
+            - severity =~ warning|info
+          equal:
+            - namespace
+            - alertname
+        - source_matchers:
+            - severity = warning
+          target_matchers:
+            - severity = info
+          equal:
+            - namespace
+            - alertname
+        - source_matchers:
+            - alertname = InfoInhibitor
+          target_matchers:
+            - severity = info
+          equal:
+            - namespace
+        - target_matchers:
+            - alertname = InfoInhibitor
+
+      # Receivers for different notification channels
+      receivers:
+        # Null receiver for alerts we want to silence
+        - name: "null"
+
+        # Critical alerts - backup failures, cluster issues
+        - name: "discord-critical"
+          slack_configs:
+            - api_url: "https://discord.com/api/webhooks/1466795538396745805/0cuQTcggLYgESQgpOc-vxTlSBZWhZBayLkzGGKfmrJ7_Oes8AveAMbRUoinNUbVNWLgs/slack"
+              send_resolved: true
+              title: "🚨 {{ .GroupLabels.alertname }}"
+              text: |-
+                {{ range .Alerts }}
+                **Alert:** {{ .Labels.alertname }}
+                **Severity:** {{ .Labels.severity }}
+                {{ if .Labels.namespace }}**Namespace:** {{ .Labels.namespace }}{{ end }}
+                {{ if .Labels.pod }}**Pod:** {{ .Labels.pod }}{{ end }}
+                {{ if .Annotations.summary }}**Summary:** {{ .Annotations.summary }}{{ end }}
+                {{ if .Annotations.description }}**Description:** {{ .Annotations.description }}{{ end }}
+                {{ end }}
+
+        # Warning alerts - high resource usage, degraded state
+        - name: "discord-warning"
+          slack_configs:
+            - api_url: "https://discord.com/api/webhooks/1466795674455642307/luZXjQIaLQKa8w-OaMoFFow4ljUlyiph2k9wTb6IR4suQT7e1XZaVDslvHGG_dJC3-Pk/slack"
+              send_resolved: true
+              title: "⚠️ {{ .GroupLabels.alertname }}"
+              text: |-
+                {{ range .Alerts }}
+                **Alert:** {{ .Labels.alertname }}
+                **Severity:** {{ .Labels.severity }}
+                {{ if .Labels.namespace }}**Namespace:** {{ .Labels.namespace }}{{ end }}
+                {{ if .Labels.pod }}**Pod:** {{ .Labels.pod }}{{ end }}
+                {{ if .Annotations.summary }}**Summary:** {{ .Annotations.summary }}{{ end }}
+                {{ if .Annotations.description }}**Description:** {{ .Annotations.description }}{{ end }}
+                {{ end }}
+
+        # Info alerts - backup completed, routine notifications
+        - name: "discord-info"
+          slack_configs:
+            - api_url: "https://discord.com/api/webhooks/1466795853988499657/5EgLUVunDCexAiwfGgHLUfEkPqztzVg-pzAgqqz0aiR1xMphQCDVJ6ktu53ecS8iFzxy/slack"
+              send_resolved: true
+              title: "ℹ️ {{ .GroupLabels.alertname }}"
+              text: |-
+                {{ range .Alerts }}
+                **Alert:** {{ .Labels.alertname }}
+                **Severity:** {{ .Labels.severity }}
+                {{ if .Labels.namespace }}**Namespace:** {{ .Labels.namespace }}{{ end }}
+                {{ if .Labels.pod }}**Pod:** {{ .Labels.pod }}{{ end }}
+                {{ if .Annotations.summary }}**Summary:** {{ .Annotations.summary }}{{ end }}
+                {{ if .Annotations.description }}**Description:** {{ .Annotations.description }}{{ end }}
+                {{ end }}
+
+      # Routing tree for alerts
+      route:
+        group_by:
+          - namespace
+          - alertname
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+        receiver: "discord-warning"  # Default receiver
+
+        routes:
+          # Silence Watchdog alerts (used for testing alertmanager is alive)
+          - matchers:
+              - alertname = "Watchdog"
+            receiver: "null"
+
+          # Silence InfoInhibitor
+          - matchers:
+              - alertname = "InfoInhibitor"
+            receiver: "null"
+
+          # Critical severity alerts
+          - matchers:
+              - severity = critical
+            receiver: "discord-critical"
+            continue: false
+
+          # Warning severity alerts
+          - matchers:
+              - severity = warning
+            receiver: "discord-warning"
+            continue: false
+
+          # Info severity alerts
+          - matchers:
+              - severity = info
+            receiver: "discord-info"
+            continue: false
+
+      # Templates for alert formatting
+      templates:
+        - /etc/alertmanager/config/*.tmpl
+
+    # Custom template for better ntfy notification formatting
+    templateFiles:
+      ntfy.tmpl: |-
+        {{ define "ntfy.title" -}}
+        [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}
+        {{- end }}
+
+        {{ define "ntfy.text" -}}
+        {{ range .Alerts }}
+        Alert: {{ .Labels.alertname }}
+        Severity: {{ .Labels.severity }}
+        {{ if .Labels.namespace }}Namespace: {{ .Labels.namespace }}{{ end }}
+        {{ if .Labels.pod }}Pod: {{ .Labels.pod }}{{ end }}
+        {{ if .Labels.volume }}Volume: {{ .Labels.volume }}{{ end }}
+        {{ if .Annotations.summary }}Summary: {{ .Annotations.summary }}{{ end }}
+        {{ if .Annotations.description }}Description: {{ .Annotations.description }}{{ end }}
+        {{ end }}
+        {{- end }}
+
+  # Prometheus Operator configuration
+  prometheusOperator:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+
+  # Node Exporter - collects host metrics from all nodes
+  nodeExporter:
+    enabled: true
+
+  # kube-state-metrics - exposes cluster-level metrics
+  kubeStateMetrics:
+    enabled: true
+
+  # Default rules for alerting
+  defaultRules:
+    create: true
+    rules:
+      alertmanager: true
+      etcd: true
+      configReloaders: true
+      general: true
+      k8s: true
+      kubeApiserverAvailability: true
+      kubeApiserverSlos: true
+      kubelet: true
+      kubeProxy: true
+      kubePrometheusGeneral: true
+      kubePrometheusNodeRecording: true
+      kubernetesApps: true
+      kubernetesResources: true
+      kubernetesStorage: true
+      kubernetesSystem: true
+      kubeScheduler: true
+      kubeStateMetrics: true
+      network: true
+      node: true
+      nodeExporterAlerting: true
+      nodeExporterRecording: true
+      prometheus: true
+      prometheusOperator: true

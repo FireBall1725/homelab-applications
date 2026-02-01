@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: living-room-dashboard
+  namespace: home-assistant
+  labels:
+    app: living-room-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: living-room-dashboard
+  template:
+    metadata:
+      labels:
+        app: living-room-dashboard
+    spec:
+      securityContext:
+        fsGroup: 1000         # Ensures volume permissions are writable for the container's group
+      containers:
+        - name: ha-fusion
+          image: ghcr.io/matt8707/ha-fusion:2024.10.1
+          ports:
+            - containerPort: 5050
+          env:
+            - name: TZ
+              value: "America/Toronto"
+            - name: HASS_URL
+              value: "https://ha.k3s.firekatt.ca"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+        - name: vscode-server
+          image: codercom/code-server:latest
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: data
+              mountPath: /workspace
+          args:
+            - --auth=none
+            - --user-data-dir=/workspace
+            - --extensions-dir=/workspace/.vscode/extensions
+          workingDir: /workspace
+          securityContext:
+            runAsUser: 1000       # Ensure this matches the user ID of the container process
+            runAsGroup: 1000      # Ensure this matches the group ID of the container process
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: living-room-dashboard-data

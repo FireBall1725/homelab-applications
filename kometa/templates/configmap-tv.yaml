@@ -1,0 +1,11 @@
+{{- if .Values.tvConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kometa.fullname" . }}-tv
+  labels:
+    {{- include "kometa.labels" . | nindent 4 }}
+data:
+  tv.yaml: |
+{{ .Values.tvConfig | indent 4 }}
+{{- end }}

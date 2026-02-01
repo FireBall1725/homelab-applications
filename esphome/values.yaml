@@ -1,0 +1,236 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/geek-cookbook/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  # -- image repository
+  repository: ghcr.io/esphome/esphome
+  # -- image tag
+  tag: ""
+  # -- image pull policy
+  pullPolicy: IfNotPresent
+
+# -- environment variables.
+# @default -- See below
+env:
+  # -- Set the container timezone
+  TZ: UTC
+
+hostNetwork: true
+
+# -- Configures service settings for the chart.
+# @default -- See values.yaml
+service:
+  main:
+    ports:
+      http:
+        port: 6052
+  terminal:
+    enabled: true
+    type: ClusterIP
+    ports:
+      terminal:
+        enabled: true
+        port: 7681
+        protocol: TCP
+        targetPort: 7681
+
+ingress:
+  # -- Enable and configure ingress settings for the chart under this key.
+  # @default -- See values.yaml
+  main:
+    enabled: true
+    hosts:
+      - host: esphome.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+  # -- Ingress for terminal sidecar
+  terminal:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: esphometerminal.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: esphome-terminal
+              port: 7681
+    tls: []
+
+# -- Configure persistence settings for the chart under this key.
+# @default -- See values.yaml
+persistence:
+  config:
+    enabled: true
+    mountPath: /config
+    accessMode: ReadWriteOnce
+    size: 10Gi
+  # -- Persistence for terminal home directory
+  terminal-home:
+    enabled: true
+    type: pvc
+    mountPath: /home/areed
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    storageClass: longhorn
+  # -- ConfigMap volume for terminal packages list
+  terminal-packages:
+    enabled: true
+    type: configMap
+    name: esphome-terminal-packages
+    mountPath: /terminal-config
+    readOnly: true
+
+initContainers:
+  update-volume-permission:
+    name: update-volume-permission
+    image: busybox
+    command: ["sh", "-c", "chown -R 568:568 /config"]
+    volumeMounts:
+      - name: config
+        mountPath: /config
+    securityContext:
+      runAsUser: 0
+
+addons:
+  codeserver:
+    enabled: true
+    volumeMounts:
+      - name: config
+        mountPath: /config
+    ingress:
+      enabled: true
+      hosts:
+        - host: esphomecode.k8s.firekatt.ca
+          paths:
+            - path: /
+              pathType: Prefix
+
+# -- Terminal sidecar for Claude Code integration
+# This adds a ttyd-based terminal with Claude Code CLI pre-installed
+additionalContainers:
+  terminal:
+    name: terminal
+    image: node:20-bookworm
+    imagePullPolicy: IfNotPresent
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+
+        # Update apt and install packages from ConfigMap
+        apt-get update
+        echo "Installing packages from ConfigMap..."
+        grep -v '^#' /terminal-config/packages.txt | grep -v '^$' | xargs apt-get install -y --no-install-recommends
+
+        # Create areed user with home directory
+        echo "Creating user areed..."
+        useradd -m -s /bin/zsh areed
+
+        # Ensure home directory has correct ownership
+        chown -R areed:areed /home/areed
+
+        # Configure passwordless sudo for areed
+        echo "areed ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/areed
+        chmod 0440 /etc/sudoers.d/areed
+
+        # Install ttyd from GitHub releases
+        TTYD_VERSION=1.7.7
+        curl -Lo /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/${TTYD_VERSION}/ttyd.x86_64
+        chmod +x /usr/local/bin/ttyd
+
+        # Install Claude Code CLI globally
+        echo "Installing Claude Code CLI..."
+        npm install -g @anthropic-ai/claude-code
+
+        # Setup zsh with oh-my-zsh for areed user
+        echo "Setting up oh-my-zsh for areed..."
+        su - areed -c 'export RUNZSH=no CHSH=no && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended || true'
+
+        # Configure Wiki.js MCP server using Claude CLI (as areed)
+        echo "Configuring Wiki.js MCP server..."
+        su - areed -c 'claude mcp add --transport http wikijs http://wikijs-mcp.app-wikijs.svc.cluster.local:3200/mcp || true'
+
+        # Create default .zshrc for areed only if it doesn't exist
+        if [ ! -f /home/areed/.zshrc ]; then
+          cat > /home/areed/.zshrc <<'ZSHRC_EOF'
+        export ZSH="$HOME/.oh-my-zsh"
+        ZSH_THEME="robbyrussell"
+        plugins=(git)
+
+        # Locale settings
+        export LANG=C.UTF-8
+        export LC_ALL=C.UTF-8
+
+        # Load oh-my-zsh
+        if [ -f "$ZSH/oh-my-zsh.sh" ]; then
+          source $ZSH/oh-my-zsh.sh
+        fi
+
+        # Environment
+        export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
+        export PATH="/usr/local/bin:$PATH"
+
+        # ESPHome config directory
+        export ESPHOME_CONFIG=/config
+
+        # Claude Code alias
+        alias cc="claude"
+
+        # ESPHome aliases
+        alias esh="cd /config && esphome"
+
+        # Welcome message
+        echo ""
+        echo "Claude Code Terminal (ESPHome)"
+        echo "* Type 'claude' or 'cc' to start Claude Code"
+        echo "* ESPHome config is at /config"
+        echo "* Use 'cd /config' to navigate to configs"
+        echo ""
+        ZSHRC_EOF
+          chown areed:areed /home/areed/.zshrc
+        fi
+
+        # Start ttyd with Solarized Dark theme
+        exec ttyd \
+          --port 7681 \
+          --writable \
+          --check-origin \
+          --max-clients 5 \
+          --terminal-type xterm-256color \
+          --client-option theme='{"background":"#002b36","foreground":"#839496","cursor":"#839496","cursorAccent":"#002b36","selectionBackground":"#073642","black":"#073642","red":"#dc322f","green":"#859900","yellow":"#b58900","blue":"#268bd2","magenta":"#d33682","cyan":"#2aa198","white":"#eee8d5","brightBlack":"#002b36","brightRed":"#cb4b16","brightGreen":"#586e75","brightYellow":"#657b83","brightBlue":"#839496","brightMagenta":"#6c71c4","brightCyan":"#93a1a1","brightWhite":"#fdf6e3"}' \
+          --client-option 'fontFamily="MapleMono NF, monospace"' \
+          --client-option fontSize=16 \
+          --client-option fontLigatures=true \
+          su - areed
+    # Note: Port 7681 is already exposed via service.terminal definition
+    # Do not define ports here with hostNetwork: true to avoid duplicate hostPort error
+    env:
+      - name: ANTHROPIC_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: esphome-terminal-anthropic-key
+            key: ANTHROPIC_API_KEY
+      - name: TERM
+        value: xterm-256color
+    volumeMounts:
+      - name: config
+        mountPath: /config
+      - name: terminal-packages
+        mountPath: /terminal-config
+        readOnly: true
+      - name: terminal-home
+        mountPath: /home/areed
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi

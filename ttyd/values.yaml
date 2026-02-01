@@ -1,0 +1,97 @@
+# ttyd with Claude Code configuration
+# Lightweight web terminal for homelab management
+
+namespace: app-ttyd
+
+image:
+  repository: tsl0922/ttyd
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Authentication - password stored in sealed secret
+auth:
+  # Sealed secret name containing the PASSWORD
+  secretName: ttyd-auth
+  # Username for basic auth
+  username: admin
+
+# Resource limits appropriate for homelab
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Persistence for home directory
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: longhorn
+  accessMode: ReadWriteOnce
+
+# Ingress configuration
+ingress:
+  enabled: true
+  host: terminal.k8s.firekatt.ca
+  ingressClassName: internal
+  annotations: {}
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 7681
+
+# Claude Code configuration
+claudeCode:
+  # Enable Claude Code CLI installation
+  enabled: true
+  # Anthropic API key stored in sealed secret
+  apiKeySecret: ttyd-anthropic-key
+
+# Shell to use (zsh preferred)
+shell: /bin/zsh
+
+# ttyd command line options
+ttyd:
+  # Allow write access (needed for interactive terminal)
+  readonly: false
+  # Check origin for CORS
+  checkOrigin: false
+  # Max clients (0 = unlimited)
+  maxClients: 5
+  # Terminal type
+  terminalType: xterm-256color
+
+# Git configuration for workspace
+git:
+  user:
+    name: ""
+    email: ""
+
+# RBAC configuration for cluster access
+rbac:
+  # Create ClusterRole and ClusterRoleBinding
+  create: true
+  # Cluster role rules - admin access for homelab management
+  rules:
+    - apiGroups: ["*"]
+      resources: ["*"]
+      verbs: ["*"]
+
+# Service account
+serviceAccount:
+  create: true
+  name: ttyd
+  annotations: {}
+
+# Pod configuration
+pod:
+  annotations: {}
+  labels: {}
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}

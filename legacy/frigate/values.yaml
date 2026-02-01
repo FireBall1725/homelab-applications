@@ -1,0 +1,198 @@
+frigate:
+  #
+  # IMPORTANT NOTE
+  #
+  # This chart inherits from our common library chart. You can check the default values/options here:
+  # https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common/values.yaml
+  #
+
+  image:
+    # -- image repository
+    repository: ghcr.io/blakeblackshear/frigate
+    # -- image tag
+    # @default -- chart.appVersion
+    tag: stable
+    # -- image pull policy
+    pullPolicy: IfNotPresent
+
+  # -- environment variables. See [docs](https://blakeblackshear.github.io/frigate/) for more details.
+  # @default -- See below
+  env:
+    # -- Set the container timezone
+    - name: TZ
+      value: "UTC"
+    - name: FRIGATE_RTSP_PASSWORD
+      value: ""
+    - name: PLUS_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: frigate-plus
+          key: apikey
+
+  # -- Configures service settings for the chart.
+  # @default -- See values.yaml
+  service:
+    main:
+      ports:
+        http:
+          port: 5000
+        rtmp:
+          enabled: true
+          port: 1935
+          protocol: TCP
+          targetPort: 1935
+
+  ingress:
+    # -- Enable and configure ingress settings for the chart under this key.
+    # @default -- See values.yaml
+    main:
+      enabled: true
+      hosts:
+      - host: frigate.k3s.firekatt.ca
+        paths:
+        - path: /
+          pathType: Prefix
+
+  securityContext:
+    # -- (bool) Privileged securityContext may be required if USB devices are accessed directly through the host machine
+    privileged: true
+
+  # -- Configure persistence settings for the chart under this key.
+  # @default -- See values.yaml
+  persistence:
+    data:
+      mountPath: /data
+      accessMode: ReadWriteOnce
+      enabled: true
+      readOnly: false
+      storageClass: longhorn
+      retain: true
+      size: 8Gi
+      type: pvc
+    media:
+      enabled: false
+      mountPath: /media
+      type: nfs
+      server: 10.0.1.242
+      path: /volume1/media
+    # -- Configure a hostPathMount to mount a USB device in the container.
+    # @default -- See values.yaml
+    usb:
+      enabled: true
+      type: hostPath
+      hostPath: /dev/bus/usb
+    # -- Configure a temporary cache. See [docs](https://blakeblackshear.github.io/frigate/) for more details..
+    # @default -- See values.yaml
+    cache:
+      enabled: true
+      type: emptyDir
+      medium: Memory
+      sizeLimit: 1Gi
+      mountPath: /dev/shm
+
+  # -- Affinity constraint rules to place the Pod on a specific node.
+  # [[ref]](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)
+  affinity:
+  #   nodeAffinity:
+  #     requiredDuringSchedulingIgnoredDuringExecution:
+  #       nodeSelectorTerms:
+  #       - matchExpressions:
+  #         - key: app
+  #           operator: In
+  #           values:
+  #           - coral-tpu
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - k3s-node-01.firekatt.ca
+
+  # -- Configure the resource requests and/or limits for the Pod
+  resources: {}
+    # requests:
+    #   # Hardware acceleration using an Intel iGPU w/ QuickSync and
+    #   # using intel-gpu-plugin (https://github.com/intel/intel-device-plugins-for-kubernetes)
+    #   gpu.intel.com/i915: 1
+    #   cpu: 200m
+    #   memory: 256Mi
+    # limits:
+    #   # Hardware acceleration using an Intel iGPU w/ QuickSync and
+    #   # using intel-gpu-plugin (https://github.com/intel/intel-device-plugins-for-kubernetes)
+    #   gpu.intel.com/i915: 1
+    #   memory: 4096Mi
+
+  configmap:
+    config:
+      # -- Store frigate configuration as a ConfigMap
+      enabled: true
+
+      # -- See [docs](https://blakeblackshear.github.io/frigate/) for more details.
+      # @default -- see URL to default config
+      data:
+        config.yml: |
+          mqtt:
+            host: 10.0.1.101
+
+          detectors:
+            # Required: name of the detector
+            detector_name:
+              # Required: type of the detector
+              # Frigate provided types include 'cpu', 'edgetpu', and 'openvino' (default: shown below)
+              # Additional detector types can also be plugged in.
+              # Detectors may require additional configuration.
+              # Refer to the Detectors configuration page for more information.
+              type: edgetpu
+
+          objects:
+            track:
+              - package
+
+          model:
+            path: plus://ade15f1264570bc9cdd9c4065b63e69f
+
+          ffmpeg:
+            global_args: -an
+
+          record:
+            enabled: false
+            expire_interval: 60
+            retain:
+              days: 30
+              mode: all
+            events:
+              pre_capture: 5
+              post_capture: 5
+              objects:
+                - person
+                - car
+              retain:
+                default: 10
+                mode: motion
+
+          snapshots:
+            enabled: true
+            clean_copy: true
+            timestamp: true
+            bounding_box: true
+            crop: false
+            height: 175
+            retain:
+              default: 10
+
+          motion:
+            improve_contrast: true
+
+          cameras:
+            package_camera:
+              enabled: true
+              ffmpeg:
+                inputs:
+                  - path: rtsps://10.0.1.254:7441/hiFG6rafdixqK19L?enableSrtp
+                    roles:
+                      - detect
+              zones:
+                package_detection_zone:
+                  coordinates: 0.004,0.417,0.457,0.915,0.532,0.877,0.584,0.788,0.782,0.641,0.177,0.229

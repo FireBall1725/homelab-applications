@@ -1,0 +1,8 @@
+apiVersion: v2
+name: sonarr
+version: 4.0.14
+appVersion: "4.0.14"
+dependencies:
+  - name: common
+    repository: https://library-charts.k8s-at-home.com
+    version: 4.5.2

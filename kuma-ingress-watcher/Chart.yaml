@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kuma-ingress-watcher
+description: Kubernetes controller that monitors Ingress resources and creates monitors in Uptime Kuma
+type: application
+version: 1.0.0
+appVersion: "1.4.1"

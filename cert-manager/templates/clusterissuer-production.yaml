@@ -1,0 +1,33 @@
+{{- if .Values.clusterIssuers.production.enabled }}
+{{- if not .Values.clusterIssuers.email }}
+{{- fail "clusterIssuers.email is required for Let's Encrypt ClusterIssuers" }}
+{{- end }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.clusterIssuers.production.name }}
+  labels:
+    app.kubernetes.io/name: cert-manager
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  acme:
+    # Let's Encrypt production server (for real certificates)
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: {{ .Values.clusterIssuers.email }}
+    # Secret to store ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-production-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: {{ .Values.clusterIssuers.dns01.cloudflare.apiTokenSecretName }}
+              key: {{ .Values.clusterIssuers.dns01.cloudflare.apiTokenSecretKey }}
+        {{- if .Values.clusterIssuers.dns01.selector }}
+        selector:
+          dnsZones:
+            {{- range .Values.clusterIssuers.dns01.selector.dnsZones }}
+            - {{ . | quote }}
+            {{- end }}
+        {{- end }}
+{{- end }}

@@ -1,0 +1,16 @@
+---
+apiVersion: v2
+appVersion: 2023.7.0
+description: Home Assistant
+name: home-assistant
+version: 1.0.0
+kubeVersion: ">=1.16.0-0"
+keywords:
+  - home-assistant
+  - hass
+  - homeassistant
+icon: https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Home_Assistant_Logo.svg/519px-Home_Assistant_Logo.svg.png
+dependencies:
+  - name: home-assistant
+    repository: https://k8s-home-lab.github.io/helm-charts/
+    version: 14.0.0
