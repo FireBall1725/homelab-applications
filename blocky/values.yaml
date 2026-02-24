@@ -205,13 +205,13 @@ config: |
         - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/native.winoffice.txt
         - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/native.amazon.txt
       security:
-        # Hagezi DoH/VPN/Proxy bypass prevention - stops apps from bypassing your DNS
-        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/doh-vpn-proxy-bypass.txt
-        # Hagezi Most Abused TLDs - blocks known-malicious top level domains
-        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/spam-tlds.txt
+        # Hagezi DoH/VPN/Proxy bypass prevention - stops apps from bypassing your DNS (wildcard format)
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/doh-vpn-proxy-bypass.txt
+        # Hagezi Most Abused TLDs - blocks known-malicious top level domains (wildcard format, no exclusions)
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/spam-tlds-notoplist.txt
       special:
-        # Hagezi Fake news / propaganda filter (replaces StevenBlack fakenews)
-        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/fake.txt
+        # Hagezi Fake news / propaganda filter (domains format, replaces StevenBlack fakenews)
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/fake.txt
     # definition of allowlist groups.
     # Note: if the same group has both allow/denylists, allowlists take precedence. Meaning if a domain is both blocked and allowed, it will be allowed.
     # If a group has only allowlist entries, only domains from this list are allowed, and all others be blocked.
