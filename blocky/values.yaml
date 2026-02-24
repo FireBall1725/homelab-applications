@@ -193,6 +193,7 @@ config: |
     # definition of denylist groups. Can be external link (http/https) or local file
     denylists:
       ads:
+        - https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro.txt
         # - https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
         - https://adaway.org/hosts.txt
         # - https://www.malwaredomainlist.com/hostslist/hosts.txt
