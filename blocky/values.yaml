@@ -193,20 +193,32 @@ config: |
     # definition of denylist groups. Can be external link (http/https) or local file
     denylists:
       ads:
-        # - https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
-        - https://adaway.org/hosts.txt
-        # - https://www.malwaredomainlist.com/hostslist/hosts.txt
-        # - https://fanboy.co.nz/fanboy-annoyance.txt
-        - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-        # - https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt
-        # - https://raw.githubusercontent.com/d3ward/toolz/master/src/d3host.txt
+        # Hagezi Pro - All-in-one blocklist (~400K domains)
+        # Blocks ads, affiliate, tracking, metrics, telemetry, phishing, malware, scam, cryptojacking
+        # Recommended balanced option with very few false positives
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/pro.txt
+        # Hagezi Threat Intelligence Feeds - additional malware/phishing/scam protection
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/tif.txt
+      native_tracking:
+        # Hagezi Native Trackers - blocks OS/device-level telemetry
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/native.apple.txt
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/native.winoffice.txt
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/native.amazon.txt
+      security:
+        # Hagezi DoH/VPN/Proxy bypass prevention - stops apps from bypassing your DNS
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/doh-vpn-proxy-bypass.txt
+        # Hagezi Most Abused TLDs - blocks known-malicious top level domains
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/spam-tlds.txt
       special:
-        - https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews/hosts
+        # Hagezi Fake news / propaganda filter (replaces StevenBlack fakenews)
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/fake.txt
     # definition of allowlist groups.
     # Note: if the same group has both allow/denylists, allowlists take precedence. Meaning if a domain is both blocked and allowed, it will be allowed.
     # If a group has only allowlist entries, only domains from this list are allowed, and all others be blocked.
     allowlists:
       ads:
+        # Hagezi referral/cashback allowlist - prevents breaking affiliate/cashback links
+        - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/referral.txt
         - |
           d3tracking.rbc.com
           analytics.supplyframe.com
@@ -216,6 +228,8 @@ config: |
       # default will be used, if no special definition for a client name exists
       default:
         - ads
+        - native_tracking
+        - security
         - special
       # # use client name (with wildcard support: * - sequence of any characters, [0-9] - range)
       # # or single ip address / client subnet as CIDR notation
