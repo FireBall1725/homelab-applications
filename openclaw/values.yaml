@@ -36,7 +36,10 @@ openclaw:
               "gateway": {
                 "port": 18789,
                 "mode": "local",
-                "trustedProxies": ["10.244.13.176", "10.244.11.27", "10.244.12.133", "10.244.13.126"]
+                "trustedProxies": ["10.244.13.176", "10.244.11.27", "10.244.12.133", "10.244.13.126"],
+                "controlUi": {
+                  "allowedOrigins": ["https://openclaw.k8s.firekatt.ca"]
+                }
               },
               "browser": {
                 "enabled": true,
