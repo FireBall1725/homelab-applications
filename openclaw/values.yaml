@@ -13,7 +13,7 @@ openclaw:
     ingress:
       main:
         enabled: true
-        className: traefik
+        className: internal
         hosts:
           - host: openclaw.k8s.firekatt.ca
             paths:
