@@ -1,0 +1,102 @@
+openclaw:
+  app-template:
+    configMode: merge
+
+    controllers:
+      main:
+        containers:
+          main:
+            envFrom:
+              - secretRef:
+                  name: openclaw-secrets
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        hosts:
+          - host: openclaw.k8s.firekatt.ca
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      data:
+        storageClass: longhorn
+
+    configMaps:
+      config:
+        enabled: true
+        data:
+          openclaw.json: |
+            {
+              "gateway": {
+                "port": 18789,
+                "mode": "local",
+                "trustedProxies": ["10.244.13.176", "10.244.11.27", "10.244.12.133", "10.244.13.126"]
+              },
+              "browser": {
+                "enabled": true,
+                "defaultProfile": "default",
+                "profiles": {
+                  "default": {
+                    "cdpUrl": "http://localhost:9222",
+                    "color": "#4285F4"
+                  }
+                }
+              },
+              "agents": {
+                "defaults": {
+                  "workspace": "/home/node/.openclaw/workspace",
+                  "model": {
+                    "primary": "anthropic/claude-sonnet-4-6"
+                  },
+                  "userTimezone": "UTC",
+                  "timeoutSeconds": 600,
+                  "maxConcurrent": 1
+                },
+                "list": [
+                  {
+                    "id": "main",
+                    "default": true,
+                    "identity": {
+                      "name": "OpenClaw",
+                      "emoji": "🦞"
+                    }
+                  }
+                ]
+              },
+              "session": {
+                "scope": "per-sender",
+                "store": "/home/node/.openclaw/sessions",
+                "reset": {
+                  "mode": "idle",
+                  "idleMinutes": 60
+                }
+              },
+              "logging": {
+                "level": "info",
+                "consoleLevel": "info",
+                "consoleStyle": "compact",
+                "redactSensitive": "tools"
+              },
+              "tools": {
+                "profile": "full",
+                "web": {
+                  "search": {
+                    "enabled": false
+                  },
+                  "fetch": {
+                    "enabled": true
+                  }
+                }
+              },
+              "channels": {
+                "discord": {
+                  "token": "${DISCORD_BOT_TOKEN}"
+                }
+              }
+            }
