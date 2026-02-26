@@ -9,7 +9,7 @@ image:
 # Theme configuration
 # Available themes: app-down, cats, connection, ghost, hacker-terminal,
 #                   l7, lost-in-space, noise, orient, shuffle, win98
-templateName: "lost-in-space"
+templateName: "connection"
 
 # Show additional details on error pages (useful for debugging)
 showDetails: false
