@@ -1,6 +1,6 @@
 home-assistant:
   image:
-    tag: 2026.3.0
+    tag: 2026.2.3
 
   persistence:
     enabled: true
