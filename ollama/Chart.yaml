@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ollama
+description: External service pointing to Ollama running on M1 Max MacBook Pro (10.0.1.191)
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

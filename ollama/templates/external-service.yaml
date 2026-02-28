@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.ollama.port }}
+      targetPort: {{ .Values.ollama.port }}
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: ollama
+  namespace: {{ .Release.Namespace }}
+subsets:
+  - addresses:
+      - ip: {{ .Values.ollama.ip }}
+    ports:
+      - name: http
+        port: {{ .Values.ollama.port }}
+        protocol: TCP
