@@ -51,13 +51,43 @@ openclaw:
                   }
                 }
               },
+              "models": {
+                "mode": "merge",
+                "providers": {
+                  "ollama": {
+                    "baseUrl": "http://ollama.app-ai.svc.cluster.local:11434",
+                    "apiKey": "ollama-local",
+                    "models": [
+                      {
+                        "id": "qwen3:32b",
+                        "name": "Qwen3 32B",
+                        "reasoning": true,
+                        "input": ["text"],
+                        "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+                        "contextWindow": 40960,
+                        "maxTokens": 40960
+                      },
+                      {
+                        "id": "llama3.2:3b",
+                        "name": "Llama 3.2 3B",
+                        "reasoning": false,
+                        "input": ["text"],
+                        "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+                        "contextWindow": 131072,
+                        "maxTokens": 131072
+                      }
+                    ]
+                  }
+                }
+              },
               "agents": {
                 "defaults": {
                   "workspace": "/home/node/.openclaw/workspace",
                   "model": {
-                    "primary": "anthropic/claude-sonnet-4-6"
+                    "primary": "ollama/qwen3:32b",
+                    "fallbacks": ["anthropic/claude-sonnet-4-6"]
                   },
-                  "userTimezone": "UTC",
+                  "userTimezone": "America/Toronto",
                   "timeoutSeconds": 600,
                   "maxConcurrent": 1
                 },
@@ -66,8 +96,8 @@ openclaw:
                     "id": "main",
                     "default": true,
                     "identity": {
-                      "name": "OpenClaw",
-                      "emoji": "🦞"
+                      "name": "FireBot",
+                      "emoji": "🔥"
                     }
                   }
                 ]
