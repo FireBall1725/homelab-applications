@@ -1,7 +1,7 @@
 apiVersion: v2
 name: node-red
-version: 4.0.9
-appVersion: "4.0.9"
+version: 4.1.6
+appVersion: "4.1.6"
 dependencies:
   - name: common
     repository: https://library-charts.k8s-at-home.com
