@@ -10,7 +10,7 @@ image:
   repository: nodered/node-red
   # -- image tag
   # @default -- chart.appVersion
-  tag:
+  tag: 4.1.6
   # -- image pull policy
   pullPolicy: IfNotPresent
 
