@@ -1,7 +1,7 @@
 apiVersion: v2
 name: radarr
-version: 5.25.0
-appVersion: "5.25.0"
+version: 6.0.4
+appVersion: "6.0.4"
 dependencies:
   - name: common
     repository: https://library-charts.k8s-at-home.com
