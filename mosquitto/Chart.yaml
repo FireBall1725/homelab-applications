@@ -1,6 +1,7 @@
 apiVersion: v2
 name: mosquitto
 version: 2.1.2
+# renovate: image=eclipse-mosquitto
 appVersion: "2.1.2"
 dependencies:
   - name: common

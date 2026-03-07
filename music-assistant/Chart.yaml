@@ -1,6 +1,7 @@
 apiVersion: v2
 name: music-assistant
 version: 2.5.5
+# renovate: image=ghcr.io/music-assistant/server
 appVersion: "2.5.5"
 dependencies:
   - name: common

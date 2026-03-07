@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: renovate
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: renovate
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              env:
+                - name: RENOVATE_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secretName }}
+                      key: RENOVATE_TOKEN
+                - name: RENOVATE_CONFIG_FILE
+                  value: /app/config.json
+                - name: LOG_LEVEL
+                  value: {{ .Values.logLevel }}
+              volumeMounts:
+                - name: config
+                  mountPath: /app/config.json
+                  subPath: config.json
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  memory: 1Gi
+          volumes:
+            - name: config
+              configMap:
+                name: renovate-config
