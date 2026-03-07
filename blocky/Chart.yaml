@@ -1,6 +1,7 @@
 apiVersion: v2
 name: blocky
 version: v0.28.2
+# renovate: image=ghcr.io/0xerr0r/blocky
 appVersion: "v0.28.2"
 dependencies:
   - name: common

@@ -1,6 +1,7 @@
 apiVersion: v2
 name: tautulli
 version: 2.16.1
+# renovate: image=lscr.io/linuxserver/tautulli
 appVersion: "2.16.1"
 dependencies:
   - name: common
