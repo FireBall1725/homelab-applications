@@ -1,0 +1,5 @@
+apiVersion: v2
+name: renovate
+version: 1.0.0
+appVersion: "43.59.2"
+description: Self-hosted Renovate bot for automated dependency updates

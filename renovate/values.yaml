@@ -1,0 +1,24 @@
+image:
+  repository: ghcr.io/renovatebot/renovate
+  tag: "43.59.2"
+  pullPolicy: IfNotPresent
+
+# -- Cron schedule for Renovate runs (default: every hour)
+schedule: "0 * * * *"
+
+# -- Repositories for Renovate to scan
+repositories:
+  - FireBall1725/homelab-applications
+  - FireBall1725/homelab-config
+
+# -- GitHub username for PR assignments
+githubUser: FireBall1725
+
+# -- Timezone for scheduling
+timezone: America/Toronto
+
+# -- Log level (debug, info, warn, error)
+logLevel: info
+
+# -- Secret name containing RENOVATE_TOKEN
+secretName: renovate-secrets
