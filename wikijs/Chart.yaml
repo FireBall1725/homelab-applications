@@ -6,5 +6,5 @@ version: 1.0.0
 appVersion: "2.5.x"
 dependencies:
   - name: wiki
-    version: "2.2.0"
+    version: "2.2.24"
     repository: "https://charts.js.wiki"
