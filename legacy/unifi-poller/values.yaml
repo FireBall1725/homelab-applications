@@ -12,7 +12,7 @@ unifi-poller:
     # -- Image [k8s pull policy](https://kubernetes.io/docs/concepts/containers/images/#updating-images).
     pullPolicy: IfNotPresent
     # -- Image tag to deploy.
-    tag: v2.9.2
+    tag: v2.34.0
 
 
   # -- Environment variable configuration options for unifi-poller ([docs](https://unifipoller.com/docs/install/configuration)).
