@@ -1,6 +1,7 @@
 apiVersion: v2
 name: homer
 version: v25.05.2
+# renovate: image=ghcr.io/bastienwirths/homer
 appVersion: "v25.05.2"
 dependencies:
   - name: common

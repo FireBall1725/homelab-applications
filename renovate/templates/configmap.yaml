@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: renovate-config
+  namespace: {{ .Release.Namespace }}
+data:
+  config.json: |
+    {
+      "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+      "repositories": {{ .Values.repositories | toJson }},
+      "extends": ["config:recommended"],
+      "timezone": {{ .Values.timezone | quote }},
+      "reviewers": [{{ .Values.githubUser | quote }}],
+      "assignees": [{{ .Values.githubUser | quote }}],
+      "labels": ["renovate", "dependencies"],
+      "automerge": false,
+      "prConcurrentLimit": 10,
+      "branchConcurrentLimit": 20,
+      "ignorePaths": ["**/charts/**"],
+      "helm-values": {
+        "enabled": true
+      },
+      "helmv3": {
+        "enabled": true
+      },
+      "customManagers": [
+        {
+          "customType": "regex",
+          "description": "Update appVersion in Chart.yaml for apps where the chart version tracks the Docker image tag",
+          "fileMatch": ["(^|/)Chart\\.yaml$"],
+          "matchStrings": [
+            "# renovate: image=(?<depName>[^\\n]+)\\nappVersion:\\s*\"?(?<currentValue>[^\"\n]+)\"?"
+          ],
+          "datasourceTemplate": "docker",
+          "versioningTemplate": "loose"
+        }
+      ]
+    }

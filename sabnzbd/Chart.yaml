@@ -1,6 +1,7 @@
 apiVersion: v2
 name: sabnzbd
 version: 4.5.5
+# renovate: image=lscr.io/linuxserver/sabnzbd
 appVersion: "4.5.5"
 dependencies:
   - name: common
