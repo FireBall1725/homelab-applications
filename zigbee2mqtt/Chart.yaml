@@ -2,7 +2,7 @@ apiVersion: v2
 name: zigbee2mqtt
 version: 2.4.0
 # renovate: image=ghcr.io/koenkk/zigbee2mqtt
-appVersion: "2.4.0"
+appVersion: "2.9.1"
 dependencies:
   - name: common
     repository: https://library-charts.k8s-at-home.com
