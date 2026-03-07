@@ -2,7 +2,7 @@ apiVersion: v2
 name: music-assistant
 version: 2.5.5
 # renovate: image=ghcr.io/music-assistant/server
-appVersion: "2.5.5"
+appVersion: "2.8.0b18"
 dependencies:
   - name: common
     repository: https://library-charts.k8s-at-home.com
