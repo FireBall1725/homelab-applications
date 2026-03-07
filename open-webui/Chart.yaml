@@ -1,0 +1,11 @@
+apiVersion: v2
+name: open-webui
+description: Open WebUI - A user-friendly web interface for LLMs
+type: application
+version: 1.0.0
+# renovate: image=ghcr.io/open-webui/open-webui
+appVersion: "0.8.8"
+dependencies:
+  - name: open-webui
+    version: 12.8.1
+    repository: https://helm.openwebui.com/
