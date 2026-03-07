@@ -2,7 +2,7 @@ apiVersion: v2
 name: blocky
 version: v0.28.2
 # renovate: image=ghcr.io/0xerr0r/blocky
-appVersion: "v0.28.2"
+appVersion: "v0.29.0"
 dependencies:
   - name: common
     repository: https://library-charts.k8s-at-home.com
