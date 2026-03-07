@@ -35,10 +35,11 @@ open-webui:
     accessModes:
       - ReadWriteOnce
 
-  # Resource limits (reasonable for homelab)
+  # Resource limits
+  # Open WebUI uses ~750Mi at idle; 1Gi limit caused repeated OOMKills during startup
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
     limits:
-      memory: 1Gi
+      memory: 2Gi
