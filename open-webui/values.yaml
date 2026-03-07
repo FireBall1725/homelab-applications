@@ -1,0 +1,44 @@
+# Open WebUI configuration
+# https://docs.openwebui.com/
+# https://helm.openwebui.com/
+
+open-webui:
+  # Disable the bundled Ollama subchart - we use the existing Ollama service in app-ai namespace
+  ollama:
+    enabled: false
+
+  # Point to the existing Ollama service running in the cluster
+  ollamaUrls:
+    - "http://ollama.app-ai.svc.cluster.local:11434"
+
+  # Disable pipelines - not needed for basic setup
+  pipelines:
+    enabled: false
+
+  # Disable websocket/redis - not needed for single replica
+  websocket:
+    enabled: false
+    redis:
+      enabled: false
+
+  # Ingress configuration
+  ingress:
+    enabled: true
+    class: internal
+    host: open-webui.k8s.firekatt.ca
+
+  # Persistence for Open WebUI data (chat history, settings, etc.)
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: longhorn
+    accessModes:
+      - ReadWriteOnce
+
+  # Resource limits (reasonable for homelab)
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
