@@ -39,6 +39,18 @@ service:
       http:
         port: 8086
 
+ingress:
+  # -- Enable and configure ingress settings for the chart under this key.
+  # @default -- See values.yaml
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: ha-mcp.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
 # -- No persistence needed - stateless MCP server
 persistence: {}
 
