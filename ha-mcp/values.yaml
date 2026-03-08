@@ -1,0 +1,51 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  # -- image repository
+  repository: ghcr.io/homeassistant-ai/ha-mcp
+  # -- image tag
+  # @default -- chart.appVersion
+  tag:
+  # -- image pull policy
+  pullPolicy: IfNotPresent
+
+# -- Override the default command to run in HTTP mode
+command:
+  - fastmcp
+  - run
+  - fastmcp-http.json
+
+# -- Environment variables
+# HOMEASSISTANT_TOKEN is injected from the sealed secret
+env:
+  - name: HOMEASSISTANT_URL
+    value: "http://home-assistant.app-home-assistant.svc.cluster.local:8080"
+  - name: HOMEASSISTANT_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: ha-mcp-secrets
+        key: HOMEASSISTANT_TOKEN
+
+# -- Configures service settings for the chart.
+# @default -- See values.yaml
+service:
+  main:
+    ports:
+      http:
+        port: 8086
+
+# -- No persistence needed - stateless MCP server
+persistence: {}
+
+# -- Resource limits
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
