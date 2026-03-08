@@ -1,0 +1,11 @@
+apiVersion: v2
+name: ha-mcp
+description: Home Assistant MCP Server - AI assistant integration via Model Context Protocol
+type: application
+version: 1.0.0
+# renovate: image=ghcr.io/homeassistant-ai/ha-mcp
+appVersion: "latest"
+dependencies:
+  - name: common
+    repository: https://library-charts.k8s-at-home.com
+    version: 4.5.2
