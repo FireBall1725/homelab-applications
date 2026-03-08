@@ -1,6 +1,6 @@
 dependencies:
 - name: common
-  repository: https://library-charts.k8s-at-home.com
-  version: 4.5.2
-digest: sha256:408d12aa9bbce6dfd4ced5c2586d92dfa518821e01823081fa9a141243b3160c
-generated: "2026-03-07T22:08:00.361132-05:00"
+  repository: https://fireball1725.github.io/firelabs-helm-common/
+  version: 5.0.3
+digest: sha256:67a6701215db65a670930d37d677d6c964b0d0320502bb76265ada096bdba5ec
+generated: "2026-03-07T22:40:17.907125-05:00"
