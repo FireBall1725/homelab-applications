@@ -5,5 +5,5 @@ version: v25.05.2
 appVersion: "v25.05.2"
 dependencies:
   - name: common
-    repository: https://library-charts.k8s-at-home.com
-    version: 4.5.2
+    repository: https://fireball1725.github.io/firelabs-helm-common/
+    version: 5.0.3
