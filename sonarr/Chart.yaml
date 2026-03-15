@@ -2,7 +2,7 @@ apiVersion: v2
 name: sonarr
 version: 4.0.16
 # renovate: image=lscr.io/linuxserver/sonarr
-appVersion: "4.0.16"
+appVersion: "4.0.16.2944-ls304"
 dependencies:
   - name: common
     repository: https://library-charts.k8s-at-home.com
