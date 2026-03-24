@@ -1,0 +1,23 @@
+{{- if .Values.ingress.enabled }}
+# Terminus ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: terminus
+  labels:
+    app.kubernetes.io/name: terminus
+    app.kubernetes.io/component: web
+spec:
+  ingressClassName: {{ .Values.ingress.ingressClassName }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: terminus
+                port:
+                  number: {{ .Values.web.port }}
+{{- end }}

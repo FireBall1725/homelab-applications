@@ -1,0 +1,17 @@
+# Terminus web service
+apiVersion: v1
+kind: Service
+metadata:
+  name: terminus
+  labels:
+    app.kubernetes.io/name: terminus
+    app.kubernetes.io/component: web
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.web.port }}
+      targetPort: http
+      name: http
+  selector:
+    app.kubernetes.io/name: terminus
+    app.kubernetes.io/component: web
