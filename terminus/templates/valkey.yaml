@@ -42,7 +42,7 @@ spec:
             - --requirepass
             - $(VALKEY_PASSWORD)
             - --maxmemory
-            - {{ .Values.valkey.maxMemory }}
+            - "{{ .Values.valkey.maxMemory }}"
             - --maxmemory-policy
             - noeviction
             - --port
@@ -63,7 +63,7 @@ spec:
               command:
                 - sh
                 - -c
-                - "valkey-cli -p {{ .Values.valkey.port }} ping | grep PONG"
+                - "valkey-cli -a $VALKEY_PASSWORD -p {{ .Values.valkey.port }} ping | grep PONG"
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
@@ -71,7 +71,7 @@ spec:
               command:
                 - sh
                 - -c
-                - "valkey-cli -p {{ .Values.valkey.port }} ping | grep PONG"
+                - "valkey-cli -a $VALKEY_PASSWORD -p {{ .Values.valkey.port }} ping | grep PONG"
             initialDelaySeconds: 10
             periodSeconds: 30
           volumeMounts:
