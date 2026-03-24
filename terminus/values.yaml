@@ -1,0 +1,90 @@
+# Terminus (TRMNL BYOS) configuration
+# https://github.com/usetrmnl/byos_hanami
+
+# Namespace for the deployment
+namespace: app-terminus
+
+# Web application
+web:
+  image:
+    repository: ghcr.io/usetrmnl/terminus
+    tag: "latest"
+    pullPolicy: Always
+
+  # Terminus listens on port 2300 by default
+  port: 2300
+
+  # API URI - how devices reach the server
+  # Set to the ingress URL so TRMNL devices can connect
+  apiUri: "https://terminus.k8s.firekatt.ca"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+# Sidekiq worker (background jobs)
+worker:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+# Valkey (Redis-compatible) for Sidekiq job queue and caching
+valkey:
+  image:
+    repository: valkey/valkey
+    tag: "9-alpine"
+    pullPolicy: IfNotPresent
+
+  port: 6379
+  database: 0
+  maxMemory: 256mb
+
+  storage:
+    storageClass: longhorn
+    size: 1Gi
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+# PostgreSQL via CloudNativePG operator
+postgres:
+  # CloudNativePG cluster name
+  clusterName: terminus-postgres
+
+  image: ghcr.io/cloudnative-pg/postgresql:17.2-3
+
+  storage:
+    storageClass: longhorn
+    size: 10Gi
+
+  database: terminus
+  owner: terminus
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Ingress configuration
+ingress:
+  enabled: true
+  host: terminus.k8s.firekatt.ca
+  ingressClassName: internal
+
+# Uploads persistent volume
+uploads:
+  storageClass: longhorn
+  size: 5Gi

@@ -1,0 +1,105 @@
+# Valkey (Redis-compatible) for Terminus Sidekiq and caching
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: terminus-valkey
+  labels:
+    app.kubernetes.io/name: terminus
+    app.kubernetes.io/component: valkey
+type: Opaque
+data:
+  # Default password - replace with a sealed secret in production
+  # This is "terminus-valkey-password" base64 encoded
+  password: {{ "terminus-valkey-password" | b64enc }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: terminus-valkey
+  labels:
+    app.kubernetes.io/name: terminus
+    app.kubernetes.io/component: valkey
+spec:
+  serviceName: terminus-valkey
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: terminus
+      app.kubernetes.io/component: valkey
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: terminus
+        app.kubernetes.io/component: valkey
+    spec:
+      containers:
+        - name: valkey
+          image: "{{ .Values.valkey.image.repository }}:{{ .Values.valkey.image.tag }}"
+          imagePullPolicy: {{ .Values.valkey.image.pullPolicy }}
+          command:
+            - valkey-server
+            - --requirepass
+            - $(VALKEY_PASSWORD)
+            - --maxmemory
+            - {{ .Values.valkey.maxMemory }}
+            - --maxmemory-policy
+            - noeviction
+            - --port
+            - "{{ .Values.valkey.port }}"
+          env:
+            - name: VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: terminus-valkey
+                  key: password
+          ports:
+            - containerPort: {{ .Values.valkey.port }}
+              name: valkey
+          resources:
+            {{- toYaml .Values.valkey.resources | nindent 12 }}
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "valkey-cli -p {{ .Values.valkey.port }} ping | grep PONG"
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "valkey-cli -p {{ .Values.valkey.port }} ping | grep PONG"
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.valkey.storage.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.valkey.storage.size }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: terminus-valkey
+  labels:
+    app.kubernetes.io/name: terminus
+    app.kubernetes.io/component: valkey
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.valkey.port }}
+      targetPort: valkey
+      name: valkey
+  selector:
+    app.kubernetes.io/name: terminus
+    app.kubernetes.io/component: valkey

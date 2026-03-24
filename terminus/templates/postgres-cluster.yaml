@@ -1,0 +1,41 @@
+# PostgreSQL Cluster for Terminus
+# Managed by CloudNativePG operator
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .Values.postgres.clusterName }}
+spec:
+  # Single instance for homelab
+  instances: 1
+
+  # PostgreSQL version
+  imageName: {{ .Values.postgres.image }}
+
+  # Storage configuration
+  storage:
+    storageClass: {{ .Values.postgres.storage.storageClass }}
+    size: {{ .Values.postgres.storage.size }}
+
+  # Bootstrap configuration
+  bootstrap:
+    initdb:
+      database: {{ .Values.postgres.database }}
+      owner: {{ .Values.postgres.owner }}
+      localeCollate: 'en_US.UTF-8'
+      localeCType: 'en_US.UTF-8'
+
+  # Enable monitoring
+  monitoring:
+    enablePodMonitor: true
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: {{ .Values.postgres.resources.requests.cpu }}
+      memory: {{ .Values.postgres.resources.requests.memory }}
+    limits:
+      cpu: {{ .Values.postgres.resources.limits.cpu }}
+      memory: {{ .Values.postgres.resources.limits.memory }}
+
+  # Automatic minor version updates
+  primaryUpdateStrategy: unsupervised

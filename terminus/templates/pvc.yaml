@@ -1,0 +1,15 @@
+# Persistent volume for Terminus uploads
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: terminus-uploads
+  labels:
+    app.kubernetes.io/name: terminus
+    app.kubernetes.io/component: web
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.uploads.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.uploads.size }}
