@@ -18,6 +18,14 @@ spec:
         app.kubernetes.io/name: terminus
         app.kubernetes.io/component: web
     spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: terminus
+                  app.kubernetes.io/component: worker
+              topologyKey: kubernetes.io/hostname
       initContainers:
         # Wait for PostgreSQL to be ready before starting
         - name: wait-for-postgres
