@@ -9,7 +9,7 @@ image:
   # -- image repository
   repository: ghcr.io/esphome/esphome
   # -- image tag
-  tag: 2026.2.4
+  tag: 2026.3.2
   # -- image pull policy
   pullPolicy: IfNotPresent
 
