@@ -13,4 +13,4 @@ icon: https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Home_Assistant_L
 dependencies:
   - name: home-assistant
     repository: https://k8s-home-lab.github.io/helm-charts/
-    version: 14.0.0
+    version: 16.3.0
