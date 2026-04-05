@@ -8,4 +8,4 @@ kubeVersion: ">=1.16.0-0"
 dependencies:
   - name: unifi-poller
     repository: https://geek-cookbook.github.io/charts/
-    version: 11.1.2
+    version: 11.2.0
