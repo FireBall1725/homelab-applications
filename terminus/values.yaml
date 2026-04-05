@@ -61,7 +61,7 @@ postgres:
   # CloudNativePG cluster name
   clusterName: terminus-postgres
 
-  image: ghcr.io/cloudnative-pg/postgresql:17.2-3
+  image: ghcr.io/cloudnative-pg/postgresql:17.5-3
 
   storage:
     storageClass: longhorn
