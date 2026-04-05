@@ -4,5 +4,5 @@ type: application
 version: 1.0.0
 dependencies:
   - name: tailscale-operator
-    version: 1.92.5
+    version: 1.94.2
     repository: https://pkgs.tailscale.com/helmcharts
