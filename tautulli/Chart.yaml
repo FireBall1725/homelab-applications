@@ -2,7 +2,7 @@ apiVersion: v2
 name: tautulli
 version: 2.16.1
 # renovate: image=lscr.io/linuxserver/tautulli
-appVersion: "2.16.1"
+appVersion: "2.17.0"
 dependencies:
   - name: common
     repository: https://fireball1725.github.io/firelabs-helm-common/
