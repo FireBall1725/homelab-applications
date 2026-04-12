@@ -2,7 +2,7 @@ apiVersion: v2
 name: sonarr
 version: 4.0.16
 # renovate: image=lscr.io/linuxserver/sonarr
-appVersion: "4.0.17.2952-ls306"
+appVersion: "4.0.17.2952-ls307"
 dependencies:
   - name: common
     repository: https://fireball1725.github.io/firelabs-helm-common/
