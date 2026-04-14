@@ -1,6 +1,6 @@
 dependencies:
 - name: wiki
   repository: https://charts.js.wiki
-  version: 2.2.24
-digest: sha256:9e0e387171c82ef7ede3da5fe1b8a6a418972b3ae272b38cbe916b20bf2eb6c3
-generated: "2026-03-07T07:01:10.949905292Z"
+  version: 3.0.0
+digest: sha256:827e7b53ba24ed2328bfc890e4d3f8478c7d50b43e720e7548239f95e3b3e327
+generated: "2026-04-14T02:06:38.411217728Z"
