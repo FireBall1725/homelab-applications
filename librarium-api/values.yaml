@@ -48,7 +48,7 @@ probes:
     custom: true
     spec:
       httpGet:
-        path: /api/v1/version
+        path: /health
         port: http
       initialDelaySeconds: 30
       periodSeconds: 30
@@ -57,7 +57,7 @@ probes:
     custom: true
     spec:
       httpGet:
-        path: /api/v1/version
+        path: /health
         port: http
       initialDelaySeconds: 5
       periodSeconds: 10
