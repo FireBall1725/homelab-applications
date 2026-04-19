@@ -1,0 +1,14 @@
+Thanks for installing librarium-web.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Image:     {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+The web image's bundled nginx.conf proxies /api and /health to
+http://librarium-api:8080 by the bare service name, so librarium-web must be
+deployed into the same namespace as librarium-api (app-librarium).
+
+Access the UI:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "common.names.fullname" . }} 3000:3000
+
+Then open http://localhost:3000
