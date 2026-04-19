@@ -22,7 +22,7 @@ This is Option A (self-contained): the upstream chart is copied verbatim into `t
 
 | Host | Description |
 |------|-------------|
-| `librarium.k8s.firekatt.ca` | Librarium API (internal LAN only) |
+| `librarium-api.k8s.firekatt.ca` | Librarium API (internal LAN only) |
 
 The `*.k8s.firekatt.ca` zone resolves inside the LAN only, so `REGISTRATION_ENABLED=true` is not external exposure.
 
