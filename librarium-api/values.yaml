@@ -37,7 +37,7 @@ ingress:
     enabled: true
     ingressClassName: internal
     hosts:
-      - host: librarium.k8s.firekatt.ca
+      - host: librarium-api.k8s.firekatt.ca
         paths:
           - path: /
             pathType: Prefix
