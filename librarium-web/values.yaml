@@ -1,0 +1,76 @@
+# Librarium Web - homelab values
+#
+# Wraps the upstream librarium-web chart (firelabs-helm-common based). Only
+# override the knobs the homelab needs; leave everything else at upstream
+# defaults so a future refresh (bump `common` or pull in new templates) is a
+# clean re-copy + reapply-overrides.
+#
+# The web image's bundled nginx.conf proxies /api and /health to
+# http://librarium-api:8080 by bare service name, so this release MUST deploy
+# into the same namespace as librarium-api (app-librarium) for DNS to resolve.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: librarium-web
+
+image:
+  repository: ghcr.io/fireball1725/librarium-web
+  tag: "26.4.0"
+  pullPolicy: IfNotPresent
+
+# Stateless static nginx bundle - safe to scale horizontally and roll without
+# downtime (no PVC, no singleton state).
+controller:
+  replicas: 2
+  strategy: RollingUpdate
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 3000
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves
+# inside the LAN only.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: librarium.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /
+        port: http
+      initialDelaySeconds: 15
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /
+        port: http
+      initialDelaySeconds: 3
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
