@@ -1,0 +1,39 @@
+Thanks for installing librarium-api.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Image:     {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+{{- if eq .Values.secret.JWT_SECRET "CHANGE_ME" }}
+
+WARNING: JWT_SECRET is still the default placeholder. Set a real value:
+
+  helm upgrade {{ .Release.Name }} . \
+    --namespace {{ .Release.Namespace }} \
+    --reuse-values \
+    --set secret.JWT_SECRET="$(openssl rand -base64 48)"
+
+{{- end }}
+
+{{- if .Values.postgres.create }}
+
+Postgres (CloudNativePG) is managed by this release:
+  Cluster:  {{ .Values.postgres.clusterName }}
+  Database: {{ .Values.postgres.database }}
+
+Check status:
+  kubectl -n {{ .Release.Namespace }} get cluster.postgresql.cnpg.io {{ .Values.postgres.clusterName }}
+  kubectl -n {{ .Release.Namespace }} get pods -l cnpg.io/cluster={{ .Values.postgres.clusterName }}
+
+The api reads DATABASE_URL from the auto-generated secret
+"{{ .Values.postgres.clusterName }}-app" (key: uri).
+{{- else }}
+
+Postgres is NOT managed by this release. Make sure env.DATABASE_URL is pointing
+at an external Postgres that already exists.
+{{- end }}
+
+Access the api:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "common.names.fullname" . }} 8080:8080
+
+Then open http://localhost:8080/api/v1/version
