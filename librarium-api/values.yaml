@@ -1,0 +1,150 @@
+# Librarium API - homelab values
+#
+# Wraps the upstream librarium-api chart (firelabs-helm-common based). Upstream
+# chart is copied verbatim from librarium/api/deploy/helm/librarium-api (Option A
+# self-contained). Only override the knobs the homelab needs; leave everything
+# else at upstream defaults so a future refresh (bump `common` or pull in new
+# templates) is a clean re-copy + reapply-overrides.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: librarium-api
+
+image:
+  repository: ghcr.io/fireball1725/librarium-api
+  tag: "26.4.0"
+  pullPolicy: IfNotPresent
+
+# Single-replica, Recreate strategy - covers PVC is RWO.
+controller:
+  replicas: 1
+  strategy: Recreate
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8080
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves
+# inside the LAN only, so REGISTRATION_ENABLED=true is not external exposure.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: librarium.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /api/v1/version
+        port: http
+      initialDelaySeconds: 30
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /api/v1/version
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Storage
+#   covers - 10Gi on longhorn (default SC, but pin explicitly for clarity)
+#   media  - disabled for now; the homelab does not host ebook/audiobook blobs
+#            through this instance yet. Flip back on when that use case lands
+#            and decide on RWX vs RWO + NFS existingClaim at that time.
+# -----------------------------------------------------------------------------
+persistence:
+  covers:
+    enabled: true
+    type: pvc
+    mountPath: /data/covers
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    storageClass: longhorn
+  media:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Non-sensitive configuration. Media-path keys are dropped since persistence.media
+# is disabled; re-add them alongside the PVC when media support is enabled.
+# -----------------------------------------------------------------------------
+configmap:
+  config:
+    enabled: true
+    data:
+      LOG_LEVEL: info
+      COVER_STORAGE_PATH: /data/covers
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 168h
+      REGISTRATION_ENABLED: "true"
+
+# -----------------------------------------------------------------------------
+# Sensitive configuration
+#
+# Upstream chart, when `.Values.secret` is set, renders its own Secret named
+# `<fullname>` and auto-attaches it via envFrom. We do NOT want that here - we
+# manage JWT_SECRET via a SealedSecret (see templates/sealed-secret-jwt.yaml)
+# and pull it into the container through `env.JWT_SECRET.valueFrom`, so we
+# disable the upstream auto-Secret by setting `secret` to an empty map.
+# -----------------------------------------------------------------------------
+secret: {}
+
+# ConfigMap is wired into envFrom. DATABASE_URL + JWT_SECRET come in as explicit
+# env vars via secretKeyRef so we do not couple anything else to envFrom naming.
+envFrom:
+  - configMapRef:
+      name: librarium-api-config
+
+env:
+  # CNPG-generated Secret: <clusterName>-app, key `uri` holds the full DSN.
+  DATABASE_URL:
+    valueFrom:
+      secretKeyRef:
+        name: librarium-db-app
+        key: uri
+  # SealedSecret managed in this chart (templates/sealed-secret-jwt.yaml).
+  JWT_SECRET:
+    valueFrom:
+      secretKeyRef:
+        name: librarium-api-jwt
+        key: JWT_SECRET
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
+# -----------------------------------------------------------------------------
+# CloudNativePG-managed Postgres cluster. The operator lives in app-cloudnative-pg.
+# -----------------------------------------------------------------------------
+postgres:
+  create: true
+  clusterName: librarium-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-3
+  database: librarium
+  owner: librarium
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  extraSpec: {}
