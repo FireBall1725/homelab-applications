@@ -147,4 +147,9 @@ postgres:
   storage:
     size: 10Gi
     storageClass: longhorn
-  extraSpec: {}
+  # Enable CNPG Prometheus metrics exposure. Matches terminus-postgres /
+  # wikijs-postgres so the homelab's kube-prometheus-stack PodMonitor discovery
+  # picks this cluster up and it shows in the CNPG Grafana dashboard.
+  extraSpec:
+    monitoring:
+      enablePodMonitor: true
