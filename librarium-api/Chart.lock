@@ -1,0 +1,6 @@
+dependencies:
+- name: common
+  repository: https://fireball1725.github.io/firelabs-helm-common/
+  version: 5.0.3
+digest: sha256:67a6701215db65a670930d37d677d6c964b0d0320502bb76265ada096bdba5ec
+generated: "2026-04-18T21:39:19.717449-04:00"
