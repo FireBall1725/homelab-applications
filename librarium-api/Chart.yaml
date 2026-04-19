@@ -1,0 +1,32 @@
+apiVersion: v2
+name: librarium-api
+description: Librarium API - Go backend for the self-hosted Librarium library tracker.
+type: application
+
+# Chart version. Bump on template/values changes; does not need to match appVersion.
+version: 0.1.0
+
+# Tracks the librarium-api release. Keep in sync with the pinned image tag in values.yaml.
+appVersion: "26.4.0"
+
+kubeVersion: ">=1.25.0-0"
+
+home: https://github.com/fireball1725/librarium-api
+sources:
+  - https://github.com/fireball1725/librarium-api
+maintainers:
+  - name: fireball1725
+    url: https://github.com/fireball1725
+
+keywords:
+  - librarium
+  - library
+  - books
+  - ebooks
+  - audiobooks
+  - self-hosted
+
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://fireball1725.github.io/firelabs-helm-common/
