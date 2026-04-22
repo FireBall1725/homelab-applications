@@ -17,6 +17,11 @@ spec:
       {{- end }}
   {{- end }}
 
+  # Advertise as an exit node (requires approval in Tailscale admin console)
+  {{- if .Values.connector.exitNode }}
+  exitNode: {{ .Values.connector.exitNode }}
+  {{- end }}
+
   # Tags for this connector
   {{- if .Values.connector.tags }}
   tags:
