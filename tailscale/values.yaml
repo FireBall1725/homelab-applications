@@ -20,6 +20,11 @@ connector:
   # Accept routes from other subnet routers
   acceptRoutes: true
 
+  # Advertise this connector as a Tailscale exit node
+  # After enabling, the exit node must be approved in the Tailscale admin console
+  # (Machines -> homelab-k8s-router -> "Use as exit node")
+  exitNode: true
+
   # Tags for this connector
   tags:
     - "tag:k8s-connector"
