@@ -14,7 +14,7 @@ connector:
   # Advertise these routes to Tailscale network
   subnetRoutes:
     - "10.244.0.0/16"  # Pod CIDR
-    - "10.0.1.0/24"    # Node network (includes K8s API)
+    - "10.0.0.0/23"    # Home LAN (/23 covers DHCP 10.0.0.x and static servers 10.0.1.x, includes K8s API)
     - "10.96.0.0/12"   # Service CIDR (default)
 
   # Accept routes from other subnet routers
