@@ -1,0 +1,9 @@
+apiVersion: v2
+name: lidarr
+version: 1.0.0
+# renovate: image=lscr.io/linuxserver/lidarr
+appVersion: "3.1.0.4875-ls25"
+dependencies:
+  - name: common
+    repository: https://fireball1725.github.io/firelabs-helm-common/
+    version: 5.0.3
