@@ -2,7 +2,7 @@ apiVersion: v2
 name: audiobookshelf
 version: 2.33.1
 # renovate: image=ghcr.io/advplyr/audiobookshelf
-appVersion: "2.33.1"
+appVersion: "2.33.2"
 dependencies:
   - name: common
     repository: https://library-charts.k8s-at-home.com
