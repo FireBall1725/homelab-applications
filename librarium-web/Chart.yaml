@@ -7,7 +7,7 @@ type: application
 version: 0.1.0
 
 # Tracks the librarium-web release. Keep in sync with the pinned image tag in values.yaml.
-appVersion: "26.4.0"
+appVersion: "26.4.1"
 
 kubeVersion: ">=1.25.0-0"
 
