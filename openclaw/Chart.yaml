@@ -7,4 +7,4 @@ appVersion: "2026.2.24"
 dependencies:
   - name: openclaw
     repository: https://serhanekicii.github.io/openclaw-helm
-    version: 1.5.12
+    version: 1.5.26
