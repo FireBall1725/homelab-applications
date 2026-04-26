@@ -1,0 +1,123 @@
+# Librarium MCP - homelab values
+#
+# Wraps the upstream librarium-mcp chart (firelabs-helm-common based). Only
+# override the knobs the homelab needs; leave everything else at upstream
+# defaults so a future refresh (bump `common` or pull in new templates) is a
+# clean re-copy + reapply-overrides.
+#
+# Deploys into the same namespace (app-librarium) as librarium-api so the
+# in-cluster service URL `http://librarium-api:8080` resolves by bare name.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: librarium-mcp
+
+image:
+  repository: ghcr.io/fireball1725/librarium-mcp
+  tag: "26.4.0"
+  pullPolicy: IfNotPresent
+
+# Single-replica, Recreate strategy - the persisted MCP token PVC is RWO and
+# the server is effectively a singleton (one identity per install).
+controller:
+  replicas: 1
+  strategy: Recreate
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8090
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves
+# inside the LAN only; the MCP /mcp endpoint is itself bearer-auth gated.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: librarium-mcp.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# /health is unauthenticated; /mcp requires bearer auth. Probes hit /health.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 15
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Storage
+#   data - small RWO PVC at /data for the persisted inbound MCP bearer token
+#          (auto-generated on first run, see startup banner in container logs).
+# -----------------------------------------------------------------------------
+persistence:
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /data
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    storageClass: longhorn
+
+# -----------------------------------------------------------------------------
+# Non-sensitive configuration
+# -----------------------------------------------------------------------------
+configmap:
+  config:
+    enabled: true
+    data:
+      LIBRARIUM_API_URL: http://librarium-api:8080
+      LIBRARIUM_MCP_DATA_DIR: /data
+
+# -----------------------------------------------------------------------------
+# Sensitive configuration
+#
+# Disable the upstream auto-Secret (would otherwise be rendered when
+# `.Values.secret` is set) - we manage LIBRARIUM_ACCESS_TOKEN via a
+# SealedSecret (templates/sealed-secret-access-token.yaml) and pull it in
+# through `env.LIBRARIUM_ACCESS_TOKEN.valueFrom`.
+# -----------------------------------------------------------------------------
+secret: {}
+
+envFrom:
+  - configMapRef:
+      name: librarium-mcp-config
+
+env:
+  # SealedSecret managed in this chart (templates/sealed-secret-access-token.yaml).
+  # PAT minted in the Librarium web UI under Profile -> API tokens.
+  LIBRARIUM_ACCESS_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: librarium-mcp-access-token
+        key: LIBRARIUM_ACCESS_TOKEN
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
