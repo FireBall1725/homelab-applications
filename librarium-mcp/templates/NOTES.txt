@@ -1,0 +1,18 @@
+Thanks for installing librarium-mcp.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Image:     {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+The MCP server talks to the Librarium API at:
+  {{ .Values.configmap.config.data.LIBRARIUM_API_URL }}
+
+The inbound bearer token for /mcp is auto-generated on first run and persisted
+to {{ .Values.configmap.config.data.LIBRARIUM_MCP_DATA_DIR }}/mcp-token. Grab
+it from the startup banner in the container logs:
+
+  kubectl -n {{ .Release.Namespace }} logs deploy/{{ include "common.names.fullname" . }}
+
+Health check (no auth):
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "common.names.fullname" . }} 8090:8090
+  curl http://localhost:8090/health
