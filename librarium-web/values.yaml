@@ -15,7 +15,7 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/librarium-web
-  tag: "26.4.1"
+  tag: "26.4.2"
   pullPolicy: IfNotPresent
 
 # Stateless static nginx bundle - safe to scale horizontally and roll without
