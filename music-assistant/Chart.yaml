@@ -2,7 +2,7 @@ apiVersion: v2
 name: music-assistant
 version: 2.5.5
 # renovate: image=ghcr.io/music-assistant/server
-appVersion: "2.9.0b3"
+appVersion: "2.9.0b9"
 dependencies:
   - name: common
     repository: https://fireball1725.github.io/firelabs-helm-common/
