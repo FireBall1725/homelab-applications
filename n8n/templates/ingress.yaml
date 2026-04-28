@@ -1,0 +1,23 @@
+# Custom Ingress for n8n with proper ingressClassName
+# This overrides the n8n chart's ingress (we disable it in values.yaml)
+# TLS is provided cluster-wide by Traefik's wildcard tls-cert default — no per-host TLS block needed.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: n8n
+  labels:
+    app.kubernetes.io/name: n8n
+    app.kubernetes.io/instance: n8n
+spec:
+  ingressClassName: internal
+  rules:
+    - host: n8n.k8s.firekatt.ca
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: n8n
+                port:
+                  number: 80
