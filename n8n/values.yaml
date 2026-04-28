@@ -1,0 +1,105 @@
+# n8n configuration
+# https://docs.n8n.io/
+# https://github.com/8gears/n8n-helm-chart
+
+# Namespace for the deployment
+namespace: app-n8n
+
+n8n:
+  # Image configuration (chart defaults to n8nio/n8n)
+  image:
+    repository: n8nio/n8n
+    pullPolicy: IfNotPresent
+    # tag: ""  # leave blank to follow chart appVersion (1.122.4 at chart 2.0.1)
+
+  # Disable bundled Valkey (Redis) — single-instance regular execution mode
+  valkey:
+    enabled: false
+
+  # Disable chart's bundled ingress — using custom ingress template with proper ingressClassName
+  ingress:
+    enabled: false
+
+  # Single instance, no queue mode, no workers, no webhook processors
+  worker:
+    enabled: false
+  webhook:
+    enabled: false
+
+  main:
+    # n8n core config — keys flatten to env vars (a.b.c => A_B_C) and land in a ConfigMap
+    config:
+      executions:
+        mode: regular
+      db:
+        type: postgresdb
+        postgresdb:
+          host: n8n-postgres-rw
+          port: 5432
+          database: n8n
+          user: n8n
+          ssl:
+            # SSL disabled for internal cluster traffic
+            enabled: false
+
+    # NOTE: The chart's main.secret block does NOT support valueFrom — it just
+    # base64-encodes literal values into a Secret. Anything sourced from another
+    # secret (CNPG-managed DB password, sealed encryption key) must go through
+    # extraEnv: instead.
+    secret: {}
+
+    # Extra env vars — supports valueFrom, used here for everything secret-backed
+    # plus the URL/host overrides required for n8n to work behind Traefik.
+    extraEnv:
+      # Postgres password from the CNPG-managed n8n-postgres-app secret (key: password)
+      DB_POSTGRESDB_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: n8n-postgres-app
+            key: password
+      # Encryption key from sealed secret (see templates/sealed-secret-encryption-key.yaml)
+      N8N_ENCRYPTION_KEY:
+        valueFrom:
+          secretKeyRef:
+            name: n8n-encryption-key
+            key: N8N_ENCRYPTION_KEY
+      # Public URL / proxy settings — required for webhooks, OAuth, editor UI behind Traefik
+      N8N_HOST:
+        value: "n8n.k8s.firekatt.ca"
+      N8N_PROTOCOL:
+        value: "https"
+      N8N_PORT:
+        value: "5678"
+      WEBHOOK_URL:
+        value: "https://n8n.k8s.firekatt.ca/"
+      N8N_EDITOR_BASE_URL:
+        value: "https://n8n.k8s.firekatt.ca/"
+      N8N_PROXY_HOPS:
+        value: "1"
+      GENERIC_TIMEZONE:
+        value: "America/Toronto"
+      TZ:
+        value: "America/Toronto"
+
+    # Persistent storage at /home/node/.n8n — must be type: dynamic to actually create a PVC
+    persistence:
+      enabled: true
+      type: dynamic
+      storageClass: longhorn
+      accessModes:
+        - ReadWriteOnce
+      size: 5Gi
+
+    # Service — chart defaults port to 80 (forwards to container port 5678)
+    service:
+      enabled: true
+      type: ClusterIP
+      port: 80
+
+    # Resource limits (reasonable for homelab single-instance)
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 1Gi
