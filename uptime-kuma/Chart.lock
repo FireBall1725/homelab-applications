@@ -1,6 +1,6 @@
 dependencies:
 - name: uptime-kuma
   repository: https://dirsigler.github.io/uptime-kuma-helm
-  version: 2.24.0
-digest: sha256:f4c779be0378e561fc4d97c0d8fdcfd1ccc7690b0bf8c99199b0b742133f0a36
-generated: "2026-01-26T11:29:29.39051-05:00"
+  version: 4.1.0
+digest: sha256:03ebc221492277541d00838c6795aae2262dacdccce90c24d2eff0f611461e87
+generated: "2026-05-01T12:07:46.114686053Z"
