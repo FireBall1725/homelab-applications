@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/renovatebot/renovate
-  tag: "43.104.4"
+  tag: "43.160.7"
   pullPolicy: IfNotPresent
 
 # -- Cron schedule for Renovate runs (default: every hour)
