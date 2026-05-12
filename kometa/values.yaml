@@ -4,7 +4,7 @@ schedule: "0 0 * * *"
 # Container image
 image:
   repository: kometateam/kometa
-  tag: v2.1.0
+  tag: v2.3.1
   pullPolicy: IfNotPresent
 
 # Persistence configuration
