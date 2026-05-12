@@ -116,7 +116,7 @@ addons:
 additionalContainers:
   terminal:
     name: terminal
-    image: node:20-bookworm
+    image: node:24-bookworm
     imagePullPolicy: IfNotPresent
     command:
       - /bin/bash
