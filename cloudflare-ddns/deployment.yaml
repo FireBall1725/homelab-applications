@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflare-ddns
+  namespace: app-cloudflare-ddns
+  labels:
+    app: cloudflare-ddns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflare-ddns
+  template:
+    metadata:
+      labels:
+        app: cloudflare-ddns
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cloudflare-ddns
+          image: docker.io/favonia/cloudflare-ddns:1.16.2
+          imagePullPolicy: IfNotPresent
+          env:
+            # Public A record(s) to keep pointed at the current WAN IP
+            - name: DOMAINS
+              value: "home.firekatt.ca"
+            # Real IP for remote access, so DNS-only (gray cloud), not proxied
+            - name: PROXIED
+              value: "false"
+            # No IPv6 at this site; disable AAAA management
+            - name: IP6_PROVIDER
+              value: "none"
+            # Check/update every 5 minutes (default, set explicitly for clarity)
+            - name: UPDATE_CRON
+              value: "@every 5m"
+          envFrom:
+            # Provides CLOUDFLARE_API_TOKEN
+            - secretRef:
+                name: cloudflare-ddns-token
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
