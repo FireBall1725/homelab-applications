@@ -18,7 +18,7 @@ controller:
   # -- Set the controller upgrade strategy
   strategy: RollingUpdate
   # -- (int) Number of pods to load balance between
-  replicas: 1
+  replicas: 2
 
 # -- environment variables. See [image docs](https://0xerr0r.github.io/blocky/installation/#run-with-docker) for more details.
 # @default -- See below
@@ -35,11 +35,13 @@ service:
       http:
         port: 4000
   dns-tcp:
-    enabled: false
+    enabled: true
     # type: ClusterIP
     externalTrafficPolicy: Local
     type: LoadBalancer
     loadBalancerIP: 10.0.1.1
+    annotations:
+      metallb.io/allow-shared-ip: blocky-dns
     ports:
       dns-tcp:
         enabled: true
@@ -52,6 +54,8 @@ service:
     externalTrafficPolicy: Local
     type: LoadBalancer
     loadBalancerIP: 10.0.1.1
+    annotations:
+      metallb.io/allow-shared-ip: blocky-dns
     ports:
       dns-udp:
         enabled: true
