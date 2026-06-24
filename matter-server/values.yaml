@@ -7,12 +7,13 @@
 
 image:
   # -- image repository
-  # Final stable release published on this path is 8.1.0. The project was
-  # archived 2026-06-23 and renamed; 8.1.1 / 8.1.2 only exist under
-  # ghcr.io/matter-js/python-matter-server.
-  repository: ghcr.io/home-assistant-libs/python-matter-server
+  # The python-matter-server project was archived under home-assistant-libs on
+  # 2026-06-23 and moved to the matter-js org. This is the maintained path;
+  # 8.1.2 is the current stable tag (8.1.1 / 8.1.2 never shipped under the old
+  # home-assistant-libs path).
+  repository: ghcr.io/matter-js/python-matter-server
   # -- image tag
-  tag: 8.1.0
+  tag: 8.1.2
   # -- image pull policy
   pullPolicy: IfNotPresent
 
