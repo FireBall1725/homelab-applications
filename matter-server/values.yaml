@@ -45,6 +45,9 @@ dnsPolicy: ClusterFirstWithHostNet
 # podAffinity follows HA wherever it schedules (HA itself has no node pin; it
 # floats on its longhorn PVC), so if HA reschedules the Matter server moves with
 # it and localhost still resolves. labelSelector matches HA's pod labels.
+# HA runs in the app-home-assistant namespace, so the term must set namespaces
+# explicitly: podAffinity defaults to the pod's own namespace, and without this
+# it finds zero HA pods in app-matter-server and never schedules.
 affinity:
   podAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
@@ -52,6 +55,8 @@ affinity:
           matchLabels:
             app.kubernetes.io/name: home-assistant
             app.kubernetes.io/instance: home-assistant
+        namespaces:
+          - app-home-assistant
         topologyKey: kubernetes.io/hostname
 
 # -- Service is for observability only. Home Assistant does NOT connect through
