@@ -1,0 +1,89 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/geek-cookbook/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  # -- image repository
+  # The python-matter-server project was archived under home-assistant-libs on
+  # 2026-06-23 and moved to the matter-js org. This is the maintained path;
+  # 8.1.2 is the current stable tag (8.1.1 / 8.1.2 never shipped under the old
+  # home-assistant-libs path).
+  repository: ghcr.io/matter-js/python-matter-server
+  # -- image tag
+  tag: 8.1.2
+  # -- image pull policy
+  pullPolicy: IfNotPresent
+
+# -- Run as a StatefulSet so the Matter fabric storage keeps a stable identity
+# and a single persistent volume across restarts.
+controller:
+  type: statefulset
+
+# -- Matter server CLI args. Storage path must point at the mounted PVC so the
+# paired-device fabric credentials survive restarts (losing /data unpairs every
+# Matter device). Port 5580 is the websocket the Home Assistant Matter
+# integration connects to.
+args:
+  - "--storage-path"
+  - "/data"
+  - "--port"
+  - "5580"
+
+# -- Host networking is required by Matter for mDNS and link-local IPv6 so the
+# server can discover and commission Thread / Wi-Fi devices. A ClusterIP cannot
+# carry that traffic. The common chart sets dnsPolicy ClusterFirstWithHostNet
+# automatically when hostNetwork is true; set explicitly to be safe.
+hostNetwork: true
+dnsPolicy: ClusterFirstWithHostNet
+
+# -- Co-locate with Home Assistant instead of pinning a fixed node. Home
+# Assistant reaches the Matter server over host-network localhost at
+# ws://localhost:5580/ws, so the two pods must land on the same node. Required
+# podAffinity follows HA wherever it schedules (HA itself has no node pin; it
+# floats on its longhorn PVC), so if HA reschedules the Matter server moves with
+# it and localhost still resolves. labelSelector matches HA's pod labels.
+affinity:
+  podAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: home-assistant
+            app.kubernetes.io/instance: home-assistant
+        topologyKey: kubernetes.io/hostname
+
+# -- Service is for observability only. Home Assistant does NOT connect through
+# it; it reaches the server over host-network localhost (ws://localhost:5580/ws).
+# Kept ClusterIP so it does not allocate a hostPort that would clash under
+# hostNetwork.
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 5580
+        protocol: TCP
+        targetPort: 5580
+
+# -- Fabric / device-credential storage. RWO longhorn volume mounted at /data,
+# matching the --storage-path arg above.
+persistence:
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /data
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    storageClass: longhorn
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
