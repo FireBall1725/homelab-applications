@@ -1,0 +1,8 @@
+apiVersion: v2
+name: matter-server
+version: 8.1.0
+appVersion: "8.1.0"
+dependencies:
+  - name: common
+    repository: https://fireball1725.github.io/firelabs-helm-common/
+    version: 5.0.3
