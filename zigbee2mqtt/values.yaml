@@ -27,6 +27,9 @@ env:
   # 9 dBm: balanced for the amplified SLZB-06MU (CC2652P). Max (~20) risks raising
   # the 2.4GHz noise floor and self-interference; raise only if edge devices are weak.
   ZIGBEE2MQTT_CONFIG_ADVANCED_TRANSMIT_POWER: "9"
+  # Channel 25: sits above WiFi ch11's upper edge, clear of a 2.4GHz WiFi plan that
+  # uses ch1/6/11 (which together cover Zigbee 11-23). Was 11, co-channel with WiFi.
+  ZIGBEE2MQTT_CONFIG_ADVANCED_CHANNEL: "25"
 
 # -- Configures service settings for the chart. Normally this does not need to be modified.
 # @default -- See values.yaml
