@@ -17,6 +17,15 @@ home-assistant:
 
   hostNetwork: true
 
+  # Run the HA pod as the homeassistant-kubernetes-integration ServiceAccount so the
+  # auto-mounted in-cluster token carries the RBAC the homeassistant-kubernetes
+  # integration needs (the integration uses in-cluster config over the internal API
+  # endpoint and ignores the manually entered token). The SA itself is defined in
+  # templates/serviceaccount.yaml, so create is false here to avoid a duplicate.
+  serviceAccount:
+    create: false
+    name: homeassistant-kubernetes-integration
+
   configuration:
     # Enable or disable the configuration setup for Home Assistant
     enabled: true
