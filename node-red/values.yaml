@@ -57,9 +57,20 @@ ingress:
   # -- Ingress for the node-red-mcp-server sidecar. Internal class only
   # (*.k8s.firekatt.ca resolves on the LAN). The /mcp endpoint is
   # unauthenticated; reachable at https://node-red-mcp.k8s.firekatt.ca/mcp.
+  #
+  # The Traefik middleware below forces the `Accept` request header to
+  # `application/json, text/event-stream`. supergateway's streamableHttp
+  # transport requires both media types, but Claude Code's `http` transport
+  # currently omits the header (claude-agent-sdk issue #202), so without this
+  # the server returns 406 (surfaced as a 400 by the cluster error-pages
+  # middleware) and the connection fails. Injecting the header in transit makes
+  # the buggy client compliant. Middleware ref format is
+  # `<namespace>-<name>@kubernetescrd`.
   mcp:
     enabled: true
     ingressClassName: internal
+    annotations:
+      traefik.ingress.kubernetes.io/router.middlewares: app-node-red-node-red-mcp-accept@kubernetescrd
     hosts:
       - host: node-red-mcp.k8s.firekatt.ca
         paths:

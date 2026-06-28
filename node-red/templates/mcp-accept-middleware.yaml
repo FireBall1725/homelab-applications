@@ -1,0 +1,18 @@
+{{- if .Values.ingress.mcp.enabled }}
+# Forces the Accept header for the node-red-mcp ingress so supergateway's
+# streamableHttp transport accepts requests from clients that omit it
+# (notably Claude Code's `http` transport, claude-agent-sdk issue #202).
+# Referenced from ingress.mcp.annotations as app-node-red-node-red-mcp-accept@kubernetescrd.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: node-red-mcp-accept
+  labels:
+    app.kubernetes.io/name: node-red
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  headers:
+    customRequestHeaders:
+      Accept: "application/json, text/event-stream"
+{{- end }}
