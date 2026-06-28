@@ -119,6 +119,16 @@ additionalContainers:
       - npx -y node-red-mcp-server@1.0.2 --url http://localhost:1880
       - --outputTransport
       - streamableHttp
+      # Stateful session management. Claude Code follows the full streamableHttp
+      # lifecycle (session id + notifications/initialized + a GET listening
+      # stream); supergateway's default stateless mode answers `initialize` but
+      # then has no session for the follow-ups, so the client marks the
+      # connection failed. The pod is single-replica, so there is no session
+      # affinity concern. sessionTimeout reaps idle sessions so an ungraceful
+      # client disconnect cannot leak them indefinitely.
+      - --stateful
+      - --sessionTimeout
+      - "3600000"
       - --port
       - "8000"
       - --healthEndpoint
