@@ -28,6 +28,7 @@ Node-RED provides a browser-based visual editor for wiring together automation f
 A `node-red-mcp` sidecar runs in the Node-RED pod and exposes the Node-RED Admin API to MCP clients.
 
 - The upstream server ([node-red-mcp-server](https://github.com/karavaev-evgeniy/node-red-mcp-server)) is stdio-only and ships no image, so [supergateway](https://github.com/supercorp-ai/supergateway) (`supercorp/supergateway:3.4.3`) wraps it and bridges stdio to a streamableHttp listener on port 8000.
+- supergateway runs in `--stateful` mode. Claude Code follows the full streamableHttp session lifecycle, which the default stateless mode does not satisfy (it answers `initialize` but the connection is then marked failed). `--sessionTimeout` reaps idle sessions. The pod is single-replica, so sessions have no affinity concern.
 - supergateway runs `npx -y node-red-mcp-server@1.0.2` at startup, so the package is pulled on first boot. The startup probe is sized to allow for that.
 - The MCP server talks to Node-RED over the Admin API at `http://localhost:1880` (same pod). Node-RED `adminAuth` is disabled, so no token is set. If `adminAuth` is enabled later, add `--token $NODE_RED_TOKEN` to the sidecar args and source the token from a SealedSecret.
 - Endpoint: `https://node-red-mcp.k8s.firekatt.ca/mcp`. Health: `/healthz` (unauthenticated, used by probes).
