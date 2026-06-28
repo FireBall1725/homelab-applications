@@ -37,7 +37,7 @@ service:
       http:
         port: 1880
       # -- Port exposing the node-red-mcp-server sidecar (supergateway,
-      # streamableHttp transport). Targets the sidecar container's port 8000.
+      # SSE transport: GET /sse stream + POST /message). Targets port 8000.
       mcp:
         enabled: true
         port: 8000
@@ -55,22 +55,14 @@ ingress:
           - path: /
             pathType: Prefix
   # -- Ingress for the node-red-mcp-server sidecar. Internal class only
-  # (*.k8s.firekatt.ca resolves on the LAN). The /mcp endpoint is
-  # unauthenticated; reachable at https://node-red-mcp.k8s.firekatt.ca/mcp.
+  # (*.k8s.firekatt.ca resolves on the LAN). Unauthenticated.
   #
-  # The Traefik middleware below forces the `Accept` request header to
-  # `application/json, text/event-stream`. supergateway's streamableHttp
-  # transport requires both media types, but Claude Code's `http` transport
-  # currently omits the header (claude-agent-sdk issue #202), so without this
-  # the server returns 406 (surfaced as a 400 by the cluster error-pages
-  # middleware) and the connection fails. Injecting the header in transit makes
-  # the buggy client compliant. Middleware ref format is
-  # `<namespace>-<name>@kubernetescrd`.
+  # SSE transport: the client connects to GET /sse (long-lived event stream)
+  # and posts messages to /message. The `/` prefix path routes both to the
+  # sidecar's port 8000. Connect endpoint: https://node-red-mcp.k8s.firekatt.ca/sse
   mcp:
     enabled: true
     ingressClassName: internal
-    annotations:
-      traefik.ingress.kubernetes.io/router.middlewares: app-node-red-node-red-mcp-accept@kubernetescrd
     hosts:
       - host: node-red-mcp.k8s.firekatt.ca
         paths:
@@ -105,10 +97,17 @@ initContainers:
 # The upstream MCP server (npm: node-red-mcp-server) is stdio-only and ships no
 # container image, so supergateway wraps it and exposes a network transport.
 # supergateway runs `npx -y node-red-mcp-server@1.0.2` and bridges its stdio to
-# streamableHttp on port 8000 (endpoint /mcp). The MCP server drives Node-RED's
-# Admin API at http://localhost:1880 (same pod). Node-RED adminAuth is disabled,
-# so no NODE_RED_TOKEN is required; add `--token $NODE_RED_TOKEN` from a
-# SealedSecret here if adminAuth is ever enabled.
+# the SSE transport on port 8000 (GET /sse stream + POST /message). The MCP
+# server drives Node-RED's Admin API at http://localhost:1880 (same pod).
+# Node-RED adminAuth is disabled, so no NODE_RED_TOKEN is required; add
+# `--token $NODE_RED_TOKEN` from a SealedSecret here if adminAuth is ever enabled.
+#
+# SSE rather than streamableHttp: supergateway's streamableHttp answers the
+# initialize POST as an SSE stream, and Claude Code's client reuses that
+# connection for the follow-up notification, which the cluster Traefik path
+# turns into a 400 (the connection works locally without Traefik, and works via
+# curl which opens fresh connections). SSE keeps the long-lived stream on a
+# dedicated GET and posts short messages separately, avoiding that pattern.
 additionalContainers:
   node-red-mcp:
     name: node-red-mcp
@@ -118,17 +117,7 @@ additionalContainers:
       - --stdio
       - npx -y node-red-mcp-server@1.0.2 --url http://localhost:1880
       - --outputTransport
-      - streamableHttp
-      # Stateful session management. Claude Code follows the full streamableHttp
-      # lifecycle (session id + notifications/initialized + a GET listening
-      # stream); supergateway's default stateless mode answers `initialize` but
-      # then has no session for the follow-ups, so the client marks the
-      # connection failed. The pod is single-replica, so there is no session
-      # affinity concern. sessionTimeout reaps idle sessions so an ungraceful
-      # client disconnect cannot leak them indefinitely.
-      - --stateful
-      - --sessionTimeout
-      - "3600000"
+      - sse
       - --port
       - "8000"
       - --healthEndpoint
@@ -165,4 +154,4 @@ additionalContainers:
         cpu: 25m
         memory: 64Mi
       limits:
-        memory: 256Mi
+        memory: 512Mi

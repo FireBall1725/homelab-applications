@@ -21,24 +21,23 @@ Node-RED provides a browser-based visual editor for wiring together automation f
 | Host | Description |
 |------|-------------|
 | `nodered.k8s.firekatt.ca` | Node-RED editor and dashboard |
-| `node-red-mcp.k8s.firekatt.ca` | MCP server (`/mcp`, streamableHttp), internal class |
+| `node-red-mcp.k8s.firekatt.ca` | MCP server (`/sse`, SSE transport), internal class |
 
 ## MCP Sidecar
 
 A `node-red-mcp` sidecar runs in the Node-RED pod and exposes the Node-RED Admin API to MCP clients.
 
-- The upstream server ([node-red-mcp-server](https://github.com/karavaev-evgeniy/node-red-mcp-server)) is stdio-only and ships no image, so [supergateway](https://github.com/supercorp-ai/supergateway) (`supercorp/supergateway:3.4.3`) wraps it and bridges stdio to a streamableHttp listener on port 8000.
-- supergateway runs in `--stateful` mode. Claude Code follows the full streamableHttp session lifecycle, which the default stateless mode does not satisfy (it answers `initialize` but the connection is then marked failed). `--sessionTimeout` reaps idle sessions. The pod is single-replica, so sessions have no affinity concern.
+- The upstream server ([node-red-mcp-server](https://github.com/karavaev-evgeniy/node-red-mcp-server)) is stdio-only and ships no image, so [supergateway](https://github.com/supercorp-ai/supergateway) (`supercorp/supergateway:3.4.3`) wraps it and bridges stdio to a network MCP transport on port 8000.
+- Transport is **SSE** (`--outputTransport sse`): the client opens a long-lived `GET /sse` event stream and posts messages to `/message`. supergateway's streamableHttp mode was tried first but failed through the cluster Traefik path: it answers the initialize POST as an SSE stream, and Claude Code reuses that connection for the follow-up notification, which Traefik turns into a 400. The same server connects fine locally (no Traefik) and over curl (fresh connection per request). SSE keeps the stream and the message POSTs separate, avoiding that pattern.
 - supergateway runs `npx -y node-red-mcp-server@1.0.2` at startup, so the package is pulled on first boot. The startup probe is sized to allow for that.
 - The MCP server talks to Node-RED over the Admin API at `http://localhost:1880` (same pod). Node-RED `adminAuth` is disabled, so no token is set. If `adminAuth` is enabled later, add `--token $NODE_RED_TOKEN` to the sidecar args and source the token from a SealedSecret.
-- Endpoint: `https://node-red-mcp.k8s.firekatt.ca/mcp`. Health: `/healthz` (unauthenticated, used by probes).
-- The `/mcp` endpoint has no authentication. The ingress is on the `internal` class only.
-- A Traefik `Middleware` (`node-red-mcp-accept`, in `templates/mcp-accept-middleware.yaml`) forces the `Accept: application/json, text/event-stream` request header on this ingress. supergateway's streamableHttp transport requires both media types; Claude Code's `http` transport currently omits the header ([claude-agent-sdk #202](https://github.com/anthropics/claude-agent-sdk-typescript/issues/202)), so without it the server returns 406, surfaced as a 400 by the cluster error-pages middleware. Drop the middleware once that client bug is fixed upstream.
+- Endpoint: `https://node-red-mcp.k8s.firekatt.ca/sse`. Health: `/healthz` (unauthenticated, used by probes).
+- The endpoint has no authentication. The ingress is on the `internal` class only.
 
 ### Adding to Claude Code
 
 ```
-claude mcp add --transport http -s user node-red http://node-red-mcp.k8s.firekatt.ca/mcp
+claude mcp add --transport sse -s user node-red https://node-red-mcp.k8s.firekatt.ca/sse
 ```
 
 The client machine has to be on the LAN (or Tailscale) since the host resolves on the LAN only.
