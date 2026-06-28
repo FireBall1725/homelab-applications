@@ -32,6 +32,15 @@ A `node-red-mcp` sidecar runs in the Node-RED pod and exposes the Node-RED Admin
 - The MCP server talks to Node-RED over the Admin API at `http://localhost:1880` (same pod). Node-RED `adminAuth` is disabled, so no token is set. If `adminAuth` is enabled later, add `--token $NODE_RED_TOKEN` to the sidecar args and source the token from a SealedSecret.
 - Endpoint: `https://node-red-mcp.k8s.firekatt.ca/mcp`. Health: `/healthz` (unauthenticated, used by probes).
 - The `/mcp` endpoint has no authentication. The ingress is on the `internal` class only.
+- A Traefik `Middleware` (`node-red-mcp-accept`, in `templates/mcp-accept-middleware.yaml`) forces the `Accept: application/json, text/event-stream` request header on this ingress. supergateway's streamableHttp transport requires both media types; Claude Code's `http` transport currently omits the header ([claude-agent-sdk #202](https://github.com/anthropics/claude-agent-sdk-typescript/issues/202)), so without it the server returns 406, surfaced as a 400 by the cluster error-pages middleware. Drop the middleware once that client bug is fixed upstream.
+
+### Adding to Claude Code
+
+```
+claude mcp add --transport http -s user node-red http://node-red-mcp.k8s.firekatt.ca/mcp
+```
+
+The client machine has to be on the LAN (or Tailscale) since the host resolves on the LAN only.
 
 ## Persistence
 
