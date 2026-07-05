@@ -38,6 +38,19 @@ service:
     ports:
       http:
         port: 8086
+  # Dedicated service for the health sidecar (see additionalContainers.health).
+  # Kept separate from `main` so `main` stays single-port and unambiguously the
+  # primary service/port; the /health ingress path targets this service by name.
+  health:
+    enabled: true
+    primary: false
+    type: ClusterIP
+    ports:
+      health:
+        enabled: true
+        port: 8099
+        protocol: TCP
+        targetPort: 8099
 
 ingress:
   # -- Enable and configure ingress settings for the chart under this key.
@@ -45,9 +58,23 @@ ingress:
   main:
     enabled: true
     ingressClassName: internal
+    # Upstream FastMCP serves only /mcp (which needs MCP headers) and has no
+    # health route, so kuma-ingress-watcher's default root probe never sees a
+    # 200. Point the auto-created Uptime Kuma monitor at /health, served by the
+    # health sidecar below. Requires the watcher >= 1.5.0.
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /health
     hosts:
       - host: ha-mcp.k8s.firekatt.ca
         paths:
+          # /health -> health sidecar. More specific than `/`, so Traefik
+          # matches it first; the sidecar's response code reflects fastmcp.
+          - path: /health
+            pathType: Prefix
+            service:
+              name: ha-mcp-health
+              port: 8099
+          # Everything else -> fastmcp (the MCP endpoint is at /mcp).
           - path: /
             pathType: Prefix
 
@@ -61,3 +88,87 @@ resources:
     memory: 128Mi
   limits:
     memory: 512Mi
+
+# -- Health-check sidecar.
+#
+# The upstream ghcr.io/homeassistant-ai/ha-mcp image (FastMCP streamable-HTTP,
+# `fastmcp run fastmcp-http.json`, port 8086) ships no health route, so nothing
+# returns 200 for Uptime Kuma to probe. This sidecar serves GET /health on :8099
+# and returns 200 only when it can open a TCP connection to the fastmcp listener
+# on 127.0.0.1:8086, else 503. That ties the health signal to the fastmcp
+# process actually listening, not merely to Traefik routing. stdlib-only Python,
+# so there is nothing to pip-install at runtime.
+#
+# The sidecar's own liveness/readiness use a TCP check on its own port 8099 (is
+# the little server listening), deliberately NOT /health, so that fastmcp being
+# down does not evict the sidecar or pull it from the Service endpoints; the
+# /health *response code* (200/503) is what carries the fastmcp signal to Kuma.
+additionalContainers:
+  health:
+    name: health
+    image: python:3.12-alpine
+    imagePullPolicy: IfNotPresent
+    command:
+      - python3
+      - -c
+      - |
+        import http.server, socket
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"
+
+            def _fastmcp_up(self):
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(2)
+                try:
+                    s.connect(("127.0.0.1", 8086))
+                    return True
+                except OSError:
+                    return False
+                finally:
+                    s.close()
+
+            def do_GET(self):
+                up = self._fastmcp_up()
+                body = b"ok\n" if up else b"fastmcp unreachable\n"
+                self.send_response(200 if up else 503)
+                self.send_header("Content-Type", "text/plain")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        http.server.HTTPServer(("0.0.0.0", 8099), Handler).serve_forever()
+    # No `ports:` block: the common library already advertises port 8099 on the
+    # pod via `service.health.ports.health`, and the Service routes to numeric
+    # targetPort 8099, which this container binds.
+    livenessProbe:
+      tcpSocket:
+        port: 8099
+      periodSeconds: 30
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readinessProbe:
+      tcpSocket:
+        port: 8099
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    resources:
+      requests:
+        cpu: 10m
+        memory: 24Mi
+      limits:
+        memory: 64Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 65534
+      runAsGroup: 65534
+      capabilities:
+        drop:
+          - ALL
+      seccompProfile:
+        type: RuntimeDefault
