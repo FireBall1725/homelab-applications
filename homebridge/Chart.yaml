@@ -1,0 +1,8 @@
+apiVersion: v2
+name: homebridge
+version: 1.0.0
+appVersion: "latest"
+dependencies:
+  - name: common
+    repository: https://fireball1725.github.io/firelabs-helm-common/
+    version: 5.0.3

@@ -1,0 +1,102 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/geek-cookbook/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  # -- image repository. Official Homebridge image; it ships the Config UI X
+  # admin UI and installs plugins itself, so no custom build is needed. The
+  # homebridge-unifi-protect plugin is installed through the UI on first run.
+  repository: homebridge/homebridge
+  # -- image tag
+  tag: latest
+  # -- Pull on every (re)start so `latest` actually tracks new releases.
+  pullPolicy: Always
+
+# -- StatefulSet keeps a stable identity and a single persistent volume across
+# restarts. The HomeKit pairing state (bridge username + persisted keys) lives
+# on the PVC, so keeping one stable instance avoids re-pairing.
+controller:
+  type: statefulset
+
+# -- Host networking is required so Homebridge can emit HAP mDNS/Bonjour
+# (224.0.0.251:5353) directly onto the LAN, where the Apple Home hub /
+# HomePods live. A pod on the CNI network cannot put multicast on the physical
+# wire, and a LoadBalancer/ClusterIP only carries unicast to a VIP, not the
+# multicast advertisement HomeKit discovery depends on. This is the k8s
+# equivalent of Docker's --network host, matching how matter-server runs.
+hostNetwork: true
+dnsPolicy: ClusterFirstWithHostNet
+
+# -- Let the scheduler place the pod on any node; every node sits on the flat
+# 10.0.1.0/23 LAN, so mDNS works from all of them, and HomeKit re-resolves the
+# address over mDNS if the pod moves. The only constraint is architecture: the
+# HomeKit Secure Video path runs ffmpeg, so keep it off the single arm64 Pi
+# node (talos-piwk-01) and on an amd64 worker. This is a node-class filter,
+# not a fixed target.
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/arch
+              operator: In
+              values:
+                - amd64
+
+# -- Environment variables.
+env:
+  # -- Container timezone.
+  TZ: "America/Toronto"
+
+# -- Service is for the Config UI X admin UI only, reached through the ingress.
+# HomeKit does NOT connect through it; controllers reach the HAP port directly
+# over the node's LAN IP via mDNS. Kept ClusterIP so it does not allocate a
+# hostPort that would clash under hostNetwork. The HAP port (default 51826)
+# and any child-bridge ports are intentionally NOT declared here; under
+# hostNetwork they bind to the node directly.
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 8581
+        protocol: TCP
+        targetPort: 8581
+
+ingress:
+  # -- Homebridge Config UI X admin interface.
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: homebridge.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# -- Persistent Homebridge config directory (/homebridge). Holds config.json,
+# installed plugins under node_modules, and the HAP/HKSV pairing state. The
+# Protect NVR host and local admin credentials are entered through the plugin
+# UI on first run and persist here on the PVC only, never in git.
+persistence:
+  config:
+    enabled: true
+    type: pvc
+    mountPath: /homebridge
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    storageClass: longhorn
+
+# -- ffmpeg headroom for HomeKit Secure Video recording streams.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 2000m
+    memory: 1Gi
