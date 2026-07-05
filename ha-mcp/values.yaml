@@ -140,7 +140,7 @@ additionalContainers:
             def log_message(self, *args):
                 pass
 
-        http.server.HTTPServer(("0.0.0.0", 8099), Handler).serve_forever()
+        http.server.ThreadingHTTPServer(("0.0.0.0", 8099), Handler).serve_forever()
     # No `ports:` block: the common library already advertises port 8099 on the
     # pod via `service.health.ports.health`, and the Service routes to numeric
     # targetPort 8099, which this container binds.
