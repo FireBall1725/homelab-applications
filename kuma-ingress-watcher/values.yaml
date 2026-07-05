@@ -2,7 +2,10 @@
 # https://github.com/SQuent/kuma-ingress-watcher
 
 image:
-  repository: squent/kuma-ingress-watcher
+  # Upstream migrated the image registry from Docker Hub to GHCR at 1.5.0.
+  # Docker Hub (docker.io/squent/kuma-ingress-watcher) stops at 1.4.1, so any
+  # 1.5.0+ tag must be pulled from ghcr.io or it 404s (ImagePullBackOff).
+  repository: ghcr.io/squent/kuma-ingress-watcher
   # 1.7.1: adds `uptime-kuma.autodiscovery.probe.path` annotation support
   # (landed in 1.5.0). 1.4.1 only probed the ingress host root `/`, so
   # services that 404 on `/` show DOWN in Uptime Kuma.
