@@ -3,7 +3,10 @@
 
 image:
   repository: squent/kuma-ingress-watcher
-  tag: "1.4.1"
+  # 1.7.1: adds `uptime-kuma.autodiscovery.probe.path` annotation support
+  # (landed in 1.5.0). 1.4.1 only probed the ingress host root `/`, so
+  # services that 404 on `/` show DOWN in Uptime Kuma.
+  tag: "1.7.1"
   pullPolicy: IfNotPresent
 
 # Uptime Kuma connection settings

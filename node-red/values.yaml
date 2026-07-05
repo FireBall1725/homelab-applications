@@ -63,6 +63,12 @@ ingress:
   mcp:
     enabled: true
     ingressClassName: internal
+    # kuma-ingress-watcher auto-creates an Uptime Kuma monitor per ingress and,
+    # by default, probes the host root `/`. On the SSE gateway `/` is not a 200
+    # (the stream lives at /sse), so the monitor flaps DOWN. Point it at the
+    # supergateway health endpoint instead. Requires the watcher >= 1.5.0.
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /healthz
     hosts:
       - host: node-red-mcp.k8s.firekatt.ca
         paths:

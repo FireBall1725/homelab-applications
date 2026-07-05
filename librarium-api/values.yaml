@@ -36,6 +36,11 @@ ingress:
   main:
     enabled: true
     ingressClassName: internal
+    # kuma-ingress-watcher probes the host root `/` by default, which 404s here
+    # (the API has no root route). Point the auto-created Uptime Kuma monitor at
+    # the unauthenticated /health endpoint. Requires the watcher >= 1.5.0.
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /health
     hosts:
       - host: librarium-api.k8s.firekatt.ca
         paths:

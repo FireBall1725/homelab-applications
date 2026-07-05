@@ -39,6 +39,11 @@ ingress:
   main:
     enabled: true
     ingressClassName: internal
+    # kuma-ingress-watcher probes the host root `/` by default. Here `/` 404s
+    # and /mcp is bearer-auth gated, so point the auto-created Uptime Kuma
+    # monitor at the unauthenticated /health endpoint. Requires watcher >= 1.5.0.
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /health
     hosts:
       - host: librarium-mcp.k8s.firekatt.ca
         paths:
