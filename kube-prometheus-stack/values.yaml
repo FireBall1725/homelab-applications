@@ -270,6 +270,18 @@ kube-prometheus-stack:
   kubeStateMetrics:
     enabled: true
 
+  # etcd metrics scraping. On Talos, etcd runs as a host service (not a labelled
+  # kube pod), so the default component=etcd selector matches nothing and the
+  # Service Endpoints stay empty. Pointing at the control plane node IPs makes the
+  # chart create manual Endpoints on :2381 for the ServiceMonitor to scrape.
+  # Requires listen-metrics-urls=http://0.0.0.0:2381 enabled in Talos machine config.
+  kubeEtcd:
+    enabled: true
+    endpoints:
+      - 10.0.1.21
+      - 10.0.1.22
+      - 10.0.1.23
+
   # Default rules for alerting
   defaultRules:
     create: true
