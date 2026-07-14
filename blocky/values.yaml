@@ -171,7 +171,10 @@ config: |
     customTTL: 1h
     # optional: if true (default), return empty result for unmapped query types (for example TXT, MX or AAAA if only IPv4 address is defined).
     # if false, queries with unmapped types will be forwarded to the upstream resolver
-    filterUnmappedTypes: false
+    # true: answer unmapped types (HTTPS/SVCB TYPE65, TXT, MX...) for mapped names with
+    # NODATA locally. Forwarding internal-only *.k8s.firekatt.ca upstream yields an
+    # intermittent cached NXDOMAIN, which breaks Apple Network.framework (Safari -1003).
+    filterUnmappedTypes: true
     # optional: replace domain in the query with other domain before resolver lookup in the mapping
     # rewrite:
       # example.com: printer.lan
