@@ -62,6 +62,33 @@ podSecurityContext:
   fsGroup: 1000
   fsGroupChangePolicy: OnRootMismatch
 
+# -- Init container that fixes volume ownership before the app starts.
+#
+# Basic Memory calls os.chmod() on its config dir at startup
+# (_secure_config_dir in basic_memory/config.py). chmod() is only permitted for
+# the file owner or root, so it fails with EPERM ("Operation not permitted")
+# when the process (appuser, UID 1000) does not own the directory. fsGroup 1000
+# above sets the volume group and adds group-write, but leaves the mount root
+# owned by root, so the startup chmod crash-loops the container.
+#
+# chown the mount roots to 1000:1000 as root so appuser owns them and the chmod
+# succeeds. Same pattern as node-red's initContainers.update-volume-permission.
+# Both /app/data (BASIC_MEMORY_HOME lives under it) and the config dir are
+# covered. app-ai enforces no restricted PodSecurity standard, so runAsUser 0 is
+# allowed here.
+initContainers:
+  init-chown:
+    name: init-chown
+    image: busybox
+    command: ["sh", "-c", "chown -R 1000:1000 /app/data /home/appuser/.basic-memory"]
+    volumeMounts:
+      - name: data
+        mountPath: /app/data
+      - name: config
+        mountPath: /home/appuser/.basic-memory
+    securityContext:
+      runAsUser: 0
+
 # -- Configures service settings for the chart.
 # @default -- See values.yaml
 service:
