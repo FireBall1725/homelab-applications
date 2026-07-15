@@ -1,0 +1,11 @@
+apiVersion: v2
+name: basic-memory
+description: Basic Memory - self-hosted AI memory MCP server (Markdown knowledge base + SQLite index)
+type: application
+version: 1.0.0
+# renovate: image=ghcr.io/basicmachines-co/basic-memory
+appVersion: "0.22.1"
+dependencies:
+  - name: common
+    repository: https://fireball1725.github.io/firelabs-helm-common/
+    version: 5.0.3

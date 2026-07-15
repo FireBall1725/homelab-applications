@@ -1,0 +1,263 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  # -- image repository
+  repository: ghcr.io/basicmachines-co/basic-memory
+  # -- image tag (immutable release tag, not `latest`)
+  # renovate: image=ghcr.io/basicmachines-co/basic-memory
+  tag: "0.22.1"
+  # -- image pull policy
+  pullPolicy: IfNotPresent
+
+# -- Single replica. The default SQLite backend writes to a ReadWriteOnce PVC,
+# so the server is a singleton (do NOT scale above 1). Recreate rather than
+# RollingUpdate avoids two pods racing for the RWO volume during a redeploy.
+controller:
+  replicas: 1
+  strategy: Recreate
+
+# -- Container command. The upstream image can start in several transports, so
+# pin it to the SSE transport bound on 0.0.0.0:8000 explicitly.
+#
+# SSE, NOT streamableHttp: supergateway/FastMCP streamableHttp answers the
+# initialize POST as an SSE stream, and Claude Code reuses that connection for
+# the follow-up notification, which the cluster Traefik path turns into a 400
+# (the same failure that hit the node-red MCP sidecar). SSE keeps the long-lived
+# stream on a dedicated request, avoiding that pattern. MCP endpoint is /mcp.
+command:
+  - basic-memory
+  - mcp
+  - --transport
+  - sse
+  - --host
+  - 0.0.0.0
+  - --port
+  - "8000"
+
+# -- Environment variables. Values below are the upstream defaults, set
+# explicitly so the config is self-documenting. The SQLite backend is the
+# default (BASIC_MEMORY_DATABASE_BACKEND is left unset); no Postgres/pgvector.
+env:
+  # -- Container timezone
+  TZ: America/Toronto
+  # -- Knowledge base (Markdown) lives under the persisted /app/data volume
+  BASIC_MEMORY_HOME: /app/data/basic-memory
+  BASIC_MEMORY_PROJECT_ROOT: /app/data
+  BASIC_MEMORY_DEFAULT_PROJECT: main
+  BASIC_MEMORY_SYNC_CHANGES: "true"
+  BASIC_MEMORY_LOG_LEVEL: INFO
+
+# -- The image runs as the non-root `appuser` (UID/GID 1000). fsGroup makes the
+# Longhorn PVCs group-owned by 1000 so appuser can write both mounts without an
+# init-container chown. OnRootMismatch skips a recursive chown when ownership is
+# already correct, keeping restarts fast on a large knowledge base.
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+
+# -- Configures service settings for the chart.
+# @default -- See values.yaml
+service:
+  main:
+    ports:
+      http:
+        port: 8000
+  # Dedicated service for the health sidecar (see additionalContainers.health).
+  # Kept separate from `main` so `main` stays single-port and unambiguously the
+  # primary service/port; the /health ingress path targets this service by name.
+  health:
+    enabled: true
+    primary: false
+    type: ClusterIP
+    ports:
+      health:
+        enabled: true
+        port: 8099
+        protocol: TCP
+        targetPort: 8099
+
+ingress:
+  # -- Internal ingress class only. *.k8s.firekatt.ca resolves on the LAN, and
+  # the Basic Memory SSE/HTTP endpoint has NO built-in authentication, so it
+  # must never be exposed to the public internet. MCP endpoint: /mcp.
+  # @default -- See values.yaml
+  main:
+    enabled: true
+    ingressClassName: internal
+    # Basic Memory serves the MCP protocol at /mcp (which needs MCP headers) and
+    # ships no plain HTTP health route, so kuma-ingress-watcher's default root
+    # probe never sees a 200. Point the auto-created Uptime Kuma monitor at
+    # /health, served by the health sidecar below. Requires the watcher >= 1.5.0.
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /health
+    hosts:
+      - host: basic-memory.k8s.firekatt.ca
+        paths:
+          # /health -> health sidecar. More specific than `/`, so Traefik
+          # matches it first; the sidecar's response code reflects the MCP
+          # listener actually being up.
+          - path: /health
+            pathType: Prefix
+            service:
+              name: basic-memory-health
+              port: 8099
+          # Everything else (including /mcp) -> the Basic Memory server.
+          - path: /
+            pathType: Prefix
+
+# -- Persistence (Longhorn, ReadWriteOnce).
+#   data   - /app/data : the Markdown knowledge base (the actual memory content)
+#   config - /home/appuser/.basic-memory : app config + SQLite index. The index
+#            can rebuild from the Markdown, but persist it to avoid a cold
+#            rebuild on every restart.
+# @default -- See values.yaml
+persistence:
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /app/data
+    accessMode: ReadWriteOnce
+    storageClass: longhorn
+    size: 5Gi
+  config:
+    enabled: true
+    type: pvc
+    mountPath: /home/appuser/.basic-memory
+    accessMode: ReadWriteOnce
+    storageClass: longhorn
+    size: 2Gi
+
+# -- Liveness/readiness/startup probes. The image exposes no HTTP health route
+# (its Docker HEALTHCHECK is the exec `basic-memory --version`), so probe the
+# TCP listener on 8000. The startup probe is generous for the first-boot index
+# build and initial Markdown sync.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      tcpSocket:
+        port: 8000
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      tcpSocket:
+        port: 8000
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+  startup:
+    enabled: true
+    custom: true
+    spec:
+      tcpSocket:
+        port: 8000
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 30
+
+# -- Resource limits. Python process plus SQLite and a filesystem watcher on the
+# Markdown tree; modest footprint.
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
+# -- Health-check sidecar.
+#
+# The upstream ghcr.io/basicmachines-co/basic-memory image serves the MCP
+# protocol at /mcp (SSE transport, port 8000) and ships no plain HTTP health
+# route, so nothing returns a clean 200 for Uptime Kuma to probe. This sidecar
+# serves GET /health on :8099 and returns 200 only when it can open a TCP
+# connection to the Basic Memory listener on 127.0.0.1:8000, else 503. That ties
+# the health signal to the server actually listening, not merely to Traefik
+# routing. stdlib-only Python, so there is nothing to pip-install at runtime.
+#
+# The sidecar's own liveness/readiness use a TCP check on its own port 8099 (is
+# the little server listening), deliberately NOT /health, so that Basic Memory
+# being down does not evict the sidecar or pull it from the Service endpoints;
+# the /health response code (200/503) is what carries the signal to Kuma.
+additionalContainers:
+  health:
+    name: health
+    image: python:3.12-alpine
+    imagePullPolicy: IfNotPresent
+    command:
+      - python3
+      - -c
+      - |
+        import http.server, socket
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"
+
+            def _upstream_up(self):
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(2)
+                try:
+                    s.connect(("127.0.0.1", 8000))
+                    return True
+                except OSError:
+                    return False
+                finally:
+                    s.close()
+
+            def do_GET(self):
+                up = self._upstream_up()
+                body = b"ok\n" if up else b"basic-memory unreachable\n"
+                self.send_response(200 if up else 503)
+                self.send_header("Content-Type", "text/plain")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        http.server.ThreadingHTTPServer(("0.0.0.0", 8099), Handler).serve_forever()
+    # No `ports:` block: the common library already advertises port 8099 on the
+    # pod via `service.health.ports.health`, and the Service routes to numeric
+    # targetPort 8099, which this container binds.
+    livenessProbe:
+      tcpSocket:
+        port: 8099
+      periodSeconds: 30
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readinessProbe:
+      tcpSocket:
+        port: 8099
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    resources:
+      requests:
+        cpu: 10m
+        memory: 24Mi
+      limits:
+        memory: 64Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 65534
+      runAsGroup: 65534
+      capabilities:
+        drop:
+          - ALL
+      seccompProfile:
+        type: RuntimeDefault

@@ -1,0 +1,19 @@
+Thanks for installing basic-memory.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Image:     {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+MCP endpoint (SSE transport, internal ingress only, no authentication):
+  https://basic-memory.k8s.firekatt.ca/mcp
+
+Add it to Claude Code (client must be on the LAN or Tailscale):
+  claude mcp add --transport sse -s user basic-memory https://basic-memory.k8s.firekatt.ca/mcp
+
+Persistence (Longhorn, ReadWriteOnce):
+  /app/data                   Markdown knowledge base (5Gi)
+  /home/appuser/.basic-memory config + SQLite index (2Gi)
+
+Health (served by the sidecar, no auth):
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "common.names.fullname" . }}-health 8099:8099
+  curl http://localhost:8099/health
