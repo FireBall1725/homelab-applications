@@ -51,6 +51,16 @@ env:
   BASIC_MEMORY_DEFAULT_PROJECT: main
   BASIC_MEMORY_SYNC_CHANGES: "true"
   BASIC_MEMORY_LOG_LEVEL: INFO
+  # -- HuggingFace / sentence-transformers model cache. Semantic indexing
+  # downloads a sentence-transformer model on first use; without a persisted
+  # cache the image re-downloads it on every restart. Point the cache at a
+  # subdir of the config PVC (already persisted) rather than the default
+  # ~/.cache/huggingface (ephemeral) or anywhere under /app/data, since
+  # BASIC_MEMORY_PROJECT_ROOT=/app/data is watched by file-sync and binary
+  # model files there would pollute the Markdown sync. init-chown already owns
+  # /home/appuser/.basic-memory, so the subdir is writable by appuser.
+  HF_HOME: /home/appuser/.basic-memory/hf-cache
+  SENTENCE_TRANSFORMERS_HOME: /home/appuser/.basic-memory/hf-cache
 
 # -- The image runs as the non-root `appuser` (UID/GID 1000). fsGroup makes the
 # Longhorn PVCs group-owned by 1000 so appuser can write both mounts without an
@@ -141,9 +151,11 @@ ingress:
 
 # -- Persistence (Longhorn, ReadWriteOnce).
 #   data   - /app/data : the Markdown knowledge base (the actual memory content)
-#   config - /home/appuser/.basic-memory : app config + SQLite index. The index
-#            can rebuild from the Markdown, but persist it to avoid a cold
-#            rebuild on every restart.
+#   config - /home/appuser/.basic-memory : app config, SQLite index, and the
+#            HuggingFace model cache (hf-cache subdir, see HF_HOME above). The
+#            index can rebuild from the Markdown, but persist it to avoid a cold
+#            rebuild on every restart. Sized to 3Gi to hold the ~100-400MB model
+#            cache alongside the SQLite index.
 # @default -- See values.yaml
 persistence:
   data:
@@ -159,7 +171,7 @@ persistence:
     mountPath: /home/appuser/.basic-memory
     accessMode: ReadWriteOnce
     storageClass: longhorn
-    size: 2Gi
+    size: 3Gi
 
 # -- Liveness/readiness/startup probes. The image exposes no HTTP health route
 # (its Docker HEALTHCHECK is the exec `basic-memory --version`), so probe the
@@ -196,14 +208,17 @@ probes:
       periodSeconds: 5
       failureThreshold: 30
 
-# -- Resource limits. Python process plus SQLite and a filesystem watcher on the
-# Markdown tree; modest footprint.
+# -- Resource limits. Idle footprint is ~150Mi, but semantic indexing loads a
+# sentence-transformer model plus the PyTorch runtime into memory during writes;
+# that spike OOMKilled the container at the previous 512Mi limit during a bulk
+# note migration. Ceiling raised to 2Gi (the node has 32Gi) with a 512Mi request
+# so the scheduler reserves a realistic post-model-load baseline.
 resources:
   requests:
-    cpu: 50m
-    memory: 128Mi
-  limits:
+    cpu: 100m
     memory: 512Mi
+  limits:
+    memory: 2Gi
 
 # -- Health-check sidecar.
 #
