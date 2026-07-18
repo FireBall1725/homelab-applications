@@ -1,0 +1,32 @@
+apiVersion: v2
+name: pcexpress-mcp
+description: PC Express MCP - Model Context Protocol server for PC Express grocery ordering (Zehrs/Loblaws banners).
+type: application
+
+# Chart version. Bump on template/values changes; does not need to match appVersion.
+version: 0.1.0
+
+# Tracks the pcexpress-mcp-server release. Keep in sync with the pinned image tag
+# in values.yaml. Placeholder until the first tagged image publishes (see PR).
+appVersion: "0.1.0"
+
+kubeVersion: ">=1.25.0-0"
+
+home: https://github.com/fireball1725/pcexpress-mcp-server
+sources:
+  - https://github.com/fireball1725/pcexpress-mcp-server
+maintainers:
+  - name: fireball1725
+    url: https://github.com/fireball1725
+
+keywords:
+  - pcexpress
+  - mcp
+  - model-context-protocol
+  - grocery
+  - self-hosted
+
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://fireball1725.github.io/firelabs-helm-common/

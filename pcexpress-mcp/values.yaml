@@ -1,0 +1,168 @@
+# PC Express MCP - homelab values
+#
+# Wraps the upstream pcexpress-mcp chart (firelabs-helm-common based). Only
+# override the knobs the homelab needs; leave everything else at upstream
+# defaults so a future refresh (bump `common` or pull in new templates) is a
+# clean re-copy + reapply-overrides.
+#
+# Deploys into its own namespace (app-pcexpress). The MCP server talks out to
+# the PC Express (Zehrs/Loblaws) cloud API - no in-cluster service dependency.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: pcexpress-mcp
+
+image:
+  repository: ghcr.io/fireball1725/pcexpress-mcp
+  # CI on pcexpress-mcp-server publishes semver tags (e.g. "0.1.0") to GHCR on a
+  # git tag. That image does not exist yet (see PR #3 on that repo). Pin the real
+  # tag here once it publishes; "latest" is a placeholder so the chart lints.
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# HARD CONSTRAINT: single replica, Recreate strategy.
+# The PC Express OAuth refresh token is single-use and rotates on every refresh.
+# Two pods would consume each other's rotated tokens and one would die with
+# `invalid_grant`. Never scale this above 1, and never use RollingUpdate (which
+# would briefly run two pods during a rollout).
+controller:
+  replicas: 1
+  strategy: Recreate
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8090
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves
+# inside the LAN only. MCP is served over SSE at /sse (posts to /messages/);
+# /mcp-style bearer gating is handled by the app when PCEXPRESS_MCP_BEARER is set.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    # kuma-ingress-watcher probes the host root `/` by default. Here `/` is not a
+    # useful health target, so point the auto-created Uptime Kuma monitor at the
+    # unauthenticated /health endpoint. Requires watcher >= 1.5.0.
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /health
+    hosts:
+      - host: pcexpress-mcp.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# /health is unauthenticated; the SSE endpoint may be bearer-gated. Probes hit
+# /health on the container port (8090).
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 15
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Storage
+#   data - small RWO PVC at /data holding the rotating OAuth refresh token.
+#          HARD CONSTRAINT: this MUST persist. The refresh token rotates on every
+#          use; a pod restart without this volume loses the rotated token and the
+#          seed token is already spent, so the install would need re-seeding.
+# -----------------------------------------------------------------------------
+persistence:
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /data
+    accessMode: ReadWriteOnce
+    size: 32Mi
+    storageClass: longhorn
+
+# -----------------------------------------------------------------------------
+# Non-sensitive configuration
+#   PCEXPRESS_STATE_DIR - where the rotating refresh token is persisted (the
+#   /data PVC above).
+# -----------------------------------------------------------------------------
+configmap:
+  config:
+    enabled: true
+    data:
+      PCEXPRESS_STATE_DIR: /data
+
+# -----------------------------------------------------------------------------
+# Sensitive configuration
+#
+# Disable the upstream auto-Secret - we manage all sensitive values via a
+# SealedSecret named `pcexpress-mcp` (templates/sealed-secret-refresh-token.yaml)
+# and pull them in through `env.*.valueFrom.secretKeyRef`.
+#
+# NOTE: the PC Express app client secret is baked into the container image, so it
+# is NOT stored here. The cart id is auto-discovered by the server, so there is
+# no cart id here either.
+# -----------------------------------------------------------------------------
+secret: {}
+
+envFrom:
+  - configMapRef:
+      name: pcexpress-mcp-config
+
+env:
+  # All keys below live in the SealedSecret `pcexpress-mcp`
+  # (templates/sealed-secret-refresh-token.yaml).
+
+  # OAuth refresh token dedicated to THIS k8s instance. Single-use / rotating -
+  # get it by running login_pcid.py once (see the sealed-secret template).
+  PCEXPRESS_REFRESH_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: pcexpress-mcp
+        key: PCEXPRESS_REFRESH_TOKEN
+
+  # Grocery banner. Default value to seal: `zehrs`.
+  PCEXPRESS_BANNER:
+    valueFrom:
+      secretKeyRef:
+        name: pcexpress-mcp
+        key: PCEXPRESS_BANNER
+
+  # Home store id used for fulfilment/availability.
+  PCEXPRESS_STORE_ID:
+    valueFrom:
+      secretKeyRef:
+        name: pcexpress-mcp
+        key: PCEXPRESS_STORE_ID
+
+  # Optional inbound bearer for the MCP/SSE endpoint. `optional: true` so the pod
+  # still starts if this key is omitted from the SealedSecret.
+  PCEXPRESS_MCP_BEARER:
+    valueFrom:
+      secretKeyRef:
+        name: pcexpress-mcp
+        key: PCEXPRESS_MCP_BEARER
+        optional: true
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
