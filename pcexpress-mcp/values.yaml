@@ -14,8 +14,8 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/pcexpress-mcp
-  # Published by pcexpress-mcp-server CI to GHCR on the v0.1.0 git tag.
-  tag: "0.1.0"
+  # Published by pcexpress-mcp-server CI to GHCR on the v0.2.0 git tag.
+  tag: "0.2.0"
   pullPolicy: IfNotPresent
 
 # HARD CONSTRAINT: single replica, Recreate strategy.
