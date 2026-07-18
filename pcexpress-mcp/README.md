@@ -11,8 +11,8 @@ pcexpress-mcp exposes the PC Express (Zehrs/Loblaws) grocery API as an MCP serve
 | | |
 |---|---|
 | **Upstream Project** | [pcexpress-mcp-server](https://github.com/fireball1725/pcexpress-mcp-server) |
-| **Chart Version** | `0.1.0` |
-| **App Version** | `0.1.0` (placeholder until the first image publishes) |
+| **Chart Version** | `0.1.1` |
+| **App Version** | `0.2.0` |
 | **Common Library** | `common` 5.0.3 ([firelabs-helm-common](https://fireball1725.github.io/firelabs-helm-common/)) |
 
 ## Ingress

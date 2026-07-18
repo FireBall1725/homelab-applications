@@ -4,11 +4,11 @@ description: PC Express MCP - Model Context Protocol server for PC Express groce
 type: application
 
 # Chart version. Bump on template/values changes; does not need to match appVersion.
-version: 0.1.0
+version: 0.1.1
 
 # Tracks the pcexpress-mcp-server release. Keep in sync with the pinned image tag
-# in values.yaml. Placeholder until the first tagged image publishes (see PR).
-appVersion: "0.1.0"
+# in values.yaml.
+appVersion: "0.2.0"
 
 kubeVersion: ">=1.25.0-0"
 
