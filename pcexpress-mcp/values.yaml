@@ -14,10 +14,8 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/pcexpress-mcp
-  # CI on pcexpress-mcp-server publishes semver tags (e.g. "0.1.0") to GHCR on a
-  # git tag. That image does not exist yet (see PR #3 on that repo). Pin the real
-  # tag here once it publishes; "latest" is a placeholder so the chart lints.
-  tag: "latest"
+  # Published by pcexpress-mcp-server CI to GHCR on the v0.1.0 git tag.
+  tag: "0.1.0"
   pullPolicy: IfNotPresent
 
 # HARD CONSTRAINT: single replica, Recreate strategy.
