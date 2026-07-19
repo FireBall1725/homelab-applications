@@ -222,6 +222,9 @@ config: |
           telemetrydeck.com
           nom.telemetrydeck.com
           cdn.telemetrydeck.com
+          # regex catch-all: apex + every subdomain (dashboard, api, ...) since a
+          # plain-domain allowlist entry only matched the exact FQDN in this setup
+          /(^|\.)telemetrydeck\.com$/
     # definition: which groups should be applied for which client
     clientGroupsBlock:
       # default will be used, if no special definition for a client name exists
