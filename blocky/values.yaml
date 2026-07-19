@@ -219,6 +219,9 @@ config: |
           d3tracking.rbc.com
           analytics.supplyframe.com
           sdk.split.io
+          telemetrydeck.com
+          nom.telemetrydeck.com
+          cdn.telemetrydeck.com
     # definition: which groups should be applied for which client
     clientGroupsBlock:
       # default will be used, if no special definition for a client name exists
