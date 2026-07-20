@@ -1,0 +1,154 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  # -- image repository
+  repository: ghcr.io/manelpb/basic-memory-viewer
+  # -- image tag. Upstream CI publishes an immutable short-commit-SHA tag only
+  # (`type=sha,prefix=,format=short`); the `latest` tag on the registry is a
+  # leftover from before that change and no longer moves, so pin the SHA.
+  # renovate: image=ghcr.io/manelpb/basic-memory-viewer
+  tag: "49842aa"
+  # -- image pull policy
+  pullPolicy: IfNotPresent
+
+# -- Stateless read-only UI, so a rolling update is safe. All state lives in
+# Basic Memory; the viewer holds only an in-memory description cache.
+controller:
+  replicas: 1
+  strategy: RollingUpdate
+
+# -- Environment variables.
+env:
+  # -- Container timezone
+  TZ: America/Toronto
+  # -- Basic Memory MCP endpoint. Points at the in-cluster Service rather than
+  # back out through Traefik at basic-memory.k8s.firekatt.ca, so the traffic
+  # never leaves the namespace and does not depend on ingress or LAN DNS.
+  MCP_URL: http://basic-memory.app-ai.svc.cluster.local:8000/mcp
+  # -- Transport. The viewer defaults to streamable HTTP, but our Basic Memory
+  # runs `--transport sse` (see basic-memory/values.yaml), so this must be sse.
+  MCP_TRANSPORT: sse
+  # -- Default project shown in the UI. Matches BASIC_MEMORY_DEFAULT_PROJECT.
+  BM_PROJECT: main
+  # -- Brand name in the UI header
+  APP_TITLE: Memory
+  #
+  # NOTES_DIR is deliberately NOT set.
+  #
+  # It would let the viewer read note frontmatter straight off disk instead of
+  # fanning out read_note calls over MCP, and it also enables the git-backed
+  # file-history feature. Both need the viewer to mount the same notes volume as
+  # Basic Memory, and basic-memory-data is a Longhorn ReadWriteOnce PVC: a second
+  # pod can only attach it if it lands on the same node, and any attempt to
+  # attach from elsewhere blocks the pod. Changing the access mode would mean
+  # recreating the PVC that holds the actual memory content, which is not worth a
+  # description-loading optimisation. Without NOTES_DIR the viewer is fully
+  # functional; descriptions resolve over MCP and the history panel stays hidden.
+  #
+  # GIT_REMOTE and MOCK_DATA are also unset (backup mode and demo data).
+
+# -- The image creates and runs as the non-root `appuser` (UID/GID 10001). No
+# volumes are mounted, so there is nothing to chown; unlike Basic Memory itself
+# this app never chmods a config dir, so no init container is needed.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Nothing is written outside /tmp, so the root filesystem is read-only.
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# -- Scratch space, required because the root filesystem is read-only.
+persistence:
+  tmp:
+    enabled: true
+    type: emptyDir
+    mountPath: /tmp
+
+# -- Service. The container runs uvicorn on port 8000 (the Dockerfile CMD), not
+# on 8200; that number appears nowhere upstream.
+service:
+  main:
+    ports:
+      http:
+        port: 8000
+
+ingress:
+  # -- Internal ingress class only. The viewer has no authentication and renders
+  # the full contents of the knowledge base, so it must never be reachable from
+  # the public internet. Same posture as basic-memory itself.
+  main:
+    enabled: true
+    ingressClassName: internal
+    # /healthz is the meaningful monitor: it returns 200 only when the MCP
+    # endpoint answers, so Kuma alerts when the viewer cannot reach Basic Memory,
+    # not merely when the pod is gone. Requires kuma-ingress-watcher >= 1.5.0.
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /healthz
+    hosts:
+      - host: basic-memory-viewer.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# -- Probes against the app's own routes (app/main.py):
+#   /livez   always 200 while uvicorn serves; used for liveness so a Basic Memory
+#            outage never restarts the viewer.
+#   /healthz opens an MCP session and returns 503 if that fails; used for
+#            readiness so the pod leaves the Service endpoints while its only
+#            dependency is down.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /livez
+        port: 8000
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8000
+      initialDelaySeconds: 5
+      periodSeconds: 15
+      timeoutSeconds: 10
+      failureThreshold: 3
+  startup:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /livez
+        port: 8000
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      failureThreshold: 20
+
+# -- Resource limits. Server-rendered FastAPI with no model loading and no
+# database; the footprint is the Python runtime plus a small description cache.
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi

@@ -1,0 +1,18 @@
+Thanks for installing basic-memory-viewer.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Image:     {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+Web UI (internal ingress only, no authentication):
+  http://basic-memory-viewer.k8s.firekatt.ca/
+
+It reads from Basic Memory over MCP in-cluster:
+  {{ .Values.env.MCP_URL }} (transport: {{ .Values.env.MCP_TRANSPORT }})
+
+Health routes:
+  /livez   process is serving HTTP
+  /healthz 200 when the MCP endpoint answers, 503 when it does not
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "common.names.fullname" . }} 8000:8000
+  curl http://localhost:8000/healthz

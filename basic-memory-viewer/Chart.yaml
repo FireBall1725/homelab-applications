@@ -1,0 +1,11 @@
+apiVersion: v2
+name: basic-memory-viewer
+description: Read-only web UI for browsing and searching Basic Memory notes over MCP
+type: application
+version: 1.0.0
+# renovate: image=ghcr.io/manelpb/basic-memory-viewer
+appVersion: "49842aa"
+dependencies:
+  - name: common
+    repository: https://fireball1725.github.io/firelabs-helm-common/
+    version: 5.0.3
