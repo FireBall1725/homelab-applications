@@ -42,3 +42,11 @@ traefik:
   additionalArguments:
     - "--entryPoints.web.http.middlewares=core-traefik-ingress-error-pages@kubernetescrd"
     - "--entryPoints.websecure.http.middlewares=core-traefik-ingress-error-pages@kubernetescrd"
+    # Responding-timeout hardening for long-lived MCP-over-SSE streams on
+    # websecure (basic-memory MCP, ha-mcp, node-red-mcp). The default idleTimeout
+    # is 180s; a keepalive that stalls past it during a heavy sync/index cycle
+    # would let Traefik reap the stream, and the SSE client does not reconnect.
+    # A large finite idleTimeout avoids that without disabling idle reaping
+    # entirely (0s would let idle keep-alive connections accumulate unbounded).
+    - "--entryPoints.websecure.transport.respondingTimeouts.idleTimeout=3600s"
+    - "--entryPoints.websecure.transport.respondingTimeouts.readTimeout=0s"
