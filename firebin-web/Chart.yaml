@@ -4,10 +4,10 @@ description: FireBin Web - React frontend (nginx) for the self-hosted FireBin pa
 type: application
 
 # Chart version. Bump on template/values changes; does not need to match appVersion.
-version: 0.1.0
+version: 0.1.1
 
 # Tracks the firebin-web release. Keep in sync with the pinned image tag in values.yaml.
-appVersion: "26.7.0"
+appVersion: "26.7.1"
 
 kubeVersion: ">=1.25.0-0"
 
