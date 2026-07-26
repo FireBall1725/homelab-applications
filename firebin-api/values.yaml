@@ -1,0 +1,162 @@
+# FireBin API - homelab values
+#
+# Go REST backend for FireBin (electronics parts inventory). Built on the
+# firelabs-helm-common library, matching the librarium-api pattern: pinned image,
+# a CloudNativePG-managed Postgres cluster, a SealedSecret for JWT_SECRET, and
+# DATABASE_URL pulled from the CNPG-generated app secret.
+#
+# The container listens on :8080 and runs its own database migrations on start.
+# The service MUST be named firebin-api on port 8080: firebin-web's bundled
+# nginx proxies /api to http://firebin-api:8080 by bare service name, so both
+# charts must deploy into the same namespace (app-firebin).
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  # This fixes the Service name to firebin-api, which firebin-web depends on.
+  fullnameOverride: firebin-api
+
+image:
+  repository: ghcr.io/fireball1725/firebin-api
+  tag: "26.7.0"
+  pullPolicy: IfNotPresent
+
+# Single-replica, Recreate strategy - the attachments PVC is RWO.
+controller:
+  replicas: 1
+  strategy: Recreate
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8080
+
+# No ingress on the api. firebin-web is the only public entrypoint; it serves the
+# UI and reverse-proxies /api to this service in-cluster. Exposing the api
+# directly would bypass that and is not needed.
+ingress:
+  main:
+    enabled: false
+
+# The api has no dedicated health endpoint documented for the alpha, so probe the
+# TCP socket. A listening :8080 means the process is up and migrations have run
+# far enough to bind. Swap to an httpGet health path if one lands upstream.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      tcpSocket:
+        port: http
+      initialDelaySeconds: 30
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      tcpSocket:
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Storage
+#   attachments - datasheets and part images the api writes to disk. The compose
+#   reference mounts a volume at /app/data/attachments; the api reads
+#   ATTACHMENT_STORAGE_PATH for the location (set below). RWO, single replica.
+# -----------------------------------------------------------------------------
+persistence:
+  attachments:
+    enabled: true
+    type: pvc
+    mountPath: /app/data/attachments
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    storageClass: longhorn
+
+# -----------------------------------------------------------------------------
+# Non-sensitive configuration.
+#
+# REGISTRATION_ENABLED=false is the safe setting: the first account to register
+# still bootstraps the admin through the first-run setup wizard, then open
+# self-signup stays closed. Flip to "true" only to allow anyone on the LAN to
+# create their own account. *.k8s.firekatt.ca resolves inside the LAN only.
+# -----------------------------------------------------------------------------
+configmap:
+  config:
+    enabled: true
+    data:
+      REGISTRATION_ENABLED: "false"
+      ATTACHMENT_STORAGE_PATH: /app/data/attachments
+
+secret: {}
+
+# ConfigMap is wired into envFrom. DATABASE_URL and JWT_SECRET come in as explicit
+# env vars via secretKeyRef so nothing else is coupled to envFrom naming.
+envFrom:
+  - configMapRef:
+      name: firebin-api-config
+
+env:
+  # CNPG-generated Secret: <clusterName>-app, key `uri` holds the full DSN.
+  DATABASE_URL:
+    valueFrom:
+      secretKeyRef:
+        name: firebin-db-app
+        key: uri
+  # SealedSecret managed in this chart (templates/sealed-secret-jwt.yaml).
+  JWT_SECRET:
+    valueFrom:
+      secretKeyRef:
+        name: firebin-api-jwt
+        key: JWT_SECRET
+
+  # Optional Digi-Key enrichment. The simplest path is to enter these in the UI
+  # under Settings, Enrichment (stored in the database). To inject them as env
+  # instead, seal a firebin-api-enrichment secret with keys DIGIKEY_CLIENT_ID
+  # and DIGIKEY_CLIENT_SECRET (see README), then uncomment:
+  # DIGIKEY_CLIENT_ID:
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: firebin-api-enrichment
+  #       key: DIGIKEY_CLIENT_ID
+  #       optional: true
+  # DIGIKEY_CLIENT_SECRET:
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: firebin-api-enrichment
+  #       key: DIGIKEY_CLIENT_SECRET
+  #       optional: true
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
+# -----------------------------------------------------------------------------
+# CloudNativePG-managed Postgres cluster. The operator lives in app-cloudnative-pg.
+# The api reads DATABASE_URL from the auto-generated firebin-db-app secret (uri).
+# -----------------------------------------------------------------------------
+postgres:
+  create: true
+  clusterName: firebin-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-3
+  database: firebin
+  owner: firebin
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  # Enable CNPG Prometheus metrics so kube-prometheus-stack PodMonitor discovery
+  # picks this cluster up, matching librarium-db / terminus-postgres / wikijs.
+  extraSpec:
+    monitoring:
+      enablePodMonitor: true

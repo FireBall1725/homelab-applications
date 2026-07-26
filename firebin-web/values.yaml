@@ -1,0 +1,74 @@
+# FireBin Web - homelab values
+#
+# React UI served by nginx. The image's bundled nginx.conf listens on :3000 and
+# proxies /api to http://firebin-api:8080 by bare service name, so this release
+# MUST deploy into the same namespace as firebin-api (app-firebin) for DNS to
+# resolve. This is the only public entrypoint: it serves the UI and reverse-
+# proxies the api itself, so the ingress points here, not at firebin-api.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: firebin-web
+
+image:
+  repository: ghcr.io/fireball1725/firebin-web
+  tag: "26.7.0"
+  pullPolicy: IfNotPresent
+
+# Stateless static nginx bundle - safe to scale horizontally and roll without
+# downtime (no PVC, no singleton state).
+controller:
+  replicas: 2
+  strategy: RollingUpdate
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 3000
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves
+# inside the LAN only (wildcard maps to 10.0.1.100 in blocky). HTTP only, no TLS
+# terminated at this ingress, matching the other app-* hosts.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: firebin.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /
+        port: http
+      initialDelaySeconds: 15
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /
+        port: http
+      initialDelaySeconds: 3
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
