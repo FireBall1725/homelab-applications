@@ -42,15 +42,15 @@ ingress:
   main:
     enabled: false
 
-# The api has no dedicated health endpoint documented for the alpha, so probe the
-# TCP socket. A listening :8080 means the process is up and migrations have run
-# far enough to bind. Swap to an httpGet health path if one lands upstream.
+# GET /api/v1/health is public (no auth) and returns 200 with a static status/
+# version payload (no DB dependency), so it is safe for both probes.
 probes:
   liveness:
     enabled: true
     custom: true
     spec:
-      tcpSocket:
+      httpGet:
+        path: /api/v1/health
         port: http
       initialDelaySeconds: 30
       periodSeconds: 30
@@ -58,7 +58,8 @@ probes:
     enabled: true
     custom: true
     spec:
-      tcpSocket:
+      httpGet:
+        path: /api/v1/health
         port: http
       initialDelaySeconds: 5
       periodSeconds: 10

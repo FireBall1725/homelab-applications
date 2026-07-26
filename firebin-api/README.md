@@ -70,4 +70,4 @@ Enrichment pulls datasheets, parameters, images, and price breaks from the Digi-
 ## Notes
 
 - PostgreSQL is provisioned via a `Cluster` CR managed by [CloudNative-PG](../cloudnative-pg/).
-- Probes hit the TCP socket on `:8080`; the alpha has no documented HTTP health path. Swap to an `httpGet` probe if one lands upstream.
+- Liveness and readiness probes hit `GET /api/v1/health` on `:8080` (public, no auth, no DB dependency; returns status and version).
