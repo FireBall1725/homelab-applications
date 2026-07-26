@@ -1,0 +1,30 @@
+Thanks for installing firebin-api.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Image:     {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+{{- if .Values.postgres.create }}
+
+Postgres (CloudNativePG) is managed by this release:
+  Cluster:  {{ .Values.postgres.clusterName }}
+  Database: {{ .Values.postgres.database }}
+
+Check status:
+  kubectl -n {{ .Release.Namespace }} get cluster.postgresql.cnpg.io {{ .Values.postgres.clusterName }}
+  kubectl -n {{ .Release.Namespace }} get pods -l cnpg.io/cluster={{ .Values.postgres.clusterName }}
+
+The api reads DATABASE_URL from the auto-generated secret
+"{{ .Values.postgres.clusterName }}-app" (key: uri).
+{{- else }}
+
+Postgres is NOT managed by this release. Make sure env.DATABASE_URL is pointing
+at an external Postgres that already exists.
+{{- end }}
+
+JWT_SECRET comes from the SealedSecret firebin-api-jwt (key JWT_SECRET). The
+first account to register through the web UI becomes the admin; open self-signup
+stays closed while REGISTRATION_ENABLED is "false".
+
+Access the api (via the firebin-web /api proxy, or directly):
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "common.names.fullname" . }} 8080:8080
