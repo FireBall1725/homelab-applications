@@ -11,9 +11,9 @@ This chart deploys the nginx bundle that serves the FireBin React UI. It is the 
 | | |
 |---|---|
 | **Upstream Project** | [firebin](https://github.com/fireball1725/firebin) |
-| **Image** | `ghcr.io/fireball1725/firebin-web:26.7.0` (public, multi-arch amd64/arm64) |
+| **Image** | `ghcr.io/fireball1725/firebin-web:26.7.1` (public, multi-arch amd64/arm64) |
 | **Chart Version** | `0.1.0` |
-| **App Version** | `26.7.0` |
+| **App Version** | `26.7.1` |
 | **Common Library** | `common` 5.0.3 ([firelabs-helm-common](https://fireball1725.github.io/firelabs-helm-common/)) |
 
 ## Ingress
