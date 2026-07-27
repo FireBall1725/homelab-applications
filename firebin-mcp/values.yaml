@@ -1,0 +1,142 @@
+# FireBin MCP - homelab values
+#
+# Wraps the firelabs-helm-common chart. Only override the knobs the homelab
+# needs; leave everything else at upstream defaults so a future refresh (bump
+# `common`, pull in new templates) stays a clean re-copy plus reapply-overrides.
+#
+# Deploys into app-firebin alongside firebin-api, so the in-cluster service URL
+# `http://firebin-api:8080` resolves by bare name. Do not point this at
+# firebin-web: that container's nginx proxies /api for the browser, and routing
+# through it adds a hop for no benefit.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: firebin-mcp
+
+image:
+  repository: ghcr.io/fireball1725/firebin-mcp
+  tag: "26.7.0"
+  pullPolicy: IfNotPresent
+
+# Single replica, Recreate strategy - the persisted MCP token PVC is RWO and
+# the server is a singleton (one FireBin identity per install).
+controller:
+  replicas: 1
+  strategy: Recreate
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8090
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves
+# inside the LAN only, and /mcp is itself bearer-auth gated.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    # kuma-ingress-watcher probes the host root `/` by default. Here `/` 404s
+    # and /mcp is bearer-auth gated, so point the auto-created Uptime Kuma
+    # monitor at the unauthenticated /health endpoint. Requires watcher >= 1.5.0.
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /health
+    hosts:
+      - host: firebin-mcp.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# /health is unauthenticated; /mcp requires bearer auth. Probes hit /health.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 15
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Storage
+#   data - small RWO PVC at /data holding the inbound MCP bearer token.
+#          Without it, every restart generates a fresh token and each
+#          configured client stops working.
+# -----------------------------------------------------------------------------
+persistence:
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /data
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    storageClass: longhorn
+
+# -----------------------------------------------------------------------------
+# Non-sensitive configuration
+# -----------------------------------------------------------------------------
+configmap:
+  config:
+    enabled: true
+    data:
+      FIREBIN_API_URL: http://firebin-api:8080
+      FIREBIN_MCP_DATA_DIR: /data
+
+# -----------------------------------------------------------------------------
+# Sensitive configuration
+#
+# Disable the upstream auto-Secret (rendered whenever `.Values.secret` is set).
+# Both tokens come from SealedSecrets in templates/ and are pulled in through
+# `env.<NAME>.valueFrom` below.
+# -----------------------------------------------------------------------------
+secret: {}
+
+envFrom:
+  - configMapRef:
+      name: firebin-mcp-config
+
+env:
+  # Outbound: the fbin_pat_ personal access token used on API calls. It carries
+  # the full authority of the account that minted it - firebin-api stores
+  # per-token scopes but no middleware reads them - so this one is minted from
+  # a dedicated non-admin `mcp` account. RequireAdmin then blocks /users,
+  # /settings, /export, /import and /stock/cleanup-empty on its own.
+  # SealedSecret: templates/sealed-secret-access-token.yaml
+  FIREBIN_ACCESS_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: firebin-mcp-access-token
+        key: FIREBIN_ACCESS_TOKEN
+  # Inbound: the bearer token MCP clients must present on /mcp. Set explicitly
+  # rather than letting the server generate one, so the value is known before
+  # the first boot and survives a lost PVC.
+  # SealedSecret: templates/sealed-secret-mcp-token.yaml
+  FIREBIN_MCP_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: firebin-mcp-token
+        key: FIREBIN_MCP_TOKEN
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
