@@ -1,0 +1,162 @@
+# FireBin KiCad library server - homelab values
+#
+# Wraps the firelabs-helm-common chart. Only override the knobs the homelab
+# needs; leave everything else at upstream defaults so a future refresh (bump
+# `common`, pull in new templates) stays a clean re-copy plus reapply-overrides.
+#
+# Serves the FireBin inventory to KiCad over the .kicad_httplib contract, so
+# parts appear in KiCad's Symbol Chooser. Deploys into app-firebin alongside
+# firebin-api so the in-cluster service URL `http://firebin-api:8080` resolves
+# by bare name. Do not point this at firebin-web: that container's nginx proxies
+# /api for the browser, and routing through it adds a hop for no benefit.
+#
+# Read-only in both directions. KiCad's HTTP library contract has no write-back,
+# and placing a symbol is not a stock movement.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: firebin-kicad
+
+image:
+  repository: ghcr.io/fireball1725/firebin-kicad
+  tag: "26.7.0-rc.1"
+  pullPolicy: IfNotPresent
+
+# Single replica, Recreate strategy - the persisted library token PVC is RWO and
+# the server is a singleton (one FireBin identity per install).
+controller:
+  replicas: 1
+  strategy: Recreate
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8091
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves
+# inside the LAN only, and /v1 is itself token-auth gated.
+#
+# KiCad derives every path from root_url + "/" + api_version + "/", so the
+# .kicad_httplib on a workstation sets root_url to this host with no path.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    # kuma-ingress-watcher probes the host root `/` by default. Here `/` 404s
+    # and /v1 is token-auth gated, so point the auto-created Uptime Kuma
+    # monitor at the unauthenticated /health endpoint. Requires watcher >= 1.5.0.
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /health
+    hosts:
+      - host: firebin-kicad.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# /health is unauthenticated; /v1 requires token auth. Probes hit /health.
+#
+# The liveness delay is generous on purpose: the first boot warms the whole
+# catalogue from firebin-api before it starts listening, and a cold API (still
+# waiting on its CNPG primary) makes that take a while.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 20
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Storage
+#   data - small RWO PVC at /data holding the inbound library token. Without it,
+#          every restart generates a fresh token and the .kicad_httplib on each
+#          workstation stops working.
+# -----------------------------------------------------------------------------
+persistence:
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /data
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    storageClass: longhorn
+
+# -----------------------------------------------------------------------------
+# Non-sensitive configuration
+#
+# FIREBIN_KICAD_CACHE_TTL is a staleness knob, not a memory one: the whole
+# catalogue is held in memory either way, and serving it from there is what
+# stops KiCad's Symbol Chooser issuing one upstream request per part every time
+# it opens.
+# -----------------------------------------------------------------------------
+configmap:
+  config:
+    enabled: true
+    data:
+      FIREBIN_API_URL: http://firebin-api:8080
+      FIREBIN_KICAD_DATA_DIR: /data
+      FIREBIN_KICAD_LISTEN: ":8091"
+      FIREBIN_KICAD_CACHE_TTL: 5m
+
+# -----------------------------------------------------------------------------
+# Sensitive configuration
+#
+# Disable the upstream auto-Secret (rendered whenever `.Values.secret` is set).
+# Both tokens come from SealedSecrets in templates/ and are pulled in through
+# `env.<NAME>.valueFrom` below.
+# -----------------------------------------------------------------------------
+secret: {}
+
+envFrom:
+  - configMapRef:
+      name: firebin-kicad-config
+
+env:
+  # Outbound: the fbin_pat_ personal access token used on API calls. It carries
+  # the full authority of the account that minted it - firebin-api stores
+  # per-token scopes but no middleware reads them - so this wants a dedicated
+  # viewer account. This service only ever reads.
+  # SealedSecret: templates/sealed-secret-access-token.yaml
+  FIREBIN_ACCESS_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: firebin-kicad-access-token
+        key: FIREBIN_ACCESS_TOKEN
+  # Inbound: the token KiCad presents as `Authorization: Token <...>`. The
+  # scheme is Token, not Bearer - that is KiCad's contract, not ours. Set
+  # explicitly rather than letting the server generate one, so the value is
+  # known before first boot and survives a lost PVC.
+  # SealedSecret: templates/sealed-secret-kicad-token.yaml
+  FIREBIN_KICAD_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: firebin-kicad-token
+        key: FIREBIN_KICAD_TOKEN
+
+# The catalogue is held in memory: roughly one small object per part, rebuilt on
+# a timer. Comfortable for a few thousand parts.
+resources:
+  requests:
+    cpu: 25m
+    memory: 48Mi
+  limits:
+    memory: 192Mi

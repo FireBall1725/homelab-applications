@@ -12,7 +12,7 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/firebin-web
-  tag: "26.7.3"
+  tag: "26.7.4-rc.1"
   pullPolicy: IfNotPresent
 
 # Stateless static nginx bundle - safe to scale horizontally and roll without
