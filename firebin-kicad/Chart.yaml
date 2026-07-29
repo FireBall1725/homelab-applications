@@ -1,0 +1,32 @@
+apiVersion: v2
+name: firebin-kicad
+description: FireBin KiCad - Model Context Protocol server for the self-hosted FireBin electronics parts inventory.
+type: application
+
+# Chart version. Bump on template/values changes; does not need to match appVersion.
+version: 0.1.0
+
+# Tracks the firebin-kicad release. Keep in sync with the pinned image tag in values.yaml.
+appVersion: "26.7.0"
+
+kubeVersion: ">=1.25.0-0"
+
+home: https://github.com/fireball1725/firebin-kicad
+sources:
+  - https://github.com/fireball1725/firebin-kicad
+maintainers:
+  - name: fireball1725
+    url: https://github.com/fireball1725
+
+keywords:
+  - firebin
+  - mcp
+  - model-context-protocol
+  - inventory
+  - electronics
+  - self-hosted
+
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://fireball1725.github.io/firelabs-helm-common/
