@@ -17,7 +17,7 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/firebin-api
-  tag: "26.7.5-rc.1"
+  tag: "26.7.5-rc.2"
   pullPolicy: IfNotPresent
 
 # Single-replica, Recreate strategy - the attachments PVC is RWO.
