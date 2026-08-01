@@ -5,10 +5,16 @@
 # CloudNativePG-managed Postgres cluster, SealedSecrets for credentials, Traefik
 # "internal" ingress.
 #
-# Networking note: upstream docs push `network_mode: host`, but that is only needed for
-# SSDP auto-discovery. Every functional path is an OUTBOUND connection from Bambuddy to
-# the printer (MQTT 8883/TLS, FTPS 990, RTSP 322 for the X1 camera), which routes fine
-# from a pod to the LAN. Printers get added by IP instead of discovered.
+# Networking note: this ran behind a MetalLB VIP until 2026-08-01 and had to move to
+# hostNetwork, which is what upstream's `network_mode: host` does.
+#
+# Outbound paths to the printer (MQTT 8883/TLS, FTPS 990, RTSP 322) route fine from a
+# pod, so the original reasoning held for those. What broke was INBOUND: Bambuddy
+# rewrites `net.info[].ip` in the MQTT status push it sends the slicer, and derives that
+# value from its own bind address only (mqtt_bridge.py; it never consults the configured
+# remote_interface_ip). Behind the VIP the bind address was the pod IP, so Bambu Studio
+# was told the printer lived at 10.244.12.90, pre-filled that on Send, and hung.
+# hostNetwork makes the bind address the node IP, which the LAN can reach.
 
 global:
   # Keep release names predictable (otherwise common prepends the release name).
@@ -25,8 +31,19 @@ controller:
   strategy: Recreate
 
 # The orca-slicer-api sidecar publishes linux/amd64 only, and talos-piwk-01 is arm64.
+#
+# Pinned to a specific node as well, because with hostNetwork the virtual printer's
+# address IS the node's address. Letting the pod reschedule would silently change the IP
+# the slicers connect to and require re-adding the printer in each of them.
 nodeSelector:
   kubernetes.io/arch: amd64
+  kubernetes.io/hostname: talos-wk-02
+
+# The virtual printer needs an address the slicer can reach; see the networking note at
+# the top. ClusterFirstWithHostNet keeps cluster DNS working, without which the pod
+# cannot resolve bambuddy-db-rw.app-bambuddy.svc and Postgres fails.
+hostNetwork: true
+dnsPolicy: ClusterFirstWithHostNet
 
 # The image starts as root and drops to PUID:PGID. fsGroup makes the Longhorn volume
 # writable by that group.
@@ -34,9 +51,11 @@ podSecurityContext:
   fsGroup: 1000
 
 # The virtual printer binds 322 (RTSP) and 990 (FTPS), both privileged. Upstream compose
-# uses `cap_add: NET_BIND_SERVICE` for exactly this. NET_BIND_SERVICE is on the Pod
-# Security Admission *baseline* allowlist, so app-bambuddy stays a normal namespace with
-# no privileged PSA labels.
+# uses `cap_add: NET_BIND_SERVICE` for exactly this.
+#
+# NET_BIND_SERVICE alone is on the Pod Security Admission *baseline* allowlist, but
+# hostNetwork is not, so the namespace carries privileged PSA labels - see
+# templates/namespace.yaml.
 securityContext:
   capabilities:
     add:
@@ -144,9 +163,10 @@ env:
   # also binds - they share a network namespace - so the sidecar is moved to 3003.
   SLICER_API_URL: "http://127.0.0.1:3003"
 
-  # FTPS passive mode has to advertise an address the slicer can reach. Without this the
-  # app would advertise its pod IP and transfers would hang after the control channel.
-  VIRTUAL_PRINTER_PASV_ADDRESS: "10.0.1.102"
+  # FTPS passive mode has to advertise an address the slicer can reach, because that
+  # address travels inside the protocol where NAT cannot rewrite it. Now the node IP,
+  # matching hostNetwork; was the MetalLB VIP 10.0.1.102 before 2026-08-01.
+  VIRTUAL_PRINTER_PASV_ADDRESS: "10.0.1.52"
 
   # Bambuddy needs the SQLAlchemy async driver prefix (postgresql+asyncpg://), which the
   # CNPG-generated `uri` key does not carry, and a URL cannot be assembled from secret
@@ -216,16 +236,23 @@ postgres:
 
 # -----------------------------------------------------------------------------
 # Virtual printer: lets Bambu Studio / OrcaSlicer send jobs straight to Bambuddy.
-# It wants its own IP and ~37 inbound ports, so it gets a dedicated MetalLB address out
-# of service-pool (10.0.1.101-119) rather than hostNetwork.
 #
-# Tradeoff: SSDP announcements leave with the pod/node source address, not the VIP, so
-# auto-discovery in the slicer will not find it. Add it manually at 10.0.1.102.
+# The dedicated MetalLB Service is OFF. On hostNetwork the pod already owns the node's
+# ports directly, so the VIP would only be a second address for the same listeners - and
+# not the one the app advertises, since net.info[].ip follows the bind address. The
+# printer is added in the slicer at the node IP, 10.0.1.52. This frees 10.0.1.102 back to
+# service-pool.
 #
-# passivePortCount 30 = three virtual printers, ten FTP passive ports each.
+# The template is kept (gated on `enabled`) so reverting is a one-line change.
+#
+# Port note: the FTP passive range is NOT configurable - ftp_server.py hard-codes
+# PASSIVE_PORT_BASE = 50000 with a 10-port slice per VP, so VP 1 is fixed at
+# 50000-50009. On Talos, 50000 is apid. The server picks a port at random from its slice
+# with 10 retries, so it lands on 50001-50009 in practice; the collision is survivable
+# but is the reason to re-check if uploads ever start failing intermittently.
 # -----------------------------------------------------------------------------
 virtualPrinter:
-  enabled: true
+  enabled: false
   loadBalancerIP: 10.0.1.102
   passivePortStart: 50000
   passivePortCount: 30
