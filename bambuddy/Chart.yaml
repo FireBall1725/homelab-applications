@@ -1,0 +1,32 @@
+apiVersion: v2
+name: bambuddy
+description: Bambuddy - self-hosted control plane for Bambu Lab printers (archive, queue, monitoring, slicing).
+type: application
+
+# Chart version. Bump on template/values changes; does not need to match appVersion.
+version: 0.1.0
+
+# Tracks the bambuddy release. Keep in sync with the pinned image tag in values.yaml.
+# Note: image tags carry no leading "v" even though git tags do.
+appVersion: "1.2.5.1"
+
+kubeVersion: ">=1.25.0-0"
+
+home: https://bambuddy.cool
+sources:
+  - https://github.com/maziggy/bambuddy
+maintainers:
+  - name: fireball1725
+    url: https://github.com/fireball1725
+
+keywords:
+  - bambuddy
+  - bambu-lab
+  - 3d-printing
+  - print-farm
+  - self-hosted
+
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://fireball1725.github.io/firelabs-helm-common/

@@ -1,0 +1,36 @@
+{{- if .Values.postgres.create -}}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .Values.postgres.clusterName }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  instances: {{ .Values.postgres.instances | default 1 }}
+  {{- with .Values.postgres.imageName }}
+  imageName: {{ . | quote }}
+  {{- end }}
+  bootstrap:
+    initdb:
+      database: {{ .Values.postgres.database | quote }}
+      owner: {{ .Values.postgres.owner | quote }}
+      {{- /*
+        Supply the owner credentials instead of letting CNPG generate them. Bambuddy
+        needs a postgresql+asyncpg:// URL, which cannot be built from the operator's
+        `uri` key, and a generated password may contain symbols that would need
+        percent-encoding inside that URL. With this set, CNPG does not create a
+        <clusterName>-app secret. The referenced Secret must be kubernetes.io/basic-auth.
+      */}}
+      {{- with .Values.postgres.ownerSecret }}
+      secret:
+        name: {{ . | quote }}
+      {{- end }}
+  storage:
+    size: {{ .Values.postgres.storage.size | quote }}
+    {{- with .Values.postgres.storage.storageClass }}
+    storageClass: {{ . | quote }}
+    {{- end }}
+  {{- with .Values.postgres.extraSpec }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}

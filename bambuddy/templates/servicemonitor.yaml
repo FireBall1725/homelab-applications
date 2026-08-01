@@ -1,0 +1,29 @@
+{{- if .Values.metrics.enabled }}
+{{- /*
+  kube-prometheus-stack-prometheus runs with serviceMonitorSelector {} and
+  serviceMonitorNamespaceSelector {}, so it scrapes every ServiceMonitor in every
+  namespace and no selector labels are needed here.
+
+  The endpoint is a UI toggle (Settings > Network > Prometheus Metrics), not an env var,
+  so this target reads as down until that switch is flipped.
+*/}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "common.names.fullname" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.labels.selectorLabels" . | nindent 6 }}
+    # The virtual printer Service carries the same selector labels; exclude it so this
+    # resolves to the main Service only.
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: DoesNotExist
+  endpoints:
+    - port: http
+      path: /api/v1/metrics
+      interval: {{ .Values.metrics.interval | default "30s" }}
+{{- end }}

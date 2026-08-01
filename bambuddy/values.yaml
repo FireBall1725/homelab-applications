@@ -1,0 +1,229 @@
+# Bambuddy - homelab values
+#
+# Self-hosted control plane for Bambu Lab printers. Built on the firelabs-helm-common
+# library, matching the firebin-api / librarium-api pattern: pinned image, a
+# CloudNativePG-managed Postgres cluster, SealedSecrets for credentials, Traefik
+# "internal" ingress.
+#
+# Networking note: upstream docs push `network_mode: host`, but that is only needed for
+# SSDP auto-discovery. Every functional path is an OUTBOUND connection from Bambuddy to
+# the printer (MQTT 8883/TLS, FTPS 990, RTSP 322 for the X1 camera), which routes fine
+# from a pod to the LAN. Printers get added by IP instead of discovered.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: bambuddy
+
+image:
+  repository: ghcr.io/maziggy/bambuddy
+  tag: "1.2.5.1"
+  pullPolicy: IfNotPresent
+
+# Single-replica, Recreate strategy - the archive PVC is RWO.
+controller:
+  replicas: 1
+  strategy: Recreate
+
+# The orca-slicer-api sidecar publishes linux/amd64 only, and talos-piwk-01 is arm64.
+nodeSelector:
+  kubernetes.io/arch: amd64
+
+# The image starts as root and drops to PUID:PGID. fsGroup makes the Longhorn volume
+# writable by that group.
+podSecurityContext:
+  fsGroup: 1000
+
+# The virtual printer binds 322 (RTSP) and 990 (FTPS), both privileged. Upstream compose
+# uses `cap_add: NET_BIND_SERVICE` for exactly this. NET_BIND_SERVICE is on the Pod
+# Security Admission *baseline* allowlist, so app-bambuddy stays a normal namespace with
+# no privileged PSA labels.
+securityContext:
+  capabilities:
+    add:
+      - NET_BIND_SERVICE
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8000
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves inside the
+# LAN only (wildcard maps to 10.0.1.100 in blocky). TLS comes from Traefik's cluster-wide
+# wildcard default cert, so no per-host tls block here.
+#
+# The root path redirects to the login page once authentication is switched on, so point
+# the Uptime Kuma autodiscovery probe at the unauthenticated health endpoint instead.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /api/v1/health
+    hosts:
+      - host: bambuddy.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# GET /api/v1/health is unauthenticated and reports database and MQTT connection state.
+# Startup is slow on first boot because Bambuddy creates its whole schema, hence the
+# generous liveness initialDelaySeconds.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /api/v1/health
+        port: http
+      initialDelaySeconds: 60
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /api/v1/health
+        port: http
+      initialDelaySeconds: 15
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Storage
+#   data   - archive/ (3MF + thumbnails), timelapses, library files, backups/.
+#            Timelapses are the growth driver; upstream calls 10+ GB archives normal.
+#   logs   - application logs, ephemeral, no reason to burn a Longhorn volume.
+#   slicer - scratch for the sidecar only. mountPath "-" suppresses the mount in the
+#            main container; the sidecar mounts it explicitly under additionalContainers.
+# -----------------------------------------------------------------------------
+persistence:
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /app/data
+    accessMode: ReadWriteOnce
+    size: 100Gi
+    storageClass: longhorn
+  logs:
+    enabled: true
+    type: emptyDir
+    mountPath: /app/logs
+    sizeLimit: 1Gi
+  slicer:
+    enabled: true
+    type: emptyDir
+    mountPath: "-"
+    sizeLimit: 20Gi
+
+# Disable the common library's auto-generated Secret so it cannot collide with the
+# sealed secrets in templates/.
+secret: {}
+
+env:
+  TZ: America/Toronto
+  PUID: "1000"
+  PGID: "1000"
+  PORT: "8000"
+
+  # OrcaSlicer sidecar, same pod. Its default port is 3000, which the virtual printer
+  # also binds - they share a network namespace - so the sidecar is moved to 3003.
+  SLICER_API_URL: "http://127.0.0.1:3003"
+
+  # FTPS passive mode has to advertise an address the slicer can reach. Without this the
+  # app would advertise its pod IP and transfers would hang after the control channel.
+  VIRTUAL_PRINTER_PASV_ADDRESS: "10.0.1.102"
+
+  # Bambuddy needs the SQLAlchemy async driver prefix (postgresql+asyncpg://), which the
+  # CNPG-generated `uri` key does not carry, and a URL cannot be assembled from secret
+  # parts without risking percent-encoding bugs in the generated password. So the
+  # credentials are supplied instead of generated - see templates/sealed-secret-*.yaml
+  # and postgres.ownerSecret below.
+  DATABASE_URL:
+    valueFrom:
+      secretKeyRef:
+        name: bambuddy-database-url
+        key: DATABASE_URL
+
+# -----------------------------------------------------------------------------
+# Server-side slicing sidecar. Versioned in lockstep with bambuddy upstream.
+# amd64-only, which is what the nodeSelector above is for.
+# -----------------------------------------------------------------------------
+additionalContainers:
+  slicer:
+    image: ghcr.io/maziggy/orca-slicer-api:bambuddy-1.2.5.1
+    imagePullPolicy: IfNotPresent
+    env:
+      - name: NODE_ENV
+        value: production
+      - name: PORT
+        value: "3003"
+    volumeMounts:
+      - name: slicer
+        mountPath: /app/data
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        cpu: "2"
+        memory: 4Gi
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    memory: 2Gi
+
+# -----------------------------------------------------------------------------
+# CloudNativePG-managed Postgres. The operator lives in app-cloudnative-pg.
+#
+# ownerSecret points bootstrap.initdb at a SealedSecret we control, so the password is a
+# known alphanumeric string. With it set, CNPG does NOT generate a bambuddy-db-app
+# secret. Bambuddy creates its own tables on first start; there is no migration job.
+# -----------------------------------------------------------------------------
+postgres:
+  create: true
+  clusterName: bambuddy-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.5-3
+  database: bambuddy
+  owner: bambuddy
+  ownerSecret: bambuddy-db-creds
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  # Enable CNPG Prometheus metrics so kube-prometheus-stack PodMonitor discovery picks
+  # this cluster up, matching firebin-db / librarium-db / terminus-postgres.
+  extraSpec:
+    monitoring:
+      enablePodMonitor: true
+
+# -----------------------------------------------------------------------------
+# Virtual printer: lets Bambu Studio / OrcaSlicer send jobs straight to Bambuddy.
+# It wants its own IP and ~37 inbound ports, so it gets a dedicated MetalLB address out
+# of service-pool (10.0.1.101-119) rather than hostNetwork.
+#
+# Tradeoff: SSDP announcements leave with the pod/node source address, not the VIP, so
+# auto-discovery in the slicer will not find it. Add it manually at 10.0.1.102.
+#
+# passivePortCount 30 = three virtual printers, ten FTP passive ports each.
+# -----------------------------------------------------------------------------
+virtualPrinter:
+  enabled: true
+  loadBalancerIP: 10.0.1.102
+  passivePortStart: 50000
+  passivePortCount: 30
+
+# ServiceMonitor only. The /api/v1/metrics endpoint itself is a UI toggle under
+# Settings > Network > Prometheus Metrics, so the target stays down until that is on.
+metrics:
+  enabled: true
+  interval: 30s
