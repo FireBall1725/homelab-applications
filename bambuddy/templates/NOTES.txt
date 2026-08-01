@@ -1,0 +1,48 @@
+Thanks for installing bambuddy.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Image:     {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+{{- if .Values.ingress.main.enabled }}
+
+Web UI:
+{{- range .Values.ingress.main.hosts }}
+  http://{{ .host }}
+{{- end }}
+
+First visit lands on the setup page. The first account created is placed in the
+Administrators group automatically.
+{{- end }}
+
+{{- if .Values.postgres.create }}
+
+Postgres (CloudNativePG) is managed by this release:
+  Cluster:  {{ .Values.postgres.clusterName }}
+  Database: {{ .Values.postgres.database }}
+
+Check status:
+  kubectl -n {{ .Release.Namespace }} get cluster.postgresql.cnpg.io {{ .Values.postgres.clusterName }}
+  kubectl -n {{ .Release.Namespace }} get pods -l cnpg.io/cluster={{ .Values.postgres.clusterName }}
+
+Credentials are supplied, not operator-generated: the owner comes from the
+"{{ .Values.postgres.ownerSecret }}" SealedSecret, and the app reads DATABASE_URL from
+the "bambuddy-database-url" SealedSecret. CNPG does not create a
+{{ .Values.postgres.clusterName }}-app secret in this configuration.
+
+Confirm Bambuddy is on Postgres and not the SQLite fallback:
+  kubectl -n {{ .Release.Namespace }} exec -it {{ .Values.postgres.clusterName }}-1 -- \
+    psql -U {{ .Values.postgres.owner }} -d {{ .Values.postgres.database }} -c '\dt'
+{{- end }}
+
+{{- if .Values.virtualPrinter.enabled }}
+
+Virtual printer is on its own MetalLB address: {{ .Values.virtualPrinter.loadBalancerIP }}
+  kubectl -n {{ .Release.Namespace }} get svc {{ include "common.names.fullname" . }}-vp
+
+SSDP auto-discovery does not work through a LoadBalancer VIP. Add the virtual printer
+manually in Bambu Studio or OrcaSlicer at {{ .Values.virtualPrinter.loadBalancerIP }}.
+{{- end }}
+
+Adding a real printer needs its IP, serial number, and 8-character access code. On the
+printer: Settings > Network > LAN Only Mode, then enable Developer Mode.
