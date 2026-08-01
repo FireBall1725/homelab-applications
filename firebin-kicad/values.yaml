@@ -19,7 +19,7 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/firebin-kicad
-  tag: "26.7.0-rc.1"
+  tag: "26.8.0-rc.1"
   pullPolicy: IfNotPresent
 
 # Single replica, Recreate strategy - the persisted library token PVC is RWO and
