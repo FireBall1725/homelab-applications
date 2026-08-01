@@ -13,7 +13,7 @@ Bambuddy archives every print as a 3MF with its metadata, thumbnails, and cost, 
 | **Upstream Project** | [bambuddy](https://github.com/maziggy/bambuddy) ([docs](https://wiki.bambuddy.cool)) |
 | **Image** | `ghcr.io/maziggy/bambuddy:1.2.5.1` (public, multi-arch amd64/arm64) |
 | **Sidecar Image** | `ghcr.io/maziggy/orca-slicer-api:bambuddy-1.2.5.1` (linux/amd64 only) |
-| **Chart Version** | `0.1.0` |
+| **Chart Version** | `0.1.1` |
 | **App Version** | `1.2.5.1` |
 | **Common Library** | `common` 5.0.3 ([firelabs-helm-common](https://fireball1725.github.io/firelabs-helm-common/)) |
 
@@ -46,7 +46,7 @@ In the slicer, enable "Store sent files on external storage" so Bambuddy can arc
 
 `bambuddy.k8s.firekatt.ca` on ingressClass `internal`. No per-host TLS block; Traefik terminates with the cluster-wide `*.k8s.firekatt.ca` wildcard cert. The zone resolves inside the LAN only.
 
-The Uptime Kuma autodiscovery annotation points at `/api/v1/health` rather than `/`, because the root redirects to the login page once authentication is switched on.
+The Uptime Kuma autodiscovery annotation points at `/health` rather than `/`, because the root redirects to the login page once authentication is switched on.
 
 ## Virtual printer
 
@@ -127,14 +127,15 @@ One OIDC provider can be driven entirely from `BAMBUDDY_OIDC_*` env vars if that
 
 `templates/servicemonitor.yaml` scrapes `/api/v1/metrics` every 30s. `kube-prometheus-stack-prometheus` runs with empty `serviceMonitorSelector` and `serviceMonitorNamespaceSelector`, so no release label is needed.
 
-The endpoint is a UI toggle under Settings, Network, Prometheus Metrics, not an env var. The target reads as down until that is switched on. Exported series cover connection state, print progress, bed and nozzle and chamber temperatures, fan speeds, WiFi signal, filament grams, and queue depth, all labelled by printer id, name, serial, and model.
+The endpoint is a UI toggle under Settings, Network, Prometheus Metrics, not an env var. The target reads as down until that is switched on. While off, `/api/v1/metrics` answers 404 with `{"detail":"Prometheus metrics not enabled"}`, which confirms the path is right and only the switch is missing. Exported series cover connection state, print progress, bed and nozzle and chamber temperatures, fan speeds, WiFi signal, filament grams, and queue depth, all labelled by printer id, name, serial, and model.
 
 The CNPG cluster exports separately through `monitoring.enablePodMonitor`, matching `firebin-db` and `librarium-db`.
 
 ## Notes
 
 - PostgreSQL is provisioned via a `Cluster` CR managed by [CloudNative-PG](../cloudnative-pg/). Bambuddy creates its own tables on first start, so there is no migration job.
-- Liveness and readiness probes hit `GET /api/v1/health`, which is unauthenticated and reports database and MQTT connection state.
+- Liveness and readiness probes hit `GET /health`, which is unauthenticated and returns `{"status":"healthy"}`. The wiki documents this as `/api/v1/health`, which 404s on 1.2.5.1; `/openapi.json` from the running container gives `/health` with `security: null`. `/api/v1/system/health` also exists but sits behind HTTPBearer.
+- Do not substitute `/healthz` or `/metrics` as a probe target. Both answer HTTP 200, but they are the SPA catch-all serving `index.html`, so they stay green with a dead backend.
 - `securityContext.capabilities.add: [NET_BIND_SERVICE]` is what lets the virtual printer bind 322 and 990. That capability sits on the Pod Security Admission baseline allowlist, so `app-bambuddy` needs no privileged PSA labels.
 - `podSecurityContext.fsGroup: 1000` matches the `PUID`/`PGID` the container drops to after startup, so the Longhorn volume stays writable.
 - Camera streams are transcoded to MJPEG by ffmpeg inside the container. If a stream connects but stalls in the browser, suspect the reverse proxy buffering the MJPEG response; upstream's documented workaround is relaying through go2rtc.

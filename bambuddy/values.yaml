@@ -63,14 +63,22 @@ ingress:
     enabled: true
     ingressClassName: internal
     annotations:
-      uptime-kuma.autodiscovery.probe.path: /api/v1/health
+      uptime-kuma.autodiscovery.probe.path: /health
     hosts:
       - host: bambuddy.k8s.firekatt.ca
         paths:
           - path: /
             pathType: Prefix
 
-# GET /api/v1/health is unauthenticated and reports database and MQTT connection state.
+# GET /health is the unauthenticated health check: returns {"status":"healthy"} as
+# application/json. The wiki documents it as /api/v1/health, which 404s on 1.2.5.1; the
+# real path per the app's own /openapi.json is /health with `security: null`.
+# /api/v1/system/health exists too but sits behind HTTPBearer.
+#
+# Do not substitute /healthz or /metrics as a probe target. Both return HTTP 200, but
+# they are the SPA catch-all serving index.html, so they stay green even when the
+# backend is dead.
+#
 # Startup is slow on first boot because Bambuddy creates its whole schema, hence the
 # generous liveness initialDelaySeconds.
 probes:
@@ -79,7 +87,7 @@ probes:
     custom: true
     spec:
       httpGet:
-        path: /api/v1/health
+        path: /health
         port: http
       initialDelaySeconds: 60
       periodSeconds: 30
@@ -88,7 +96,7 @@ probes:
     custom: true
     spec:
       httpGet:
-        path: /api/v1/health
+        path: /health
         port: http
       initialDelaySeconds: 15
       periodSeconds: 10
@@ -224,6 +232,8 @@ virtualPrinter:
 
 # ServiceMonitor only. The /api/v1/metrics endpoint itself is a UI toggle under
 # Settings > Network > Prometheus Metrics, so the target stays down until that is on.
+# While off it answers 404 with {"detail":"Prometheus metrics not enabled"}, which
+# confirms the path is right and only the switch is missing.
 metrics:
   enabled: true
   interval: 30s
