@@ -1,0 +1,47 @@
+Thanks for installing spoolman.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Image:     {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+{{- if .Values.ingress.main.enabled }}
+
+Web UI:
+{{- range .Values.ingress.main.hosts }}
+  http://{{ .host }}
+{{- end }}
+
+Spoolman has no authentication by design; the network is the security boundary.
+{{- end }}
+
+In-cluster address for other apps (Bambuddy, Home Assistant):
+  http://{{ include "common.names.fullname" . }}.{{ .Release.Namespace }}:{{ .Values.service.main.ports.http.port }}
+
+{{- if .Values.env.SPOOLMAN_ALLOWED_HOSTS }}
+
+Host checking is ON. Answering to: {{ .Values.env.SPOOLMAN_ALLOWED_HOSTS }}
+plus IP literals, single-label names and *.local / *.lan / *.home / *.internal.
+
+Any other Host header gets a 400, so if you add an ingress host or reach this by a new
+in-cluster name, add it to env.SPOOLMAN_ALLOWED_HOSTS in values.yaml at the same time.
+{{- end }}
+
+{{- if .Values.postgres.create }}
+
+Postgres (CloudNativePG) is managed by this release:
+  Cluster:  {{ .Values.postgres.clusterName }}
+  Database: {{ .Values.postgres.database }}
+
+Check status:
+  kubectl -n {{ .Release.Namespace }} get cluster.postgresql.cnpg.io {{ .Values.postgres.clusterName }}
+
+Credentials come from the operator-generated "{{ .Values.postgres.clusterName }}-app"
+secret, read as five discrete SPOOLMAN_DB_* env vars. No sealed secrets in this chart.
+
+Confirm it is really on Postgres and not the SQLite fallback:
+  kubectl -n {{ .Release.Namespace }} logs deploy/{{ include "common.names.fullname" . }} | grep -i 'connecting to database'
+  kubectl -n {{ .Release.Namespace }} exec {{ .Values.postgres.clusterName }}-1 -c postgres -- \
+    psql -U postgres -d {{ .Values.postgres.database }} -c '\dt'
+
+Schema migrations run automatically at startup (alembic upgrade head); there is no Job.
+{{- end }}

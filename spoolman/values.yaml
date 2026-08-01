@@ -1,0 +1,175 @@
+# Spoolman - homelab values
+#
+# Filament spool inventory. Bambuddy syncs AMS slots and per-print usage against it;
+# Home Assistant and Moonraker can read it too.
+#
+# Unlike bambuddy, this chart needs NO SealedSecrets. Spoolman takes discrete database
+# fields rather than a DSN, and spoolman/database/database.py hands them to SQLAlchemy's
+# URL.create() as separate values, which escapes internally. A CNPG-generated password
+# containing symbols is therefore safe, so the auto-created spoolman-db-app secret wires
+# straight in and templates/cnpg-cluster.yaml is a verbatim copy of firebin-api's.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: spoolman
+
+image:
+  repository: ghcr.io/donkie/spoolman
+  tag: "0.26.0"
+  pullPolicy: IfNotPresent
+
+# Single replica. Nothing here is stateful outside Postgres, but Spoolman is a
+# single-instance app (its backup rate-limit state is process-local).
+controller:
+  replicas: 1
+  strategy: Recreate
+
+# Kubernetes injects a Docker-style service link for every Service in the namespace, so a
+# Service named "spoolman" sets SPOOLMAN_PORT=tcp://<clusterIP>:8000 and shadows the app's
+# own port variable. Upstream's entrypoint.sh calls this out by name and defends against
+# it; turning service links off avoids the situation entirely, and also stops any future
+# Service named spoolman-db from clobbering SPOOLMAN_DB_PORT.
+enableServiceLinks: false
+
+# The container starts as root and drops to the "app" user via gosu. fsGroup matches the
+# PUID/PGID below.
+podSecurityContext:
+  fsGroup: 1000
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        # The container listens on 8000 (Dockerfile EXPOSE 8000, entrypoint default).
+        # The 7912 in upstream docs is only the host port in their compose file.
+        port: 8000
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves inside the LAN
+# only. TLS comes from Traefik's cluster-wide wildcard default cert, so no per-host tls
+# block. If this host ever changes, SPOOLMAN_ALLOWED_HOSTS below must change with it.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /api/v1/health
+    hosts:
+      - host: spoolman.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# Spoolman has no authentication by design, so /api/v1/health needs no credentials.
+# Probes address the pod IP, and IP literals bypass the host check below.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /api/v1/health
+        port: http
+      initialDelaySeconds: 45
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /api/v1/health
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+# No persistence block, deliberately. With SPOOLMAN_DB_TYPE=postgres there is no durable
+# state on disk: the SQLite file is never created, the nightly backup and POST
+# /api/v1/backup are SQLite-only no-ops, and logs also go to stdout. Postgres is the
+# single source of truth and the pod can move nodes freely.
+
+# Disable the common library's auto-generated Secret; nothing here needs it.
+secret: {}
+
+env:
+  TZ: America/Toronto
+  PUID: "1000"
+  PGID: "1000"
+
+  SPOOLMAN_DB_TYPE: postgres
+
+  # A real env var here, unlike bambuddy's UI toggle, so /metrics serves from first boot.
+  SPOOLMAN_METRICS_ENABLED: "TRUE"
+
+  # DNS rebinding protection. Off upstream unless set; once set, any Host that is not an
+  # IP literal, a single-label name, or a .local/.lan/.home/.internal name gets a hard 400.
+  #
+  # BOTH entries are required. The second is the in-cluster short name Bambuddy uses:
+  # it contains a dot and is not a local suffix, so omitting it breaks that integration
+  # with a 400 rather than anything that looks like a name-resolution problem.
+  SPOOLMAN_ALLOWED_HOSTS: "spoolman.k8s.firekatt.ca,spoolman.app-spoolman"
+
+  # Straight from the CNPG-generated secret, no sealing needed. See the header comment.
+  SPOOLMAN_DB_HOST:
+    valueFrom:
+      secretKeyRef:
+        name: spoolman-db-app
+        key: host
+  SPOOLMAN_DB_PORT:
+    valueFrom:
+      secretKeyRef:
+        name: spoolman-db-app
+        key: port
+  SPOOLMAN_DB_NAME:
+    valueFrom:
+      secretKeyRef:
+        name: spoolman-db-app
+        key: dbname
+  SPOOLMAN_DB_USERNAME:
+    valueFrom:
+      secretKeyRef:
+        name: spoolman-db-app
+        key: username
+  SPOOLMAN_DB_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: spoolman-db-app
+        key: password
+
+  # SPOOLMAN_CORS_ORIGIN is deliberately unset. It is only needed for a browser UI served
+  # from another host (Fluidd, Mainsail). Bambuddy, Home Assistant and Moonraker are
+  # server-side and send no Origin. Setting it to "*" would also switch host checking off.
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
+# -----------------------------------------------------------------------------
+# CloudNativePG-managed Postgres. The operator lives in app-cloudnative-pg.
+# Spoolman runs `alembic upgrade head` itself during FastAPI startup, so there is no
+# migration Job. Credentials come from the operator-generated spoolman-db-app secret.
+# -----------------------------------------------------------------------------
+postgres:
+  create: true
+  clusterName: spoolman-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.5-3
+  database: spoolman
+  owner: spoolman
+  storage:
+    size: 5Gi
+    storageClass: longhorn
+  extraSpec:
+    monitoring:
+      enablePodMonitor: true
+
+metrics:
+  enabled: true
+  interval: 30s
