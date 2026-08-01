@@ -1,0 +1,27 @@
+{{- if .Values.metrics.enabled }}
+{{- /*
+  kube-prometheus-stack-prometheus runs with serviceMonitorSelector {} and
+  serviceMonitorNamespaceSelector {}, so it scrapes every ServiceMonitor in every
+  namespace and no selector labels are needed here.
+
+  /metrics sits at the top level, not under /api/v1: main.py mounts it outside the API
+  router so it does not collide with the single-page-app catch-all at the root.
+
+  Gated by SPOOLMAN_METRICS_ENABLED, which is a real env var rather than a UI toggle, so
+  this target should come up green on first boot.
+*/}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "common.names.fullname" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.labels.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.metrics.interval | default "30s" }}
+{{- end }}

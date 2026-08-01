@@ -1,0 +1,32 @@
+apiVersion: v2
+name: spoolman
+description: Spoolman - filament spool inventory for 3D printing, with a REST API for Bambuddy, Moonraker and Home Assistant.
+type: application
+
+# Chart version. Bump on template/values changes; does not need to match appVersion.
+version: 0.1.0
+
+# Tracks the Spoolman release. Keep in sync with the pinned image tag in values.yaml.
+# Note: image tags carry no leading "v" even though git tags do.
+appVersion: "0.26.0"
+
+kubeVersion: ">=1.25.0-0"
+
+home: https://github.com/Donkie/Spoolman
+sources:
+  - https://github.com/Donkie/Spoolman
+maintainers:
+  - name: fireball1725
+    url: https://github.com/fireball1725
+
+keywords:
+  - spoolman
+  - filament
+  - 3d-printing
+  - inventory
+  - self-hosted
+
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://fireball1725.github.io/firelabs-helm-common/
