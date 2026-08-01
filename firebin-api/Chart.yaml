@@ -4,10 +4,10 @@ description: FireBin API - Go backend for the self-hosted FireBin electronics pa
 type: application
 
 # Chart version. Bump on template/values changes; does not need to match appVersion.
-version: 0.1.4
+version: 0.1.5
 
 # Tracks the firebin-api release. Keep in sync with the pinned image tag in values.yaml.
-appVersion: "26.8.0-rc.2"
+appVersion: "26.8.0-rc.3"
 
 kubeVersion: ">=1.25.0-0"
 
