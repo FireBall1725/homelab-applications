@@ -5,16 +5,16 @@
 # CloudNativePG-managed Postgres cluster, SealedSecrets for credentials, Traefik
 # "internal" ingress.
 #
-# Networking note: this ran behind a MetalLB VIP until 2026-08-01 and had to move to
-# hostNetwork, which is what upstream's `network_mode: host` does.
+# Networking note: upstream docs push `network_mode: host`, but every functional path to
+# the printer is OUTBOUND (MQTT 8883/TLS, FTPS 990, RTSP 322), which routes fine from a
+# pod. The virtual printer gets a MetalLB VIP instead, so its address survives the pod
+# moving between nodes. hostNetwork was tried on 2026-08-01 and reverted for exactly that
+# reason: it makes the printer's address the node's address, which pins the workload.
 #
-# Outbound paths to the printer (MQTT 8883/TLS, FTPS 990, RTSP 322) route fine from a
-# pod, so the original reasoning held for those. What broke was INBOUND: Bambuddy
-# rewrites `net.info[].ip` in the MQTT status push it sends the slicer, and derives that
-# value from its own bind address only (mqtt_bridge.py; it never consults the configured
-# remote_interface_ip). Behind the VIP the bind address was the pod IP, so Bambu Studio
-# was told the printer lived at 10.244.12.90, pre-filled that on Send, and hung.
-# hostNetwork makes the bind address the node IP, which the LAN can reach.
+# What the VIP alone does not fix is Bambuddy telling the slicer where it lives. It
+# rewrites `net.info[].ip` in its MQTT status push from its own bind address and never
+# reads remote_interface_ip, so Bambu Studio was told the printer was at 10.244.12.90 and
+# hung on Send. See vpAdvertisePatch below.
 
 global:
   # Keep release names predictable (otherwise common prepends the release name).
@@ -31,19 +31,9 @@ controller:
   strategy: Recreate
 
 # The orca-slicer-api sidecar publishes linux/amd64 only, and talos-piwk-01 is arm64.
-#
-# Pinned to a specific node as well, because with hostNetwork the virtual printer's
-# address IS the node's address. Letting the pod reschedule would silently change the IP
-# the slicers connect to and require re-adding the printer in each of them.
+# No node pin: the VP address is the MetalLB VIP, so the pod is free to move.
 nodeSelector:
   kubernetes.io/arch: amd64
-  kubernetes.io/hostname: talos-wk-02
-
-# The virtual printer needs an address the slicer can reach; see the networking note at
-# the top. ClusterFirstWithHostNet keeps cluster DNS working, without which the pod
-# cannot resolve bambuddy-db-rw.app-bambuddy.svc and Postgres fails.
-hostNetwork: true
-dnsPolicy: ClusterFirstWithHostNet
 
 # The image starts as root and drops to PUID:PGID. fsGroup makes the Longhorn volume
 # writable by that group.
@@ -53,9 +43,9 @@ podSecurityContext:
 # The virtual printer binds 322 (RTSP) and 990 (FTPS), both privileged. Upstream compose
 # uses `cap_add: NET_BIND_SERVICE` for exactly this.
 #
-# NET_BIND_SERVICE alone is on the Pod Security Admission *baseline* allowlist, but
-# hostNetwork is not, so the namespace carries privileged PSA labels - see
-# templates/namespace.yaml.
+# NET_BIND_SERVICE is on the Pod Security Admission *baseline* allowlist, so app-bambuddy
+# stays a normal namespace with no privileged PSA labels. (It needed privileged during the
+# brief hostNetwork experiment on 2026-08-01; host namespaces are not on the allowlist.)
 securityContext:
   capabilities:
     add:
@@ -147,6 +137,11 @@ persistence:
     enabled: true
     type: emptyDir
     mountPath: "-"
+  vppatch:
+    enabled: true
+    type: configMap
+    name: bambuddy-vp-advertise-patch
+    mountPath: /opt/vp-patch
     sizeLimit: 20Gi
 
 # Disable the common library's auto-generated Secret so it cannot collide with the
@@ -164,9 +159,16 @@ env:
   SLICER_API_URL: "http://127.0.0.1:3003"
 
   # FTPS passive mode has to advertise an address the slicer can reach, because that
-  # address travels inside the protocol where NAT cannot rewrite it. Now the node IP,
-  # matching hostNetwork; was the MetalLB VIP 10.0.1.102 before 2026-08-01.
-  VIRTUAL_PRINTER_PASV_ADDRESS: "10.0.1.52"
+  # address travels inside the protocol where NAT cannot rewrite it.
+  VIRTUAL_PRINTER_PASV_ADDRESS: "10.0.1.102"
+
+  # Read by the sitecustomize shim in templates/configmap-vp-advertise-patch.yaml. This is
+  # the address handed to the slicer in net.info[].ip, so it must match the VIP.
+  VP_ADVERTISE_IP: "10.0.1.102"
+
+  # Puts the shim on the interpreter's path. Python imports `sitecustomize` at startup, so
+  # the patch applies with no change to the image entrypoint.
+  PYTHONPATH: /opt/vp-patch
 
   # Bambuddy needs the SQLAlchemy async driver prefix (postgresql+asyncpg://), which the
   # CNPG-generated `uri` key does not carry, and a URL cannot be assembled from secret
@@ -236,26 +238,31 @@ postgres:
 
 # -----------------------------------------------------------------------------
 # Virtual printer: lets Bambu Studio / OrcaSlicer send jobs straight to Bambuddy.
+# It wants its own IP and ~37 inbound ports, so it gets a dedicated MetalLB address out
+# of service-pool (10.0.1.101-119). The VIP follows the pod between nodes, which is why
+# this is preferred over hostNetwork.
 #
-# The dedicated MetalLB Service is OFF. On hostNetwork the pod already owns the node's
-# ports directly, so the VIP would only be a second address for the same listeners - and
-# not the one the app advertises, since net.info[].ip follows the bind address. The
-# printer is added in the slicer at the node IP, 10.0.1.52. This frees 10.0.1.102 back to
-# service-pool.
+# Tradeoff: SSDP announcements leave with the pod source address, not the VIP, so
+# auto-discovery in the slicer will not find it. Add it manually at 10.0.1.102.
 #
-# The template is kept (gated on `enabled`) so reverting is a one-line change.
-#
-# Port note: the FTP passive range is NOT configurable - ftp_server.py hard-codes
-# PASSIVE_PORT_BASE = 50000 with a 10-port slice per VP, so VP 1 is fixed at
-# 50000-50009. On Talos, 50000 is apid. The server picks a port at random from its slice
-# with 10 retries, so it lands on 50001-50009 in practice; the collision is survivable
-# but is the reason to re-check if uploads ever start failing intermittently.
+# passivePortCount 30 = three virtual printers, ten FTP passive ports each.
 # -----------------------------------------------------------------------------
 virtualPrinter:
-  enabled: false
+  enabled: true
   loadBalancerIP: 10.0.1.102
   passivePortStart: 50000
   passivePortCount: 30
+
+# -----------------------------------------------------------------------------
+# Workaround for upstream deriving net.info[].ip from the bind address only. See the
+# header comment in templates/configmap-vp-advertise-patch.yaml for the mechanism.
+#
+# Requires the VP's bind_ip to be 0.0.0.0 (set in the app, not here) so the patched
+# fallback is the code path that runs. Drop all of this when upstream reads
+# remote_interface_ip in mqtt_bridge.py.
+# -----------------------------------------------------------------------------
+vpAdvertisePatch:
+  enabled: true
 
 # ServiceMonitor only. The /api/v1/metrics endpoint itself is a UI toggle under
 # Settings > Network > Prometheus Metrics, so the target stays down until that is on.
