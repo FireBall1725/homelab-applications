@@ -1,18 +1,15 @@
+{{- /*
+  Kept deliberately, even though it now carries nothing but the default label.
+
+  This file was added on 2026-08-01 to give the namespace privileged PSA labels for a
+  hostNetwork experiment, which was reverted the same day. Deleting the file would hand
+  Argo (prune: true) a Namespace to remove, taking the PVC and the Postgres cluster with
+  it. Emptying the labels instead drops the namespace back to the cluster-default baseline
+  policy, which is all NET_BIND_SERVICE needs.
+*/}}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ .Release.Namespace }}
   labels:
     kubernetes.io/metadata.name: {{ .Release.Namespace }}
-    # The virtual printer runs with hostNetwork so the address it reports to the
-    # slicer is one the slicer can actually reach. Bambuddy rewrites net.info[].ip
-    # in its MQTT status push to its own bind address; behind a LoadBalancer that
-    # is the pod IP (10.244.x.x), which Bambu Studio then tries to upload to and
-    # hangs. hostNetwork makes the bind address the node IP.
-    #
-    # The cluster-default baseline Pod Security policy rejects host namespaces, so
-    # this namespace must opt into privileged (same as app-matter-server and
-    # app-home-assistant).
-    pod-security.kubernetes.io/enforce: privileged
-    pod-security.kubernetes.io/audit: privileged
-    pod-security.kubernetes.io/warn: privileged

@@ -1,0 +1,62 @@
+{{- if .Values.vpAdvertisePatch.enabled }}
+{{- /*
+  Makes the virtual printer advertise the MetalLB VIP instead of its pod IP.
+
+  Bambuddy rewrites `net.info[].ip` in the MQTT status push it sends the slicer, so the
+  slicer knows where to upload. mqtt_bridge.py derives that value from the VP's own bind
+  address and never reads `remote_interface_ip`, even though the TLS cert SAN and the SSDP
+  Location header both do. Behind a LoadBalancer the bind address is the pod IP, so Bambu
+  Studio was told the printer lived at 10.244.x.x, pre-filled that on Send, and hung.
+
+  With the VP's bind_ip set to 0.0.0.0 the listeners bind every interface (which is what we
+  want behind the VIP) and mqtt_bridge falls through to `_resolve_host_interface_for_target`,
+  a module-level function that looks for a pod interface sharing a subnet with the printer
+  and finds none. Overriding that one function is the whole patch.
+
+  Python imports `sitecustomize` automatically at interpreter start when it is on the path,
+  so this needs no change to the image's entrypoint. It logs loudly on both failure paths:
+  an upstream refactor that renames the function shows up in the pod log rather than
+  silently restoring the broken address.
+
+  Delete this ConfigMap, the persistence item, and the two env vars once upstream honours
+  remote_interface_ip in mqtt_bridge.py.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.names.fullname" . }}-vp-advertise-patch
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  sitecustomize.py: |
+    """Advertise VP_ADVERTISE_IP to the slicer instead of the pod IP."""
+    import os
+    import sys
+
+    _ADDR = os.environ.get("VP_ADVERTISE_IP")
+    _APP = "/app"
+
+    if _ADDR:
+        if _APP not in sys.path:
+            sys.path.insert(0, _APP)
+        try:
+            from backend.app.services.virtual_printer import mqtt_bridge
+        except Exception as exc:  # noqa: BLE001 - must never break interpreter start
+            print(
+                "[vp-advertise-patch] NOT APPLIED, import failed: %r" % (exc,),
+                file=sys.stderr,
+            )
+        else:
+            if hasattr(mqtt_bridge, "_resolve_host_interface_for_target"):
+                mqtt_bridge._resolve_host_interface_for_target = lambda target_ip: _ADDR
+                print(
+                    "[vp-advertise-patch] advertising %s to slicers" % (_ADDR,),
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    "[vp-advertise-patch] NOT APPLIED, _resolve_host_interface_for_target "
+                    "is gone - check whether upstream fixed this and drop the patch",
+                    file=sys.stderr,
+                )
+{{- end }}
