@@ -1,0 +1,31 @@
+apiVersion: v2
+name: ollama-admin
+description: Ollama Admin - web UI for managing models and monitoring the external Ollama inference host.
+type: application
+
+# Chart version. Bump on template/values changes; does not need to match appVersion.
+version: 0.1.0
+
+# Tracks the upstream ollama-admin release. Keep in sync with the pinned image tag.
+appVersion: "0.15.5"
+
+kubeVersion: ">=1.25.0-0"
+
+home: https://github.com/ollama-admin/ollama-admin
+sources:
+  - https://github.com/ollama-admin/ollama-admin
+maintainers:
+  - name: fireball1725
+    url: https://github.com/fireball1725
+
+keywords:
+  - ollama
+  - llm
+  - models
+  - admin
+  - self-hosted
+
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://fireball1725.github.io/firelabs-helm-common/
