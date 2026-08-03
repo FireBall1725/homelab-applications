@@ -1,0 +1,212 @@
+# Ollama Admin - homelab values
+#
+# Web UI for managing models on the external Ollama host. Built on the
+# firelabs-helm-common library, matching the firebin-api pattern: pinned image,
+# a CloudNativePG-managed Postgres cluster, a SealedSecret for NEXTAUTH_SECRET,
+# and DATABASE_URL pulled from the CNPG-generated app secret.
+#
+# Deploys into app-ai, alongside the `ollama` chart. That chart is a Service +
+# Endpoints bridge to the external inference host on the LAN, so this app reaches
+# it by bare service name and no new networking is needed.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: ollama-admin
+
+image:
+  repository: ghcr.io/ollama-admin/ollama-admin
+  tag: "0.15.5"
+  pullPolicy: IfNotPresent
+
+# Single replica. All state lives in Postgres, but the app is single-user in
+# practice and there is nothing to gain from a second pod.
+controller:
+  replicas: 1
+  strategy: Recreate
+
+# Kubernetes injects Docker-style service links for every Service in the namespace.
+# app-ai already contains a Service named "ollama", so links would set
+# OLLAMA_PORT=tcp://<clusterIP>:11434 and OLLAMA_SERVICE_HOST inside an app whose whole
+# job is talking to Ollama. Same trap Spoolman hit with SPOOLMAN_PORT. The URL is
+# configured explicitly via DEFAULT_OLLAMA_URL below, so turn links off entirely.
+enableServiceLinks: false
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 3000
+
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: ollama-admin.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# -----------------------------------------------------------------------------
+# Probes
+#
+# There is no dedicated health endpoint, so these hit / like firebin-web does.
+# The startup probe is deliberately patient: docker-entrypoint.sh runs
+# `prisma generate` and `prisma db push` against Postgres on every boot, and the
+# first boot also waits on a cold CNPG cluster. failureThreshold 60 at 5s gives
+# that five minutes before the kubelet gives up, and keeps liveness from killing
+# the pod part-way through a schema sync.
+# -----------------------------------------------------------------------------
+probes:
+  startup:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 60
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /
+        port: http
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /
+        port: http
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+# -----------------------------------------------------------------------------
+# Non-sensitive configuration.
+#
+# DEFAULT_OLLAMA_URL seeds the first server entry in the setup wizard. It points
+# at the in-namespace `ollama` Service, which forwards to the external host.
+#
+# GPU_AGENT_ENABLED stays false on purpose. The upstream gpu-agent reports
+# garbage on Apple Silicon: it hardcodes temperature to -1, reports whole-system
+# RAM pressure (active + wired pages / total) as GPU utilization, and emits no
+# power draw at all. It also shells out to system_profiler and vm_stat, so it
+# cannot run in-cluster anyway; it would report a Talos node's numbers.
+#
+# LOG_STORE_PROMPTS defaults to true upstream, which would put full prompt and
+# response bodies in Postgres. Metadata-only is enough here.
+# -----------------------------------------------------------------------------
+configmap:
+  config:
+    enabled: true
+    data:
+      DEFAULT_OLLAMA_URL: "http://ollama:11434"
+      NEXTAUTH_URL: "https://ollama-admin.k8s.firekatt.ca"
+      AUTH_DISABLED: "false"
+      GPU_AGENT_ENABLED: "false"
+      LOG_STORE_PROMPTS: "false"
+      LOG_RETENTION_DAYS: "90"
+      CATALOG_REFRESH_ENABLED: "true"
+
+secret: {}
+
+# ConfigMap is wired into envFrom. DATABASE_URL and NEXTAUTH_SECRET come in as
+# explicit env vars via secretKeyRef so nothing else is coupled to envFrom naming.
+envFrom:
+  - configMapRef:
+      name: ollama-admin-config
+
+env:
+  # CNPG-generated Secret: <clusterName>-app, key `uri` holds the full DSN.
+  # It emits a postgresql:// URL, which is what docker-entrypoint.sh matches on
+  # to switch the Prisma provider away from sqlite.
+  DATABASE_URL:
+    valueFrom:
+      secretKeyRef:
+        name: ollama-admin-db-app
+        key: uri
+  # SealedSecret managed in this chart (templates/sealed-secret-nextauth.yaml).
+  NEXTAUTH_SECRET:
+    valueFrom:
+      secretKeyRef:
+        name: ollama-admin-nextauth
+        key: NEXTAUTH_SECRET
+
+# -----------------------------------------------------------------------------
+# Security context.
+#
+# Satisfies the PodSecurity "restricted" profile. app-ai carries no PSA labels so
+# nothing enforces it today, but the cluster warns on admission and the image
+# already meets the bar: its Dockerfile creates nextjs/nodejs as uid/gid 1001 and
+# sets USER nextjs. The UID is spelled out numerically here because runAsNonRoot
+# cannot be verified against a username alone; a bare `USER nextjs` with
+# runAsNonRoot: true fails admission with "non-numeric user, cannot verify".
+#
+# Deliberately absent: readOnlyRootFilesystem. It is not part of the restricted
+# profile, and it would break startup. docker-entrypoint.sh rewrites
+# prisma/schema.prisma in place with sed and runs `prisma generate`, which writes
+# node_modules/.prisma. Both need a writable root filesystem.
+#
+# Running as 1001 also means the entrypoint's root branch never executes. That
+# branch only repairs SQLite volume ownership and is skipped on the Postgres path.
+# -----------------------------------------------------------------------------
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# No persistence. Postgres holds all state.
+persistence: {}
+
+# `prisma generate` is the memory high-water mark during boot, well above steady
+# state for a Next.js server serving one user.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 1Gi
+
+# -----------------------------------------------------------------------------
+# CloudNativePG-managed Postgres cluster. The operator lives in app-cloudnative-pg.
+# The app reads DATABASE_URL from the auto-generated ollama-admin-db-app secret.
+#
+# Note: on Postgres the entrypoint runs `prisma db push`, not `migrate deploy`,
+# so there is no migration history in this database. Upstream schema changes are
+# applied by diffing against the live schema on the next boot.
+# -----------------------------------------------------------------------------
+postgres:
+  create: true
+  clusterName: ollama-admin-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-3
+  database: ollama_admin
+  owner: ollama_admin
+  storage:
+    size: 5Gi
+    storageClass: longhorn
+  # Enable CNPG Prometheus metrics so kube-prometheus-stack PodMonitor discovery
+  # picks this cluster up, matching firebin-db / librarium-db.
+  extraSpec:
+    monitoring:
+      enablePodMonitor: true
