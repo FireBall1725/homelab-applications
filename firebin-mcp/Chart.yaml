@@ -4,10 +4,10 @@ description: FireBin MCP - Model Context Protocol server for the self-hosted Fir
 type: application
 
 # Chart version. Bump on template/values changes; does not need to match appVersion.
-version: 0.1.1
+version: 0.1.2
 
 # Tracks the firebin-mcp release. Keep in sync with the pinned image tag in values.yaml.
-appVersion: "26.8.0-rc.1"
+appVersion: "26.8.0-nightly.202608072313"
 
 kubeVersion: ">=1.25.0-0"
 
