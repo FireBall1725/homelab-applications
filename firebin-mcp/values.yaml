@@ -15,7 +15,7 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/firebin-mcp
-  tag: "26.8.0-nightly.202608072313"
+  tag: "26.8.1"
   pullPolicy: IfNotPresent
 
 # Single replica, Recreate strategy - the persisted MCP token PVC is RWO and
