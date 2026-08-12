@@ -7,7 +7,7 @@ type: application
 version: 0.1.8
 
 # Tracks the firebin-api release. Keep in sync with the pinned image tag in values.yaml.
-appVersion: "26.8.0-rc.6"
+appVersion: "26.8.0-rc.7"
 
 kubeVersion: ">=1.25.0-0"
 
