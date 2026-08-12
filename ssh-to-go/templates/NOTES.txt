@@ -1,0 +1,45 @@
+Thanks for installing ssh-to-go.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Image:     {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+{{- if .Values.ingress.main.enabled }}
+
+Web UI:
+{{- range .Values.ingress.main.hosts }}
+  https://{{ .host }}
+{{- end }}
+
+First run: visit /setup and set the admin password. Until you do, every other page
+redirects there. The password is bcrypt-hashed into /data/auth.json; there is no
+recovery path other than deleting that file.
+{{- end }}
+
+In-cluster address:
+  http://{{ include "common.names.fullname" . }}.{{ .Release.Namespace }}:{{ .Values.service.main.ports.http.port }}
+
+Before any host will work, on each target:
+
+  1. Install tmux. The session list comes from `tmux list-sessions`, so a host
+     without tmux connects fine and shows nothing.
+  2. Append this instance's public key to ~/.ssh/authorized_keys. Generate the
+     keypair in the UI first (Settings > Keys), then copy the public half.
+
+Then add the host in the UI. That writes it back to config.yaml on the config PVC.
+
+Check the seeded config resolved correctly:
+
+  kubectl -n {{ .Release.Namespace }} exec deploy/{{ include "common.names.fullname" . }} -- cat /etc/ssh-to-go/config.yaml
+
+listen_addr MUST read 0.0.0.0:8080. If it says 127.0.0.1:8080 the seed init container
+did not run, the process is bound to loopback, and the Service cannot reach it even
+though the pod reports Running.
+
+Two behaviours worth knowing:
+
+  - Browser sessions are held in memory and never persisted, so every pod restart
+    logs out every browser. Renovate bumps this image often.
+  - Authentication is a single shared admin password, and the exec API runs arbitrary
+    shell on your hosts. The `internal` ingress class keeps this on the LAN, which is
+    what makes that acceptable. Do not expose it outward without an auth proxy.

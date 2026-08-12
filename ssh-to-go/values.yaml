@@ -1,0 +1,214 @@
+# ssh-to-go - homelab values
+#
+# Browser terminal session manager (github.com/awkto/ssh-to-go, AGPL-3.0). The server
+# opens OUTBOUND ssh connections to the hosts listed in its config, runs
+# `tmux list-sessions` against each every poll_interval, and relays the panes to
+# xterm.js over a websocket at /ws/{host}/{session}.
+#
+# It is an ssh CLIENT. There is no sshd in the container and no port 22 listener, so
+# this needs no LoadBalancer - a single HTTP port behind the usual Traefik ingress.
+#
+# Deploys into its own namespace (app-ssh-to-go). No database, no in-cluster
+# dependencies; all state is JSON files on the /data PVC.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: ssh-to-go
+
+image:
+  repository: docker.io/awkto/ssh-to-go
+  # Upstream publishes to Docker Hub only - there is no ghcr.io mirror, the release
+  # workflow only logs into Docker Hub. Tags carry a leading "v".
+  # renovate: image=docker.io/awkto/ssh-to-go
+  tag: "v1.29.0"
+  pullPolicy: IfNotPresent
+
+# Single replica, Recreate strategy - both PVCs below are RWO.
+controller:
+  replicas: 1
+  strategy: Recreate
+
+# Every published tag is linux/amd64 only; the manifest index carries one platform
+# entry plus an attestation stub. Upstream only builds arm64 on a manual
+# workflow_dispatch with multiarch=true, and no released tag has one. talos-piwk-01 is
+# arm64, so without this pin the scheduler can land the pod there and it dies on
+# ImagePullBackOff with an exec-format mismatch. Same reason as bambuddy.
+nodeSelector:
+  kubernetes.io/arch: amd64
+
+# -----------------------------------------------------------------------------
+# Seed the config file on first boot
+#
+# This init container is NOT optional. internal/config/config.go Load() falls back to
+# listen_addr "127.0.0.1:8080" when the config file is missing, and also relocates
+# data_dir to <configDir>/data. The image bakes /etc/ssh-to-go/config.yaml in, but the
+# persistence.config PVC below MOUNTS OVER that path so hosts stay editable from the
+# web UI (the API rewrites this file on every host add/edit/delete). An empty PVC on
+# first boot therefore produces a pod that pulls, starts, reports Running, binds
+# loopback only, and is unreachable from its own Service - while quietly writing its
+# keys and auth.json to /etc/ssh-to-go/data instead of the /data volume.
+#
+# Writing the file here rather than copying it out of the image keeps the values in
+# this repo, where they are reviewable. The `-s` test makes it idempotent, so a
+# rollout never clobbers hosts added through the UI.
+#
+# common renders initContainers verbatim (lib/controller/_pod.tpl), so volumeMounts
+# must be spelled out. Volume names match the persistence keys below. Same shape as
+# basic-memory's init-chown.
+# -----------------------------------------------------------------------------
+initContainers:
+  seed-config:
+    name: seed-config
+    image: busybox
+    command:
+      - sh
+      - -c
+      - |
+        [ -s /etc/ssh-to-go/config.yaml ] && exit 0
+        cat > /etc/ssh-to-go/config.yaml <<'EOF'
+        listen_addr: "0.0.0.0:8080"
+        poll_interval: 5s
+        data_dir: /data
+        hosts: []
+        EOF
+    volumeMounts:
+      - name: config
+        mountPath: /etc/ssh-to-go
+    securityContext:
+      runAsUser: 0
+
+# -----------------------------------------------------------------------------
+# No securityContext block, on purpose - this one runs as root.
+#
+# The runtime image is alpine:3.21 with no USER directive, so uid 0 is the image's
+# designed mode. The app creates /data/keys at 0700, writes ed25519 private keys at
+# 0600, then execs the openssh client against them; ssh refuses a key it considers
+# group-readable and wants a real home directory for its own bookkeeping. A
+# runAsUser + fsGroup pin would trade a known-good state for an uncertain one, and on
+# a container that already holds the private keys to every host it manages, the
+# container uid is not the security boundary - the ingress class is.
+#
+# fsGroup is also unnecessary here for the reason it was needed on firebin-api: root
+# can already write a root-owned Longhorn volume.
+#
+# If you are here to "harden" this, read the paragraph above first.
+# -----------------------------------------------------------------------------
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        # Dockerfile EXPOSEs 8080 and the seeded config binds 0.0.0.0:8080.
+        port: 8080
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves on the LAN
+# only, and that is load-bearing: see the auth note at the bottom of this file.
+#
+# No tls: block and no cluster-issuer annotation - Traefik serves the cluster-wide
+# *.k8s.firekatt.ca wildcard as its default certificate.
+#
+# No websocket annotation either; Traefik proxies the /ws/{host}/{session} upgrade
+# without one.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    # kuma-ingress-watcher probes the host root by default, but `/` redirects when
+    # unauthenticated. /login is public and returns 200 once the setup wizard has run.
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /login
+    hosts:
+      - host: ssh-to-go.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# The image exposes no /health or /healthz route, and /api/version sits behind auth,
+# so probe the TCP listener. Startup is disabled: the binary binds its socket
+# immediately, there is no migration or index build to wait on.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      tcpSocket:
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      tcpSocket:
+        port: 8080
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+  startup:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Storage
+#
+#   data   - /data, the data_dir from the seeded config. Holds auth.json (bcrypt
+#            password hash + API token hashes), settings.json, session-registry.json,
+#            session-ids.json, session-icons.json, recent-commands.json, and the
+#            ed25519 keypair under keys/. All small JSON plus two key files; nothing
+#            here grows without bound. There are no logs, no cache and no uploads on
+#            this volume - exec job artifacts live under ~/.ssh-to-go/exec/ on the
+#            TARGET host and are collected after 24h. 1Gi is roughly a thousand times
+#            what it needs; longhorn has allowVolumeExpansion so growing is a one-line
+#            change if that ever stops being true.
+#
+#   config - /etc/ssh-to-go, holding config.yaml. A PVC and not a ConfigMap because
+#            the API rewrites this file in place on every host add/edit/delete
+#            (config.AppendHost / UpdateHost / RemoveHost). Mounted read-only, host
+#            management from the web UI fails. Seeded by the init container above.
+#
+# Deliberately NOT labelled for Longhorn backup. Everything on both volumes is
+# reproducible in about two minutes: set a new password, generate a new keypair,
+# re-add the hosts. Note that daily-backup-r2 currently has groups: [] anyway, so the
+# default group label would select nothing.
+# -----------------------------------------------------------------------------
+persistence:
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /data
+    accessMode: ReadWriteOnce
+    storageClass: longhorn
+    size: 1Gi
+  config:
+    enabled: true
+    type: pvc
+    mountPath: /etc/ssh-to-go
+    accessMode: ReadWriteOnce
+    storageClass: longhorn
+    size: 128Mi
+
+# -----------------------------------------------------------------------------
+# No secrets, sealed or otherwise.
+#
+# The admin password is set through a first-run wizard at /setup and stored as a
+# bcrypt hash (cost 12) in /data/auth.json. API tokens are created in the UI and
+# stored hashed in the same file. The ssh keypair is generated or imported in the UI
+# onto /data/keys. None of that is chart input, so there is nothing to seal.
+#
+# SSH_TO_GO_NO_AUTH=1 is the one server-side env var and it disables authentication
+# entirely. It is deliberately not set. Do not set it.
+# -----------------------------------------------------------------------------
+secret: {}
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
