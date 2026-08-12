@@ -25,6 +25,23 @@ controller:
   replicas: 1
   strategy: Recreate
 
+# The runtime image is distroless:nonroot, so the api does not run as root. A
+# Longhorn PVC mounts owned by root, which meant every datasheet download failed
+# with "mkdir /app/data/attachments/datasheets: permission denied". Storing
+# datasheets arrived in 26.8.0-rc.6 and is the first thing to actually write to
+# this volume, so the gap went unnoticed until then.
+#
+# fsGroup is the fix and needs no assumption about the image's UID: kubelet
+# chowns the volume to this GID and adds it to the container's supplementary
+# groups, so the process can write whichever non-root user it runs as. Only
+# runAsUser/runAsGroup would need the exact UID, and neither is required here.
+#
+# OnRootMismatch skips the recursive chown when ownership is already right, so
+# restarts stay fast as the volume fills with PDFs.
+podSecurityContext:
+  fsGroup: 65532
+  fsGroupChangePolicy: OnRootMismatch
+
 service:
   main:
     enabled: true
