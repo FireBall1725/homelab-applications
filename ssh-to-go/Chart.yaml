@@ -1,0 +1,33 @@
+apiVersion: v2
+name: ssh-to-go
+description: ssh-to-go - browser terminal session manager. SSHes out to your hosts, polls tmux, relays panes to xterm.js.
+type: application
+
+# Chart version. Bump on template/values changes; does not need to match appVersion.
+version: 0.1.0
+
+# Tracks the upstream ssh-to-go release. Keep in sync with the pinned image tag in
+# values.yaml. Upstream publishes tags WITH a leading "v" (v1.29.0), unlike most of
+# the other charts here, so the two strings differ by that prefix.
+appVersion: "1.29.0"
+
+kubeVersion: ">=1.25.0-0"
+
+home: https://github.com/awkto/ssh-to-go
+sources:
+  - https://github.com/awkto/ssh-to-go
+maintainers:
+  - name: fireball1725
+    url: https://github.com/fireball1725
+
+keywords:
+  - ssh
+  - tmux
+  - terminal
+  - web-terminal
+  - self-hosted
+
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://fireball1725.github.io/firelabs-helm-common/
