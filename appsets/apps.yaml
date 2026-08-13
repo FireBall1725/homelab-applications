@@ -1,4 +1,11 @@
 # https://argo-cd.readthedocs.io/en/stable/user-guide/application-set/
+#
+# One Application per directory under apps/<namespace>/<name>/. The path is the
+# whole configuration: the second segment is the destination namespace, the
+# third is the Application name and the Helm release name.
+#
+# A *directory* generator rather than a files generator on Chart.yaml, because
+# cloudflare-ddns and unpoller are raw-manifest apps with no Chart.yaml.
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -7,38 +14,58 @@ spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
 
-  # Create and update, never delete. Every generated Application carries
-  # resources-finalizer.argocd.argoproj.io and no PVC in homelab-applications
-  # sets helm.sh/resource-policy: keep, so deleting an Application takes its
-  # volumes with it. Removing an app is deliberate: delete its directory, then
+  # Create and update, never delete. preserveResourcesOnDeletion also makes the
+  # controller strip resources-finalizer.argocd.argoproj.io from the generated
+  # Applications, so deleting one can no longer cascade into its PVCs. No PVC in
+  # this repo sets helm.sh/resource-policy: keep, which is why that matters.
+  #
+  # Removing an app is two deliberate steps: delete its directory, then
   # kubectl delete application <name> -n core-argocd.
   syncPolicy:
     applicationsSync: create-update
     preserveResourcesOnDeletion: true
 
   generators:
+  # Everything except the ServerSideApply exceptions below.
   - git:
-      repoURL: https://github.com/FireBall1725/homelab-config.git
+      repoURL: https://github.com/FireBall1725/homelab-applications.git
       revision: HEAD
-      files:
-      - path: "apps/*/app-config.json"
+      directories:
+      - path: apps/*/*
+      - path: apps/app-cloudnative-pg/cloudnative-pg
+        exclude: true
+
+  # cloudnative-pg ships CRDs too large for client-side apply.
+  - git:
+      repoURL: https://github.com/FireBall1725/homelab-applications.git
+      revision: HEAD
+      directories:
+      - path: apps/app-cloudnative-pg/cloudnative-pg
+      template:
+        spec:
+          syncPolicy:
+            syncOptions:
+            - CreateNamespace=true
+            - Replace=false
+            - ServerSideApply=true
+
   template:
     metadata:
-      name: '{{ index .path.segments 1 }}'
+      name: '{{ .path.basename }}'
     spec:
       project: homelab-gitops
       source:
         repoURL: https://github.com/FireBall1725/homelab-applications.git
-        targetRevision: '{{ .targetRevision }}'
-        path: '{{ index .path.segments 1 }}'
+        targetRevision: HEAD
+        path: '{{ .path.path }}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{ .namespace }}'
+        namespace: '{{ index .path.segments 1 }}'
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
-          - CreateNamespace={{ or .createNamespace true }}
-          - Replace={{ or .replace false }}
-          - 'ServerSideApply={{ index . "serverSideApply" | default false }}'
+        - CreateNamespace=true
+        - Replace=false
+        - ServerSideApply=false
