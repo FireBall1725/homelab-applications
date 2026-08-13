@@ -41,8 +41,18 @@ spec:
       revision: HEAD
       directories:
       - path: apps/app-cloudnative-pg/cloudnative-pg
+      # The CRD schema requires metadata, spec.project and spec.destination on a
+      # generator-level template even though the values are merged over the
+      # top-level template below. Note that `argocd appset generate` does not run
+      # that validation, so it will happily render a template the API rejects.
       template:
+        metadata:
+          name: '{{ .path.basename }}'
         spec:
+          project: homelab-gitops
+          destination:
+            server: https://kubernetes.default.svc
+            namespace: '{{ index .path.segments 1 }}'
           syncPolicy:
             syncOptions:
             - CreateNamespace=true
