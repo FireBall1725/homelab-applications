@@ -1,43 +1,97 @@
 # Homelab Applications
 
-This repository contains all Helm charts for applications running in my home Kubernetes cluster. Applications are deployed and managed using ArgoCD with a GitOps workflow.
+Every Helm chart & raw manifest running in the home Kubernetes cluster, plus the
+single ApplicationSet that turns them into ArgoCD Applications. 57 apps across 36
+namespaces, one Talos cluster.
 
-## Architecture
+## How an app becomes an Application
 
-This homelab uses a **two-repository pattern**:
+The path is the configuration. `apps/<namespace>/<name>/` gives ArgoCD everything
+it needs: the second path segment is the destination namespace, the third is both
+the Application name & the Helm release name.
 
-| Repository | Purpose |
-|---|---|
-| **homelab-applications** (this repo) | Helm chart wrappers with configuration overrides |
-| **homelab-config** | ArgoCD `Application` and `ApplicationSet` manifests |
+```
+apps/app-media/sonarr/          -> Application "sonarr" in namespace "app-media"
+apps/kube-system/headlamp/      -> Application "headlamp" in namespace "kube-system"
+apps/app-firebin/firebin-api/   -> Application "firebin-api" in namespace "app-firebin"
+```
 
-ArgoCD monitors this repository and automatically syncs applications when changes are pushed. The `homelab-config` repo defines *which* apps to deploy and into *which* namespaces; this repo defines *how* each app is configured.
+`appsets/apps.yaml` holds the ApplicationSet that does this. It runs a git
+*directory* generator over `apps/*/*`, so adding a directory adds an app & there's
+no second file to keep in sync. A directory generator rather than a files
+generator on `Chart.yaml`, because `cloudflare-ddns` & `unpoller` are raw manifest
+directories with no chart at all.
 
-### Namespace Conventions
+Two rules on that ApplicationSet are load-bearing:
 
-| Pattern | Used For | Example |
+`applicationsSync: create-update` lets the controller create & update Applications
+but never delete one. `preserveResourcesOnDeletion: true` makes it strip
+`resources-finalizer.argocd.argoproj.io` from every Application it generates. Both
+exist because no PVC in this repo sets `helm.sh/resource-policy: keep`, so before
+this a deleted Application took its PersistentVolumes with it. Deleting a
+directory now leaves the Application running until you remove it yourself:
+
+```bash
+kubectl delete application <name> -n core-argocd
+```
+
+`cloudnative-pg` is the one app with a per-app override. Its CRDs exceed the
+262,144-byte annotation limit that client-side apply relies on, so a second
+generator matches only that directory & sets `ServerSideApply=true`.
+
+### Namespace conventions
+
+| Pattern | Used for | Example |
 |---|---|---|
-| `app-<name>` | ArgoCD-managed apps | `app-wikijs`, `app-traefik` |
+| `app-<name>` | ArgoCD-managed apps | `app-wikijs`, `app-media` |
 | `core-<name>` | Tofu-managed infrastructure | `core-argocd`, `core-longhorn` |
 | Standard names | System components | `cert-manager`, `kube-system` |
 
-## Directory Structure
+A namespace can hold several apps. `app-media` holds nine, `app-ai` six,
+`app-firebin` four.
 
-Each application has its own top-level folder containing a complete Helm chart:
+## Where the rest of it lives
+
+This repo holds charts & the ApplicationSet. It does not hold the ArgoCD install.
+The `argo-cd` Helm release, the `homelab-gitops` AppProject & `Application/app-bootstrap`
+are OpenTofu resources in `~/Documents/terraform/talos-cluster/core-argocd.tf`,
+with local state. `app-bootstrap` points at `appsets/` in this repo & is what
+applies the ApplicationSet. If you need to change the bootstrap Application,
+that's the file, & use `-target` so a plan doesn't drag in the whole cluster.
+
+Until 2026-08-13 there was a second repo, `homelab-config`, holding one
+`app-config.json` per app. Its only real content was the destination namespace,
+which the path now carries. Two of its four keys did nothing: `replace` was
+`false` in all 57 files, & `createNamespace` was read through
+`{{ or .createNamespace true }}`, which returns `true` for `or false true`, so the
+five apps that set it to `false` had been getting `CreateNamespace=true` for
+years.
+
+## Directory layout
 
 ```
-<app-name>/
-├── Chart.yaml          # Chart metadata and upstream dependency
-├── Chart.lock          # Dependency lock file (generated)
-├── values.yaml         # Configuration overrides
-├── templates/          # Custom resource templates (optional)
-├── charts/             # Downloaded dependencies (gitignored)
-└── README.md           # App-specific documentation
+apps/<namespace>/<name>/
+├── Chart.yaml          # chart metadata & upstream dependency
+├── Chart.lock          # dependency lock (33 of 55 charts have one)
+├── values.yaml         # configuration overrides
+├── templates/          # extra resources: sealed secrets, CNPG clusters, ingresses
+├── charts/             # vendored dependency tarballs, tracked in git
+└── README.md           # app notes
+
+appsets/apps.yaml       # the ApplicationSet
 ```
 
-## Common Library
+`charts/*.tgz` is committed, not ignored. 46 tarballs are tracked. Be aware that
+11 of them are older than what their `Chart.yaml` declares: `traefik` vendors
+35.4.0 against a declared 39.0.7, `homarr` vendors 5.3.0 against 8.16.1. ArgoCD
+re-resolves at sync time, so the committed tarball is what a local `helm template`
+uses & what a reviewer reads, & the two disagree. `cribl-edge` declares a floating
+`^4.12.1`, which is the only chart here whose render isn't reproducible.
 
-Many applications use the **[FireLabs Helm Common Library](https://github.com/FireBall1725/firelabs-helm-common)** (`v5.0.3+`), a maintained fork of the k8s-at-home common library. It provides reusable templates for Deployments, Services, Ingresses, and persistence, reducing boilerplate across apps.
+## Common library
+
+Most apps wrap the [FireLabs Helm Common Library](https://github.com/FireBall1725/firelabs-helm-common),
+a fork of the k8s-at-home common library, & put everything in `values.yaml`.
 
 ```yaml
 # Chart.yaml
@@ -52,97 +106,116 @@ dependencies:
 {{ include "common.all" . }}
 ```
 
-All configuration then lives in `values.yaml` using the common library schema.
+`audiobookshelf` & `lazylibrarian` still point at the old k8s-at-home repo at
+4.5.2.
+
+Resource names come from the release name, which is the directory name. 12 charts
+pin `global.fullnameOverride` so their names don't depend on it; the rest inherit.
+Renaming a directory therefore renames every Deployment, Service **and PVC** the
+chart owns, which orphans the volume. Don't rename a directory to move an app
+between namespaces; that isn't what the layout is for.
 
 ## Applications
 
-### Home Automation
-
+### Home automation
 | App | Description |
 |-----|-------------|
-| [Home Assistant](home-assistant/) | Smart home hub |
-| [Node-RED](node-red/) | Flow-based automation engine |
-| [ESPHome](esphome/) | ESP device firmware management |
-| [Zigbee2MQTT](zigbee2mqtt/) | Zigbee device bridge |
-| [Mosquitto](mosquitto/) | MQTT broker |
-| [Music Assistant](music-assistant/) | Multi-room audio server |
+| [Home Assistant](apps/app-home-assistant/home-assistant/) | Smart home hub |
+| [Node-RED](apps/app-node-red/node-red/) | Flow-based automation engine |
+| [ESPHome](apps/app-esphome/esphome/) | ESP device firmware management |
+| [Zigbee2MQTT](apps/app-zigbee2mqtt/zigbee2mqtt/) | Zigbee device bridge |
+| [Mosquitto](apps/app-mosquitto/mosquitto/) | MQTT broker |
+| [Matter Server](apps/app-matter-server/matter-server/) | Matter/Thread controller |
+| [Music Assistant](apps/app-music-assistant/music-assistant/) | Multi-room audio server |
+| [Homebridge](apps/app-homebridge/homebridge/) | HomeKit bridge |
 
-### Monitoring & Observability
-
+### Monitoring
 | App | Description |
 |-----|-------------|
-| [Kube Prometheus Stack](kube-prometheus-stack/) | Prometheus, Grafana, Alertmanager |
-| [Uptime Kuma](uptime-kuma/) | Uptime monitoring and status page |
-| [Kuma Ingress Watcher](kuma-ingress-watcher/) | Automatic ingress monitor registration |
-| [Unpoller](unpoller/) | UniFi network metrics exporter |
-| [Cribl Edge](cribl-edge/) | Log and metric collection agent |
+| [Kube Prometheus Stack](apps/app-monitoring/kube-prometheus-stack/) | Prometheus, Grafana, Alertmanager |
+| [Uptime Kuma](apps/app-uptime-kuma/uptime-kuma/) | Uptime monitoring & status page |
+| [Kuma Ingress Watcher](apps/app-uptime-kuma/kuma-ingress-watcher/) | Registers ingresses with Uptime Kuma |
+| [Unpoller](apps/app-unpoller/unpoller/) | UniFi network metrics exporter |
+| [Cribl Edge](apps/app-cribl-edge/cribl-edge/) | Log & metric collection agent |
 
-### Media Management
-
+### Media
 | App | Description |
 |-----|-------------|
-| [Radarr](radarr/) | Movie library management |
-| [Sonarr](sonarr/) | TV series management |
-| [Prowlarr](prowlarr/) | Indexer aggregator for *arr apps |
-| [SABnzbd](sabnzbd/) | Usenet downloader |
-| [Pinchflat](pinchflat/) | YouTube channel archival |
-| [Tautulli](tautulli/) | Plex analytics |
-| [Kometa](kometa/) | Plex metadata and collections manager |
+| [Radarr](apps/app-media/radarr/) | Movie library management |
+| [Sonarr](apps/app-media/sonarr/) | TV series management |
+| [Lidarr](apps/app-media/lidarr/) | Music library management |
+| [Prowlarr](apps/app-media/prowlarr/) | Indexer aggregator |
+| [SABnzbd](apps/app-media/sabnzbd/) | Usenet downloader |
+| [Pinchflat](apps/app-media/pinchflat/) | YouTube channel archival |
+| [Tautulli](apps/app-media/tautulli/) | Plex analytics |
+| [Audiobookshelf](apps/app-media/audiobookshelf/) | Audiobook & podcast server |
+| [LazyLibrarian](apps/app-media/lazylibrarian/) | Book library management |
+| [Kometa](apps/app-kometa/kometa/) | Plex metadata & collections |
 
-### Infrastructure & Core Services
-
+### Infrastructure
 | App | Description |
 |-----|-------------|
-| [CloudNative-PG](cloudnative-pg/) | PostgreSQL operator |
-| [Cert Manager](cert-manager/) | TLS certificate automation |
-| [Traefik](traefik/) | Ingress controller |
-| [Tailscale](tailscale/) | Mesh VPN |
-| [Metrics Server](metrics-server/) | Kubernetes resource metrics |
+| [CloudNative-PG](apps/app-cloudnative-pg/cloudnative-pg/) | PostgreSQL operator |
+| [Cert Manager](apps/cert-manager/cert-manager/) | TLS certificate automation |
+| [Traefik](apps/core-traefik-ingress/traefik/) | Ingress controller |
+| [Error Pages](apps/core-traefik-ingress/error-pages/) | Custom Traefik error pages |
+| [Tailscale](apps/app-tailscale/tailscale/) | Mesh VPN |
+| [Metrics Server](apps/kube-system/metrics-server/) | Kubernetes resource metrics |
+| [Blocky](apps/app-blocky/blocky/) | DNS-based ad blocking |
+| [Cloudflare DDNS](apps/app-cloudflare-ddns/cloudflare-ddns/) | Dynamic DNS updater |
 
-### Networking & DNS
-
+### AI
 | App | Description |
 |-----|-------------|
-| [Blocky](blocky/) | DNS-based ad blocking |
+| [Open WebUI](apps/app-ai/open-webui/) | Web UI for local LLMs |
+| [Ollama](apps/app-ai/ollama/) | Bridge to the LLM host at 10.0.1.191 |
+| [Ollama Admin](apps/app-ai/ollama-admin/) | Model management UI |
+| [Openclaw](apps/app-openclaw/openclaw/) | AI agent gateway (Discord) |
+| [ha-mcp](apps/app-ai/ha-mcp/) | Home Assistant MCP server |
+| [Basic Memory](apps/app-ai/basic-memory/) | Persistent note store over MCP |
+| [Basic Memory Viewer](apps/app-ai/basic-memory-viewer/) | Web UI for Basic Memory |
 
-### AI & Automation
-
+### FireBin & Librarium
 | App | Description |
 |-----|-------------|
-| [Open WebUI](open-webui/) | Web UI for local LLMs |
-| [Ollama](ollama/) | External LLM inference server (bridge) |
-| [Openclaw](openclaw/) | AI agent gateway (Discord) |
-| [ha-mcp](ha-mcp/) | Home Assistant MCP server for AI integration |
+| [FireBin API](apps/app-firebin/firebin-api/) | Electronics inventory backend |
+| [FireBin Web](apps/app-firebin/firebin-web/) | Inventory frontend |
+| [FireBin MCP](apps/app-firebin/firebin-mcp/) | Inventory MCP server |
+| [FireBin KiCad](apps/app-firebin/firebin-kicad/) | KiCad HTTP library |
+| [Librarium API](apps/app-librarium/librarium-api/) | Book catalogue backend |
+| [Librarium Web](apps/app-librarium/librarium-web/) | Catalogue frontend |
+| [Librarium MCP](apps/app-librarium/librarium-mcp/) | Catalogue MCP server |
 
-### Dashboards & Management
-
+### Dashboards & tools
 | App | Description |
 |-----|-------------|
-| [Headlamp](headlamp/) | Kubernetes web UI |
-| [Homarr](homarr/) | Homelab dashboard |
-| [Homer](homer/) | Static homepage |
-| [Wiki.js](wikijs/) | Documentation wiki |
-| [ttyd](ttyd/) | Web-based terminal |
+| [Headlamp](apps/kube-system/headlamp/) | Kubernetes web UI |
+| [Homarr](apps/app-homarr/homarr/) | Homelab dashboard |
+| [Homer](apps/app-homer/homer/) | Static homepage |
+| [Wiki.js](apps/app-wikijs/wikijs/) | Documentation wiki |
+| [ttyd](apps/app-ttyd/ttyd/) | Web-based terminal |
+| [ssh-to-go](apps/app-ssh-to-go/ssh-to-go/) | Browser SSH gateway |
+| [Terminus](apps/app-terminus/terminus/) | Terminal workspace |
+| [n8n](apps/app-n8n/n8n/) | Workflow automation |
+| [Spoolman](apps/app-spoolman/spoolman/) | Filament inventory |
+| [Bambuddy](apps/app-bambuddy/bambuddy/) | Bambu printer bridge |
+| [PC Express MCP](apps/app-pcexpress/pcexpress-mcp/) | Grocery ordering MCP server |
+| [Renovate](apps/app-renovate/renovate/) | Dependency update bot |
 
-### Utilities
+## Adding an application
 
-| App | Description |
-|-----|-------------|
-| [Error Pages](error-pages/) | Custom Traefik error pages |
-| [Renovate](renovate/) | Automated dependency update bot |
-
-## Adding a New Application
-
-### Step 1: Create Chart Structure (this repo)
+Create the directory under the namespace it belongs in. That's the whole
+registration step; there's no second repo & no config file.
 
 ```bash
-mkdir <app-name>
+mkdir -p apps/app-<name>/<name>
 ```
 
-**`Chart.yaml`** — upstream chart dependency:
+`Chart.yaml`:
+
 ```yaml
 apiVersion: v2
-name: <app-name>
+name: <name>
 type: application
 version: 1.0.0
 appVersion: "1.0.0"
@@ -152,7 +225,8 @@ dependencies:
     repository: https://<chart-repo-url>/
 ```
 
-**`values.yaml`** — configuration overrides:
+`values.yaml`:
+
 ```yaml
 <chart-name>:
   env:
@@ -165,86 +239,76 @@ dependencies:
   ingress:
     enabled: true
     hosts:
-      - host: <app-name>.k8s.firekatt.ca
+      - host: <name>.k8s.firekatt.ca
         paths:
           - path: /
             pathType: Prefix
 ```
 
-Download dependencies:
-```bash
-helm dependency update
-```
+Then `helm dependency update`, commit, push. The ApplicationSet picks it up on
+the next refresh.
 
-### Step 2: Create App Config (homelab-config repo)
+## Secrets
 
-Create `apps/<app-name>/app-config.json`:
-```json
-{
-    "targetRevision": "HEAD",
-    "namespace": "app-<app-name>",
-    "createNamespace": true,
-    "replace": false
-}
-```
-
-### Step 3: Commit & Push
-
-ArgoCD automatically detects and syncs new applications when `selfHeal: true` is enabled.
-
-## Secret Management
-
-This homelab uses **Sealed Secrets** to safely store sensitive data in git. Encrypted secrets can be committed and are decrypted only inside the cluster.
+Sealed Secrets, so encrypted material can sit in a public repo & decrypt only
+inside the cluster. The controller is `sealed-secrets-controller` in `kube-system`.
 
 ```bash
-# Create and seal a secret
 kubectl create secret generic <name> \
   --namespace=<namespace> \
   --from-literal=<key>=<value> \
   --dry-run=client -o yaml | \
-  kubeseal -o yaml > <app-name>/templates/sealed-secret.yaml
+  kubeseal --controller-name sealed-secrets-controller \
+           --controller-namespace kube-system \
+           -o yaml > apps/<namespace>/<name>/templates/sealed-secret.yaml
 ```
 
-See [SECRETS.md](SECRETS.md) for full documentation.
+Seal secrets, don't generate them. ArgoCD caches rendered manifests per
+`(revision, path)`, so a template using `randAlphaNum` mints a new value on every
+commit to this repo while the running pods keep whatever they started with.
+`terminus` did exactly that for 94 syncs before it was sealed on 2026-08-13. Its
+`APP_SECRET` is read through `secretKeyRef` into an env var, which resolves at pod
+start, so nothing broke until a pod restarted & logged everyone out. `lookup` is
+not a way around this: the repo-server has no cluster access & returns empty.
 
-## Cluster Information
+See [SECRETS.md](SECRETS.md) for the full workflow.
+
+## Cluster
 
 | | |
 |---|---|
-| **Platform** | Talos Linux |
-| **Kubernetes** | v1.33+ |
-| **Storage** | Longhorn |
-| **Ingress** | Traefik v3 |
-| **GitOps** | ArgoCD |
-| **Load Balancer IP** | 10.0.1.100 |
+| Platform | Talos Linux |
+| Kubernetes | v1.33+ |
+| ArgoCD | v3.0.3, namespace `core-argocd` |
+| Storage | Longhorn, namespace `core-longhorn` |
+| Ingress | Traefik v3 |
+| Load balancer IP | 10.0.1.100 |
 
-## Dependency Management
-
-```bash
-# Add FireLabs common library
-helm repo add firelabs https://fireball1725.github.io/firelabs-helm-common/
-helm repo update
-
-# Download/update chart dependencies
-helm dependency update
-
-# Find latest chart versions
-helm search repo <chart-name> --versions | head -10
-```
-
-## Useful Commands
+## Commands
 
 ```bash
-# Force ArgoCD hard refresh
-kubectl -n core-argocd patch application <app-name> --type merge \
+# force a hard refresh on one app
+kubectl -n core-argocd patch application <name> --type merge \
   -p '{"metadata":{"annotations":{"argocd.argoproj.io/refresh":"hard"}}}'
 
-# Check ArgoCD app status
-kubectl get applications -n core-argocd
+# anything not healthy
+kubectl get applications -n core-argocd --no-headers | grep -v 'Synced *Healthy'
 
-# Check pod health across namespaces
-kubectl get pods --all-namespaces --field-selector status.phase!=Running,status.phase!=Succeeded
+# pods that aren't running
+kubectl get pods -A --field-selector status.phase!=Running,status.phase!=Succeeded
 
-# Generate a long-lived service account token
+# what the ApplicationSet would generate, before you merge
+argocd appset generate appsets/apps.yaml -o yaml
+
+# long-lived service account token
 kubectl create token <service-account> -n <namespace> --duration=87600h
+```
+
+## Dependency management
+
+```bash
+helm repo add firelabs https://fireball1725.github.io/firelabs-helm-common/
+helm repo update
+helm dependency update apps/<namespace>/<name>
+helm search repo <chart-name> --versions | head -10
 ```
