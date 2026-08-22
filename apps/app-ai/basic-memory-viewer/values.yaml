@@ -8,11 +8,11 @@
 image:
   # -- image repository
   repository: ghcr.io/manelpb/basic-memory-viewer
-  # -- image tag. Upstream CI publishes an immutable short-commit-SHA tag only
-  # (`type=sha,prefix=,format=short`); the `latest` tag on the registry is a
-  # leftover from before that change and no longer moves, so pin the SHA.
+  # -- image tag. Upstream CI publishes an immutable short-commit-SHA tag for
+  # every build and a version tag for releases; the `latest` tag on the registry
+  # is a leftover from before that change and no longer moves, so pin a version.
   # renovate: image=ghcr.io/manelpb/basic-memory-viewer
-  tag: "49842aa"
+  tag: "v0.1.1"
   # -- image pull policy
   pullPolicy: IfNotPresent
 

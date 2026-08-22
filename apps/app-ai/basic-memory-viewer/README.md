@@ -15,7 +15,7 @@ It writes nothing. Every route is a GET, and the app holds no state beyond an in
 | **Upstream Project** | [basic-memory-viewer](https://github.com/manelpb/basic-memory-viewer) |
 | **Helm Chart** | `common` ([FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common)) |
 | **Chart Version** | `1.0.0` |
-| **App Version** | `49842aa` |
+| **App Version** | `v0.1.1` |
 | **Common Library** | [FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common) `v5.0.3` |
 
 ## Ingress
@@ -34,7 +34,7 @@ The viewer has no authentication and renders the whole knowledge base, so it sta
 
 ## Image Tag
 
-Upstream CI publishes one tag per build, the short commit SHA (`type=sha,prefix=,format=short` in `.github/workflows/build.yml`). The `latest` tag still sitting on the registry predates that change and no longer moves, so it is not a useful pointer. The chart pins `49842aa`, the commit that added the `MCP_TRANSPORT` switch this deployment depends on. Renovate tracks the ghcr repository.
+Upstream CI publishes one tag per build, the short commit SHA (`type=sha,prefix=,format=short` in `.github/workflows/build.yml`), and since release-please landed a version tag for each release as well. Both are immutable. The `latest` tag still sitting on the registry predates that change and no longer moves, so it is not a useful pointer. The chart pins `v0.1.1`, which is the same image as commit `33ada3f`. Renovate tracks the ghcr repository.
 
 ## NOTES_DIR
 
