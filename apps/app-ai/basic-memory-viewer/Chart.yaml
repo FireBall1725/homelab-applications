@@ -4,7 +4,7 @@ description: Read-only web UI for browsing and searching Basic Memory notes over
 type: application
 version: 1.0.0
 # renovate: image=ghcr.io/manelpb/basic-memory-viewer
-appVersion: "49842aa"
+appVersion: "v0.1.1"
 dependencies:
   - name: common
     repository: https://fireball1725.github.io/firelabs-helm-common/
