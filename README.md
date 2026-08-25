@@ -1,7 +1,7 @@
 # Homelab Applications
 
 Every Helm chart & raw manifest running in the home Kubernetes cluster, plus the
-single ApplicationSet that turns them into ArgoCD Applications. 57 apps across 36
+single ApplicationSet that turns them into ArgoCD Applications. 58 apps across 36
 namespaces, one Talos cluster.
 
 ## How an app becomes an Application
@@ -47,7 +47,7 @@ generator matches only that directory & sets `ServerSideApply=true`.
 | `core-<name>` | Tofu-managed infrastructure | `core-argocd`, `core-longhorn` |
 | Standard names | System components | `cert-manager`, `kube-system` |
 
-A namespace can hold several apps. `app-media` holds nine, `app-ai` six,
+A namespace can hold several apps. `app-media` holds ten, `app-ai` six,
 `app-firebin` four.
 
 ## Where the rest of it lives
@@ -147,6 +147,7 @@ between namespaces; that isn't what the layout is for.
 | [Prowlarr](apps/app-media/prowlarr/) | Indexer aggregator |
 | [SABnzbd](apps/app-media/sabnzbd/) | Usenet downloader |
 | [Pinchflat](apps/app-media/pinchflat/) | YouTube channel archival |
+| [Sportarr](apps/app-media/sportarr/) | Sports event PVR |
 | [Tautulli](apps/app-media/tautulli/) | Plex analytics |
 | [Audiobookshelf](apps/app-media/audiobookshelf/) | Audiobook & podcast server |
 | [LazyLibrarian](apps/app-media/lazylibrarian/) | Book library management |
