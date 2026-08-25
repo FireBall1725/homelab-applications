@@ -1,0 +1,96 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/geek-cookbook/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  # -- image repository
+  repository: sportarr/sportarr
+  # -- image tag
+  tag: ""
+  # -- image pull policy
+  pullPolicy: IfNotPresent
+
+# -- environment variables.
+# @default -- See below
+env:
+  # -- Set the container timezone. Local time, not UTC: event start times drive
+  # the calendar and the release search windows.
+  TZ: America/Toronto
+  # -- Own downloaded files as 1026:100, matching the existing /media/sports tree
+  # on the NAS. The entrypoint starts as root, applies these, then drops.
+  PUID: "1026"
+  PGID: "100"
+  UMASK: "022"
+
+# -- Configures service settings for the chart.
+# @default -- See values.yaml
+service:
+  main:
+    ports:
+      http:
+        port: 1867
+
+ingress:
+  # -- Enable and configure ingress settings for the chart under this key.
+  # @default -- See values.yaml
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: sportarr.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# -- Sportarr exposes /ping for health checks. The default probes are TCP, which
+# go ready as soon as Kestrel binds, before the database is open.
+probes:
+  liveness:
+    custom: true
+    spec:
+      httpGet:
+        path: /ping
+        port: 1867
+      initialDelaySeconds: 0
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+  readiness:
+    custom: true
+    spec:
+      httpGet:
+        path: /ping
+        port: 1867
+      initialDelaySeconds: 0
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+  startup:
+    custom: true
+    spec:
+      httpGet:
+        path: /ping
+        port: 1867
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 5
+      failureThreshold: 30
+
+# -- Configure persistence settings for the chart under this key.
+# @default -- See values.yaml
+persistence:
+  config:
+    enabled: true
+    mountPath: /config
+    accessMode: ReadWriteOnce
+    size: 2Gi
+
+  media:
+    enabled: true
+    mountPath: /media
+    type: nfs
+    server: 10.0.1.241
+    path: /volume2/media
