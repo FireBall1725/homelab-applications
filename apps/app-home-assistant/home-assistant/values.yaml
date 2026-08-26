@@ -17,6 +17,13 @@ home-assistant:
 
   hostNetwork: true
 
+  # The chart hands this one securityContext to both containers, and code-server
+  # defaulted to uid 1000 while Home Assistant writes /config as root:root 0644,
+  # so every save from hacode.k8s.firekatt.ca failed with EACCES.
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+
   # Run the HA pod as the homeassistant-kubernetes-integration ServiceAccount so the
   # auto-mounted in-cluster token carries the RBAC the homeassistant-kubernetes
   # integration needs (the integration uses in-cluster config over the internal API
