@@ -13,7 +13,7 @@ Home Assistant is the central smart home hub, integrating with hundreds of devic
 | **Upstream Project** | [Home Assistant](https://www.home-assistant.io) |
 | **Helm Chart** | `home-assistant` ([pajikos](http://pajikos.github.io/home-assistant-helm-chart/)) |
 | **Chart Version** | `0.3.32` |
-| **App Version** | `2026.3.0` |
+| **App Version** | `2026.8.3` |
 | **Common Library** | Upstream chart |
 
 ## Ingress
