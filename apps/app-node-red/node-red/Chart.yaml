@@ -1,7 +1,7 @@
 apiVersion: v2
 name: node-red
-version: 4.1.6
-appVersion: "4.1.6"
+version: 5.0.4
+appVersion: "5.0.4"
 dependencies:
   - name: common
     repository: https://fireball1725.github.io/firelabs-helm-common/
