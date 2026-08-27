@@ -12,8 +12,8 @@ Node-RED provides a browser-based visual editor for wiring together automation f
 |---|---|
 | **Upstream Project** | [Node-RED](https://nodered.org) |
 | **Helm Chart** | `common` ([FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common)) |
-| **Chart Version** | `4.1.6` |
-| **App Version** | `4.1.6` |
+| **Chart Version** | `5.0.4` |
+| **App Version** | `5.0.4` |
 | **Common Library** | [FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common) `v5.0.3` |
 
 ## Ingress
