@@ -12,8 +12,8 @@ ESPHome compiles and flashes firmware for ESP-based IoT devices directly from YA
 |---|---|
 | **Upstream Project** | [ESPHome](https://esphome.io) |
 | **Helm Chart** | `common` ([FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common)) |
-| **Chart Version** | `2026.2.4` |
-| **App Version** | `2026.2.4` |
+| **Chart Version** | `2026.8.1` |
+| **App Version** | `2026.8.1` |
 | **Common Library** | [FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common) `v5.0.3` |
 
 ## Ingress

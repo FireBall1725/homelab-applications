@@ -1,7 +1,7 @@
 apiVersion: v2
 name: esphome
-version: 2026.2.4
-appVersion: "2026.2.4"
+version: 2026.8.1
+appVersion: "2026.8.1"
 dependencies:
   - name: common
     repository: https://fireball1725.github.io/firelabs-helm-common/
