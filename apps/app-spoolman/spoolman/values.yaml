@@ -15,7 +15,7 @@ global:
 
 image:
   repository: ghcr.io/donkie/spoolman
-  tag: "0.26.0"
+  tag: "0.26.1"
   pullPolicy: IfNotPresent
 
 # Single replica. Nothing here is stateful outside Postgres, but Spoolman is a
