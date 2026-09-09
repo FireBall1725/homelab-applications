@@ -148,7 +148,9 @@ config: |
         - https://dns.google/dns-query
         - https://doh.li/dns-query
         - https://doh.appliedprivacy.net/query
-        - https://dns.containerpi.com/dns-query
+        # dns.containerpi.com removed 2026-09-06: the hostname itself no longer
+        # resolves ("no such host"), so parallel_best wasted one of its two picks
+        # on a dead upstream and paired with a flaky one the query failed outright.
         - https://protected.canadianshield.cira.ca/dns-query
         - https://dns.digitale-gesellschaft.ch/dns-query
     # optional: Determines what strategy blocky uses to choose the upstream servers.
@@ -343,9 +345,9 @@ config: |
   # optional: write query information (question, answer, client, duration etc.) to daily csv file
   queryLog:
     # optional one of: mysql, postgresql, timescale, csv, csv-client. If empty, log to console
-    type: mysql
-    # directory (should be mounted as volume in docker) for csv, db connection string for mysql/postgresql
-    target: db_user:db_password@tcp(db_host_or_ip:3306)/db_name?charset=utf8mb4&parseTime=True&loc=Local
+    # Was `mysql` against the upstream sample's placeholder target, which failed on
+    # every startup ("lookup db_host_or_ip ... no such host") and fell back to console.
+    type: console
     #postgresql target: postgres://user:password@db_host_or_ip:5432/db_name
     # if > 0, deletes log files which are older than ... days
     logRetentionDays: 7
@@ -354,9 +356,15 @@ config: |
     # optional: Time between the creation attempts, default: 2s
     creationCooldown: 2s
     # optional: Which fields should be logged. You can choose one or more from: clientIP, clientName, responseReason, responseAnswer, question, duration. If not defined, it logs all fields
+    # Without question and responseReason every line reads "query resolved
+    # client_ip=..." with no domain and no block reason, so a suspected block
+    # cannot be confirmed from the logs at all.
     fields:
       - clientIP
       - duration
+      - question
+      - responseReason
+      - responseAnswer
     # optional: Interval to write data in bulk to the external database, default: 30s
     flushInterval: 30s
 
