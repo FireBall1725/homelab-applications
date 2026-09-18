@@ -6,8 +6,15 @@ metadata:
     {{- include "error-pages.labels" . | nindent 4 }}
 spec:
   errors:
+    # One entry per code or range. Traefik parses a range on the hyphen and
+    # does not split an entry on commas, so "403,404" as a single entry would
+    # match nothing and the middleware would quietly stop intercepting
+    # anything at all. Splitting here keeps the value in values.yaml readable
+    # as one comma-separated line while emitting the shape Traefik expects.
     status:
-      - {{ .Values.middleware.errorStatusCodes | quote }}
+      {{- range splitList "," .Values.middleware.errorStatusCodes }}
+      - {{ . | trim | quote }}
+      {{- end }}
     query: /{status}.html
     service:
       name: {{ include "error-pages.fullname" . }}

@@ -48,6 +48,21 @@ replicaCount: 2
 middleware:
   # Name of the middleware (will be prefixed with release name)
   name: error-pages
-  # HTTP status codes to intercept
-  # Common ranges: 400-599 (all client and server errors)
-  errorStatusCodes: "400-599"
+  # HTTP status codes to intercept. Comma-separated; each entry is a single
+  # code or a hyphenated range.
+  #
+  # Deliberately not 400-599. This middleware is attached to both entrypoints
+  # globally, so it also sits in front of every JSON API in the cluster, and
+  # Traefik's errors middleware replaces the response body outright. An API
+  # that answered {"error": "invalid credentials"} had it swapped for this
+  # service's {"error": true, "code": 401, ...}, which is how a Librarium
+  # login with a wrong password came to render the word "true" to the user
+  # (2026-09-17). The codes below are the ones a person reads as a page;
+  # 400, 401, 409 and 422 carry meaning for a caller and now pass through.
+  #
+  # 404 and 5xx are still intercepted, which is a deliberate trade: they are
+  # the ones most worth a friendly page, and an API 404 or 500 body is less
+  # likely to be shown to a user verbatim. Exempting a route entirely is not
+  # possible while the middleware is attached at the entrypoint, because
+  # Traefik prepends entrypoint middlewares to every router with no opt-out.
+  errorStatusCodes: "403,404,500-504"
