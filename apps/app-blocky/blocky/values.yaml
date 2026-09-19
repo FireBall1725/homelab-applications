@@ -210,6 +210,20 @@ config: |
         - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
         # - https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt
         # - https://raw.githubusercontent.com/d3ward/toolz/master/src/d3host.txt
+        # Our own blocks, on top of the lists. Regex lines cover the apex and every subdomain.
+        - |
+          # Facebook / Meta, all of it (Instagram and WhatsApp domains left alone)
+          /(^|\.)facebook\.com$/
+          /(^|\.)facebook\.net$/
+          /(^|\.)fbcdn\.net$/
+          /(^|\.)fbsbx\.com$/
+          /(^|\.)fb\.com$/
+          /(^|\.)fb\.gg$/
+          /(^|\.)fb\.me$/
+          # Yandex AppMetrica; the lists miss the redirect host
+          /(^|\.)appmetrica\.yandex\.(com|net|ru)$/
+          # Azur Games country lookup (Train Miner)
+          geoip.k8s.azurgames.com
       special:
         - https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews/hosts
     # definition of allowlist groups.
