@@ -12,8 +12,8 @@ Music Assistant is a free, open-source music player and library manager that agg
 |---|---|
 | **Upstream Project** | [Music Assistant](https://music-assistant.io) |
 | **Helm Chart** | `common` ([FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common)) |
-| **Chart Version** | `2.5.5` |
-| **App Version** | `2.5.5` |
+| **Chart Version** | `2.10.4` |
+| **App Version** | `2.10.4` |
 | **Common Library** | [FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common) `v5.0.3` |
 
 ## Ingress
