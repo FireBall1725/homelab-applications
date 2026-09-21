@@ -173,10 +173,19 @@ config: |
     customTTL: 1h
     # optional: if true (default), return empty result for unmapped query types (for example TXT, MX or AAAA if only IPv4 address is defined).
     # if false, queries with unmapped types will be forwarded to the upstream resolver
-    # true: answer unmapped types (HTTPS/SVCB TYPE65, TXT, MX...) for mapped names with
-    # NODATA locally. Forwarding internal-only *.k8s.firekatt.ca upstream yields an
-    # intermittent cached NXDOMAIN, which breaks Apple Network.framework (Safari -1003).
-    filterUnmappedTypes: true
+    #
+    # false since 2026-09-21. `true` answers unmapped types locally, but customDNS
+    # is a static mapping with no zone data, so its NODATA for HTTPS/SVCB (TYPE65)
+    # carries no SOA. Apple's Network.framework resolves A and TYPE65 together and
+    # rejects the SOA-less NODATA, failing the whole lookup with -1003. Every
+    # *.k8s.firekatt.ca was unreachable from iOS while macOS was fine.
+    #
+    # It was set `true` because forwarding internal-only names upstream returned
+    # an intermittent cached NXDOMAIN. That no longer applies: Cloudflare now
+    # holds a wildcard *.k8s.firekatt.ca -> 10.0.1.100, so upstream answers every
+    # name under the zone, with a well-formed NODATA (SOA present) for TYPE65.
+    # A records still come from customDNS, so the fast local path is unchanged.
+    filterUnmappedTypes: false
     # optional: replace domain in the query with other domain before resolver lookup in the mapping
     # rewrite:
       # example.com: printer.lan
