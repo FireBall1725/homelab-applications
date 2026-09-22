@@ -39,6 +39,27 @@ args:
 hostNetwork: true
 dnsPolicy: ClusterFirstWithHostNet
 
+# -- Wait for DNS before the server starts. It downloads the PAA root certs only
+# at startup, and after a node reboot it beat CoreDNS, fetched 0, and then
+# failed every new device with "Failed Device Attestation" for 13 days. Gives up
+# after 5 minutes so a DNS outage can't keep already-paired devices offline.
+initContainers:
+  wait-for-dns:
+    name: wait-for-dns
+    image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+    command:
+      - python3
+      - -c
+      - |
+        import socket, sys, time
+        for _ in range(60):
+            try:
+                socket.getaddrinfo("on.dcl.csa-iot.org", 443)
+                sys.exit(0)
+            except OSError:
+                time.sleep(5)
+        print("DNS still down after 5m, starting without fresh PAA certs")
+
 # -- Co-locate with Home Assistant instead of pinning a fixed node. Home
 # Assistant reaches the Matter server over host-network localhost at
 # ws://localhost:5580/ws, so the two pods must land on the same node. Required
