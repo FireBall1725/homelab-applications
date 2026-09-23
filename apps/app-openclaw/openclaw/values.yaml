@@ -31,6 +31,7 @@ openclaw:
                   - ALL
                 add:
                   - CHOWN
+                  - DAC_OVERRIDE
           init-config:
             dependsOn: init-perms
           # 2.0 refuses to start on a pre-2.0 session store and installs the Discord plugin from npm.
