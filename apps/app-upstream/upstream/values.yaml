@@ -1,0 +1,131 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  repository: ghcr.io/fireball1725/upstream
+  # -- Pinned to the immutable nightly. Argo syncs on a git change and pullPolicy
+  # is IfNotPresent, so the floating :nightly tag would never redeploy.
+  tag: "26.9.0-nightly.202609230350"
+  pullPolicy: IfNotPresent
+
+# -- One replica, Recreate: the SQLite database and repo clone sit on a
+# ReadWriteOnce volume that two pods can't share.
+controller:
+  replicas: 1
+  strategy: Recreate
+
+env:
+  TZ: America/Toronto
+  UPSTREAM_REPO: https://github.com/FireBall1725/homelab-applications.git
+  UPSTREAM_BRANCH: main
+  # -- Same glob as appsets/apps.yaml, so the app list matches what Argo deploys.
+  UPSTREAM_APP_GLOB: apps/*/*
+  UPSTREAM_SCHEDULE: "0 */6 * * *"
+  UPSTREAM_GIT_AUTHOR_NAME: FireBall1725
+  UPSTREAM_GIT_AUTHOR_EMAIL: 727458+FireBall1725@users.noreply.github.com
+  # -- Fine-grained PAT scoped to homelab-applications only (Contents and Pull
+  # requests read/write). optional so the pod starts before the SealedSecret
+  # exists; the UI lists the missing token as a setup problem.
+  GITHUB_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: upstream-github
+        key: GITHUB_TOKEN
+        optional: true
+
+# -- The image runs as uid 65532. fsGroup gives it write access to the PVC.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Writes only to /data and /tmp (git and helm), so the root filesystem is read-only.
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+persistence:
+  # -- SQLite database, the repo clone and bump worktrees. Scan results rebuild
+  # on the next scan; per-app rules and the PR log don't.
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /data
+    accessMode: ReadWriteOnce
+    storageClass: longhorn
+    size: 1Gi
+  tmp:
+    enabled: true
+    type: emptyDir
+    mountPath: /tmp
+
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+
+ingress:
+  # -- Internal ingress class only. There's no login, and the UI can open PRs
+  # against this repo, so it must never be reachable from the internet.
+  main:
+    enabled: true
+    ingressClassName: internal
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /healthz
+    hosts:
+      - host: upstream.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 3
+  startup:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      periodSeconds: 5
+      failureThreshold: 20
+
+# -- Idle between scans. Bump PRs run helm dependency update, which is the peak.
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi

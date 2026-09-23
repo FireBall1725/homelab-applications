@@ -1,0 +1,13 @@
+apiVersion: v2
+name: upstream
+description: Tracks which apps in this repo have newer images, charts or releases, and opens the bump PRs
+type: application
+version: 1.0.0
+appVersion: "26.9.0-nightly.202609230350"
+home: https://github.com/fireball1725/upstream
+sources:
+  - https://github.com/fireball1725/upstream
+dependencies:
+  - name: common
+    repository: https://fireball1725.github.io/firelabs-helm-common/
+    version: 5.0.3
