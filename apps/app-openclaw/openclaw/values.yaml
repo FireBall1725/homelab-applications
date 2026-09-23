@@ -169,6 +169,11 @@ openclaw:
                   }
                 }
               },
+              "commands": {
+                "native": "auto",
+                "nativeSkills": "auto",
+                "restart": true
+              },
               "plugins": {
                 "entries": {
                   "discord": {
