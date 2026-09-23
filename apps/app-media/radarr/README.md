@@ -12,7 +12,7 @@ Radarr monitors movie release feeds and automatically searches for, downloads, a
 |---|---|
 | **Upstream Project** | [Radarr](https://github.com/Radarr/Radarr) |
 | **Helm Chart** | `common` ([FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common)) |
-| **Chart Version** | `6.4.4` |
+| **Chart Version** | `6.0.5` |
 | **App Version** | `6.4.4` |
 | **Common Library** | [FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common) `v5.0.3` |
 

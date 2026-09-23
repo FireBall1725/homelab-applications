@@ -13,7 +13,7 @@ Sonarr monitors TV series release feeds and automatically searches for, download
 | **Upstream Project** | [Sonarr](https://github.com/Sonarr/Sonarr) |
 | **Helm Chart** | `common` ([FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common)) |
 | **Chart Version** | `4.0.17` |
-| **App Version** | `4.0.16` |
+| **App Version** | `4.0.20.3014-ls325` |
 | **Common Library** | [FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common) `v5.0.3` |
 
 ## Ingress
