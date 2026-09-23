@@ -4,11 +4,11 @@ description: Spoolman - filament spool inventory for 3D printing, with a REST AP
 type: application
 
 # Chart version. Bump on template/values changes; does not need to match appVersion.
-version: 0.1.0
+version: 0.1.1
 
 # Tracks the Spoolman release. Keep in sync with the pinned image tag in values.yaml.
 # Note: image tags carry no leading "v" even though git tags do.
-appVersion: "0.26.0"
+appVersion: "0.26.1"
 
 kubeVersion: ">=1.25.0-0"
 

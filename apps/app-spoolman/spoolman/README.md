@@ -11,9 +11,9 @@ Spoolman tracks filament spools: weight remaining, material, vendor, cost, and c
 | | |
 |---|---|
 | **Upstream Project** | [Spoolman](https://github.com/Donkie/Spoolman) |
-| **Image** | `ghcr.io/donkie/spoolman:0.26.0` (public, amd64/arm64/armv7) |
-| **Chart Version** | `0.1.0` |
-| **App Version** | `0.26.0` |
+| **Image** | `ghcr.io/donkie/spoolman:0.26.1` (public, amd64/arm64/armv7) |
+| **Chart Version** | `0.1.1` |
+| **App Version** | `0.26.1` |
 | **Common Library** | `common` 5.0.3 ([firelabs-helm-common](https://fireball1725.github.io/firelabs-helm-common/)) |
 
 Image tags carry no leading `v` even though the upstream git tags do: git `v0.26.0` publishes as image `0.26.0`.
