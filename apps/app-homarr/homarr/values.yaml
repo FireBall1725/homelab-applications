@@ -1,6 +1,6 @@
 homarr:
   image:
-    tag: v1.51.0
+    tag: "v1.77.2"
 
   env:
     TZ: "America/Toronto"
