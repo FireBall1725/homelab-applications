@@ -1,8 +1,8 @@
 apiVersion: v2
 name: sabnzbd
-version: 4.5.5
+version: 4.5.6
 # renovate: image=lscr.io/linuxserver/sabnzbd
-appVersion: "4.5.5"
+appVersion: "5.1.3"
 dependencies:
   - name: common
     repository: https://fireball1725.github.io/firelabs-helm-common/

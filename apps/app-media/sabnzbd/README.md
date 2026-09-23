@@ -12,8 +12,8 @@ SABnzbd is a feature-rich Usenet downloader that handles NZB files, automating t
 |---|---|
 | **Upstream Project** | [SABnzbd](https://sabnzbd.org) |
 | **Helm Chart** | `common` ([FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common)) |
-| **Chart Version** | `4.5.5` |
-| **App Version** | `4.5.5` |
+| **Chart Version** | `5.1.3` |
+| **App Version** | `5.1.3` |
 | **Common Library** | [FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common) `v5.0.3` |
 
 ## Ingress
