@@ -2,8 +2,8 @@ apiVersion: v2
 name: upstream
 description: Tracks which apps in this repo have newer images, charts or releases, and opens the bump PRs
 type: application
-version: 1.1.0
-appVersion: "26.9.0-nightly.202609230530"
+version: 1.1.1
+appVersion: "26.9.0-nightly.202609230714"
 home: https://github.com/fireball1725/upstream
 sources:
   - https://github.com/fireball1725/upstream
