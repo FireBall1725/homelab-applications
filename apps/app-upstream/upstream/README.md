@@ -4,7 +4,8 @@
 
 - UI: http://upstream.k8s.firekatt.ca/ (internal ingress, no login)
 - Image: `ghcr.io/fireball1725/upstream`, pinned to an immutable tag in `values.yaml` and `appVersion`
-- Data: 1 Gi Longhorn PVC at `/data` (SQLite database and the repo clone)
+- Data: 1 Gi Longhorn PVC at `/data` (SQLite database, the repo clone, and a work clone per bump PR)
+- Metrics: a ServiceMonitor scrapes `/metrics`; `UpstreamScanFailing` and `UpstreamScansStale` alert when scans fail or stop
 
 ## GitHub token
 

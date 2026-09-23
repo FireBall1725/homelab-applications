@@ -1,0 +1,34 @@
+{{- if .Values.metrics.enabled }}
+{{- include "common.values.setup" . -}}
+---
+{{- /*
+  Only the two things that need a person: scans failing, or scans not running at all.
+  Update counts are what the UI is for, so nothing here alerts on them.
+*/}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "common.names.fullname" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: {{ include "common.names.fullname" . }}
+      rules:
+        - alert: UpstreamScanFailing
+          annotations:
+            summary: Upstream's scans of homelab-applications are failing.
+            description: The most recent scan failed. The error is on the Upstream page and under Scans and settings.
+          expr: upstream_last_scan_success == 0
+          for: 1h
+          labels:
+            severity: warning
+        - alert: UpstreamScansStale
+          annotations:
+            summary: Upstream hasn't finished a scan in 14 hours.
+            description: Scans run every 6 hours, so two have been missed. Check the pod and its schedule.
+          expr: time() - upstream_last_scan_timestamp_seconds > 14 * 3600
+          for: 30m
+          labels:
+            severity: warning
+{{- end }}
