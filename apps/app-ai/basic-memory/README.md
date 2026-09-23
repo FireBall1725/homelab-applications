@@ -13,8 +13,8 @@ Basic Memory stores knowledge as plain Markdown files and exposes it to AI assis
 | **Upstream Project** | [Basic Memory](https://github.com/basicmachines-co/basic-memory) |
 | **Docs** | [docs.basicmemory.com](https://docs.basicmemory.com/reference/docker) |
 | **Helm Chart** | `common` ([FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common)) |
-| **Chart Version** | `1.0.0` |
-| **App Version** | `0.22.1` |
+| **Chart Version** | `1.0.1` |
+| **App Version** | `0.23.2` |
 | **Common Library** | [FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common) `v5.0.3` |
 
 ## Ingress
