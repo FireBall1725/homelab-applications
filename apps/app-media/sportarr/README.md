@@ -12,8 +12,8 @@ Sportarr monitors the leagues and athletes you follow, searches your indexers fo
 |---|---|
 | **Upstream Project** | [Sportarr](https://github.com/Sportarr/Sportarr) |
 | **Helm Chart** | `common` ([FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common)) |
-| **Chart Version** | `4.1.3` |
-| **App Version** | `4.1.3.1113` |
+| **Chart Version** | `4.1.4` |
+| **App Version** | `4.1.7.1117` |
 | **Common Library** | [FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common) `v5.0.3` |
 
 ## Ingress
