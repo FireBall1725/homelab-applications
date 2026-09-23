@@ -9,7 +9,7 @@ image:
   repository: ghcr.io/fireball1725/upstream
   # -- Pinned to the immutable nightly. Argo syncs on a git change and pullPolicy
   # is IfNotPresent, so the floating :nightly tag would never redeploy.
-  tag: "26.9.0-nightly.202609230413"
+  tag: "26.9.0-nightly.202609230434"
   pullPolicy: IfNotPresent
 
 # -- One replica, Recreate: the SQLite database and repo clone sit on a
