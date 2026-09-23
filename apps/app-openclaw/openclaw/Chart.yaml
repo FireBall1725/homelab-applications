@@ -2,9 +2,9 @@ apiVersion: v2
 name: openclaw
 description: OpenClaw - Autonomous AI agent for messaging platforms
 type: application
-version: 1.0.0
-appVersion: "2026.2.24"
+version: 1.1.0
+appVersion: "2026.9.5"
 dependencies:
   - name: openclaw
     repository: https://serhanekicii.github.io/openclaw-helm
-    version: 1.5.12
+    version: 1.5.40

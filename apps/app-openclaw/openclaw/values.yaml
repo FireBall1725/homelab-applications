@@ -1,14 +1,45 @@
 openclaw:
   app-template:
-    configMode: merge
+    openclawVersion: "2026.9.5"
+    # Git is the source of truth; runtime edits to openclaw.json are replaced on restart.
+    configMode: overwrite
 
     controllers:
       main:
+        initContainers:
+          # 2.0 refuses to start on a pre-2.0 session store and installs the Discord plugin from npm.
+          init-doctor:
+            dependsOn: init-config
+            image:
+              repository: ghcr.io/openclaw/openclaw
+              tag: "{{ .Values.openclawVersion }}"
+            command:
+              - node
+              - /app/dist/index.js
+              - doctor
+              - --fix
+              - --non-interactive
+            envFrom:
+              - secretRef:
+                  name: openclaw-secrets
+            env:
+              NPM_CONFIG_CACHE: /tmp/.npm
+            securityContext:
+              runAsUser: 1000
+              runAsGroup: 1000
+              runAsNonRoot: true
+              readOnlyRootFilesystem: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
         containers:
           main:
             envFrom:
               - secretRef:
                   name: openclaw-secrets
+            env:
+              NPM_CONFIG_CACHE: /tmp/.npm
 
     ingress:
       main:
@@ -26,6 +57,25 @@ openclaw:
     persistence:
       data:
         storageClass: longhorn
+        advancedMounts:
+          main:
+            init-doctor:
+              - path: /home/node/.openclaw
+      tmp:
+        advancedMounts:
+          main:
+            init-doctor:
+              - path: /tmp
+      # Plugin installs write to $HOME, which is otherwise on the read-only root.
+      home:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          main:
+            init-doctor:
+              - path: /home/node
+            main:
+              - path: /home/node
 
     configMaps:
       config:
@@ -39,6 +89,9 @@ openclaw:
                 "trustedProxies": ["10.244.13.176", "10.244.11.27", "10.244.12.133", "10.244.13.126"],
                 "controlUi": {
                   "allowedOrigins": ["https://openclaw.k8s.firekatt.ca"]
+                },
+                "terminal": {
+                  "enabled": false
                 }
               },
               "browser": {
@@ -47,7 +100,30 @@ openclaw:
                 "profiles": {
                   "default": {
                     "cdpUrl": "http://localhost:9222",
-                    "color": "#4285F4"
+                    "attachOnly": true
+                  }
+                }
+              },
+              "models": {
+                "providers": {
+                  "ollama": {
+                    "apiKey": "ollama-local",
+                    "baseUrl": "http://ollama.app-ai.svc.cluster.local:11434",
+                    "api": "ollama",
+                    "timeoutSeconds": 300,
+                    "models": [
+                      {
+                        "id": "qwen3.6:latest",
+                        "name": "Qwen 3.6",
+                        "contextWindow": 65536,
+                        "contextTokens": 65536,
+                        "params": {
+                          "num_ctx": 65536,
+                          "thinking": false,
+                          "keep_alive": -1
+                        }
+                      }
+                    ]
                   }
                 }
               },
@@ -55,22 +131,20 @@ openclaw:
                 "defaults": {
                   "workspace": "/home/node/.openclaw/workspace",
                   "model": {
-                    "primary": "anthropic/claude-sonnet-4-6"
+                    "primary": "ollama/qwen3.6:latest"
                   },
-                  "userTimezone": "UTC",
+                  "userTimezone": "America/Toronto",
                   "timeoutSeconds": 600,
                   "maxConcurrent": 1
                 },
-                "list": [
-                  {
-                    "id": "main",
-                    "default": true,
+                "entries": {
+                  "main": {
                     "identity": {
                       "name": "OpenClaw",
                       "emoji": "🦞"
                     }
                   }
-                ]
+                }
               },
               "session": {
                 "scope": "per-sender",
@@ -82,9 +156,7 @@ openclaw:
               },
               "logging": {
                 "level": "info",
-                "consoleLevel": "info",
-                "consoleStyle": "compact",
-                "redactSensitive": "tools"
+                "consoleLevel": "info"
               },
               "tools": {
                 "profile": "full",
@@ -97,9 +169,25 @@ openclaw:
                   }
                 }
               },
+              "commands": {
+                "native": "auto",
+                "nativeSkills": "auto",
+                "restart": true
+              },
+              "plugins": {
+                "entries": {
+                  "discord": {
+                    "enabled": true
+                  }
+                }
+              },
               "channels": {
                 "discord": {
-                  "token": "${DISCORD_BOT_TOKEN}"
+                  "enabled": true,
+                  "token": "${DISCORD_BOT_TOKEN}",
+                  "dmPolicy": "allowlist",
+                  "allowFrom": ["93194491795607552"],
+                  "groupPolicy": "disabled"
                 }
               }
             }
