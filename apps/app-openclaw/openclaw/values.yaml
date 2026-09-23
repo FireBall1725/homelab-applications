@@ -208,6 +208,30 @@ openclaw:
                 "nativeSkills": "auto",
                 "restart": true
               },
+              "mcp": {
+                "servers": {
+                  "basic-memory": {
+                    "url": "http://basic-memory.app-ai.svc.cluster.local:8000/mcp",
+                    "transport": "sse",
+                    "enabled": true
+                  },
+                  "home-assistant": {
+                    "url": "http://ha-mcp.app-ai.svc.cluster.local:8086/mcp",
+                    "transport": "streamable-http",
+                    "enabled": true
+                  },
+                  "node-red": {
+                    "url": "http://node-red.app-node-red.svc.cluster.local:8000/sse",
+                    "transport": "sse",
+                    "enabled": true
+                  },
+                  "pcexpress": {
+                    "url": "http://pcexpress-mcp.app-pcexpress.svc.cluster.local:8090/sse",
+                    "transport": "sse",
+                    "enabled": true
+                  }
+                }
+              },
               "plugins": {
                 "entries": {
                   "discord": {
