@@ -12,7 +12,7 @@ Headlamp is a feature-rich, extensible Kubernetes dashboard for browsing cluster
 |---|---|
 | **Upstream Project** | [Headlamp](https://headlamp.dev) |
 | **Helm Chart** | `headlamp` ([Kubernetes SIGs](https://kubernetes-sigs.github.io/headlamp/)) |
-| **Chart Version** | `0.39.0` |
+| **Chart Version** | `0.45.0` |
 | **App Version** | `1.0.0` |
 | **Common Library** | Upstream chart |
 
