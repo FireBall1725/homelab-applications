@@ -12,7 +12,7 @@ image:
   # every build and a version tag for releases; the `latest` tag on the registry
   # is a leftover from before that change and no longer moves, so pin a version.
   # renovate: image=ghcr.io/manelpb/basic-memory-viewer
-  tag: "v0.1.1"
+  tag: "v0.2.0"
   # -- image pull policy
   pullPolicy: IfNotPresent
 

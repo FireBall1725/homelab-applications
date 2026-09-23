@@ -14,8 +14,8 @@ It writes nothing. Every route is a GET, and the app holds no state beyond an in
 |---|---|
 | **Upstream Project** | [basic-memory-viewer](https://github.com/manelpb/basic-memory-viewer) |
 | **Helm Chart** | `common` ([FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common)) |
-| **Chart Version** | `1.0.0` |
-| **App Version** | `v0.1.1` |
+| **Chart Version** | `1.0.1` |
+| **App Version** | `v0.2.0` |
 | **Common Library** | [FireLabs Helm Common](https://github.com/FireBall1725/firelabs-helm-common) `v5.0.3` |
 
 ## Ingress

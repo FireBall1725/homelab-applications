@@ -13,9 +13,9 @@ It replaces remote-desktopping into the inference host to run `ollama pull`. Not
 | | |
 |---|---|
 | **Upstream Project** | [ollama-admin](https://github.com/ollama-admin/ollama-admin) |
-| **Image** | `ghcr.io/ollama-admin/ollama-admin:0.15.5` |
-| **Chart Version** | `0.1.0` |
-| **App Version** | `0.15.5` |
+| **Image** | `ghcr.io/ollama-admin/ollama-admin:0.15.6` |
+| **Chart Version** | `0.1.1` |
+| **App Version** | `0.15.6` |
 | **Common Library** | `common` 5.0.3 ([firelabs-helm-common](https://fireball1725.github.io/firelabs-helm-common/)) |
 
 The container listens on `:3000`. Upstream ships a Dockerfile and a docker-compose file but no Helm chart, so this one is ours. It follows the `firebin-api` pattern: pinned image, CNPG cluster, SealedSecret for the session key.

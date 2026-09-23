@@ -4,10 +4,10 @@ description: Ollama Admin - web UI for managing models and monitoring the extern
 type: application
 
 # Chart version. Bump on template/values changes; does not need to match appVersion.
-version: 0.1.0
+version: 0.1.1
 
 # Tracks the upstream ollama-admin release. Keep in sync with the pinned image tag.
-appVersion: "0.15.5"
+appVersion: "0.15.6"
 
 kubeVersion: ">=1.25.0-0"
 
