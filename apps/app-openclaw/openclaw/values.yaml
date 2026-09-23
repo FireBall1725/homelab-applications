@@ -8,6 +8,7 @@ openclaw:
       main:
         initContainers:
           # The volume root is owned by root, and 2.0 chmods the state dir to 700, which only its owner may do.
+          # It also retires the agent DB left by the old custom session.store path; it duplicates agent:main:main.
           init-perms:
             image:
               repository: ghcr.io/openclaw/openclaw
@@ -16,6 +17,9 @@ openclaw:
               - sh
               - -c
               - >-
+                if [ -e /home/node/.openclaw/sessions.sqlite ]; then
+                mkdir -p /home/node/.openclaw/retired-2026-09-23 &&
+                mv /home/node/.openclaw/sessions.sqlite* /home/node/.openclaw/retired-2026-09-23/; fi &&
                 chown 1000:1000 /home/node /home/node/.openclaw &&
                 find /home/node/.openclaw -xdev ! -user 1000
                 ! -path /home/node/.openclaw/lost+found ! -path '/home/node/.openclaw/lost+found/*'
