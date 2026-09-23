@@ -7,6 +7,32 @@ openclaw:
     controllers:
       main:
         initContainers:
+          # The volume root is owned by root, and 2.0 chmods the state dir to 700, which only its owner may do.
+          init-perms:
+            image:
+              repository: ghcr.io/openclaw/openclaw
+              tag: "{{ .Values.openclawVersion }}"
+            command:
+              - sh
+              - -c
+              - >-
+                chown 1000:1000 /home/node /home/node/.openclaw &&
+                find /home/node/.openclaw -xdev ! -user 1000
+                ! -path /home/node/.openclaw/lost+found ! -path '/home/node/.openclaw/lost+found/*'
+                -print -exec chown 1000:1000 {} +
+            securityContext:
+              runAsUser: 0
+              runAsGroup: 0
+              runAsNonRoot: false
+              readOnlyRootFilesystem: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+                add:
+                  - CHOWN
+          init-config:
+            dependsOn: init-perms
           # 2.0 refuses to start on a pre-2.0 session store and installs the Discord plugin from npm.
           init-doctor:
             dependsOn: init-config
@@ -59,6 +85,8 @@ openclaw:
         storageClass: longhorn
         advancedMounts:
           main:
+            init-perms:
+              - path: /home/node/.openclaw
             init-doctor:
               - path: /home/node/.openclaw
       tmp:
@@ -72,6 +100,8 @@ openclaw:
         type: emptyDir
         advancedMounts:
           main:
+            init-perms:
+              - path: /home/node
             init-doctor:
               - path: /home/node
             main:
