@@ -12,7 +12,7 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/librarium-api
-  tag: "26.9.1-nightly.202609212159"
+  tag: "26.9.1-nightly.202609240116"
   pullPolicy: IfNotPresent
 
 # Single-replica, Recreate strategy - covers PVC is RWO.
