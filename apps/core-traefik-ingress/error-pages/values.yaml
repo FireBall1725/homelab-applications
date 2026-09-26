@@ -3,7 +3,7 @@
 
 image:
   repository: ghcr.io/tarampampam/error-pages
-  tag: "3"
+  tag: "4"
   pullPolicy: IfNotPresent
 
 # Theme configuration
