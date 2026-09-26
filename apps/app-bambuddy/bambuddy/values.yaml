@@ -22,7 +22,7 @@ global:
 
 image:
   repository: ghcr.io/maziggy/bambuddy
-  tag: "1.2.5.1"
+  tag: "1.2.5.6"
   pullPolicy: IfNotPresent
 
 # Single-replica, Recreate strategy - the archive PVC is RWO.
