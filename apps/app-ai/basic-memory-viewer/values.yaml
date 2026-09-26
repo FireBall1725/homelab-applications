@@ -30,9 +30,12 @@ env:
   # back out through Traefik at basic-memory.k8s.firekatt.ca, so the traffic
   # never leaves the namespace and does not depend on ingress or LAN DNS.
   MCP_URL: http://basic-memory.app-ai.svc.cluster.local:8000/mcp
-  # -- Transport. The viewer defaults to streamable HTTP, but our Basic Memory
-  # runs `--transport sse` (see basic-memory/values.yaml), so this must be sse.
-  MCP_TRANSPORT: sse
+  # -- Transport. Matches Basic Memory's `--transport streamable-http`.
+  MCP_TRANSPORT: http
+  # -- Seconds a healthy check is cached. Basic Memory keeps ~11-24 kB per
+  # streamable-HTTP session and never frees it, so every uncached probe is a
+  # small permanent leak; 300 s keeps that to ~6 MB a day.
+  HEALTH_TTL: "300"
   # -- Default project shown in the UI. Matches BASIC_MEMORY_DEFAULT_PROJECT.
   BM_PROJECT: main
   # -- Brand name in the UI header

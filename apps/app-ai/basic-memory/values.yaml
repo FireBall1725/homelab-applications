@@ -22,22 +22,26 @@ controller:
   strategy: Recreate
 
 # -- Container command. The upstream image can start in several transports, so
-# pin it to the SSE transport bound on 0.0.0.0:8000 explicitly.
+# pin it to streamable HTTP bound on 0.0.0.0:8000 explicitly. MCP endpoint is /mcp.
 #
-# SSE, NOT streamableHttp: supergateway/FastMCP streamableHttp answers the
-# initialize POST as an SSE stream, and Claude Code reuses that connection for
-# the follow-up notification, which the cluster Traefik path turns into a 400
-# (the same failure that hit the node-red MCP sidecar). SSE keeps the long-lived
-# stream on a dedicated request, avoiding that pattern. MCP endpoint is /mcp.
+# Streamable HTTP, not SSE. SSE needs one stream held open for the whole client
+# session, and Claude Code's SSE client doesn't reconnect when that stream drops
+# (Mac sleep, a network blip, or any rollout here), so every call then failed until
+# a manual /mcp reconnect. With streamable HTTP each call is its own request, and
+# after a rollout the old session gets a 404, which makes the client start a new
+# one by itself. July's 400 on the initialized notification through Traefik no
+# longer happens (retested 2026-09-26 on 0.23.2 and Traefik v3.4).
 command:
   - basic-memory
   - mcp
   - --transport
-  - sse
+  - streamable-http
   - --host
   - 0.0.0.0
   - --port
   - "8000"
+  - --path
+  - /mcp
 
 # -- Environment variables. Values below are the upstream defaults, set
 # explicitly so the config is self-documenting. The SQLite backend is the
@@ -223,7 +227,7 @@ resources:
 # -- Health-check sidecar.
 #
 # The upstream ghcr.io/basicmachines-co/basic-memory image serves the MCP
-# protocol at /mcp (SSE transport, port 8000) and ships no plain HTTP health
+# protocol at /mcp (streamable HTTP, port 8000) and ships no plain HTTP health
 # route, so nothing returns a clean 200 for Uptime Kuma to probe. This sidecar
 # serves GET /health on :8099 and returns 200 only when it can open a TCP
 # connection to the Basic Memory listener on 127.0.0.1:8000, else 503. That ties

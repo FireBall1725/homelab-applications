@@ -8,7 +8,7 @@ MCP endpoint (SSE transport, internal ingress only, no authentication):
   https://basic-memory.k8s.firekatt.ca/mcp
 
 Add it to Claude Code (client must be on the LAN or Tailscale):
-  claude mcp add --transport sse -s user basic-memory https://basic-memory.k8s.firekatt.ca/mcp
+  claude mcp add --transport http -s user basic-memory https://basic-memory.k8s.firekatt.ca/mcp
 
 Persistence (Longhorn, ReadWriteOnce):
   /app/data                   Markdown knowledge base (5Gi)

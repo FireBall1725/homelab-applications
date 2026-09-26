@@ -30,7 +30,7 @@ The viewer has no authentication and renders the whole knowledge base, so it sta
 
 `MCP_URL` points at the in-cluster Service, `http://basic-memory.app-ai.svc.cluster.local:8000/mcp`, rather than back out through Traefik at `basic-memory.k8s.firekatt.ca`. The traffic stays inside the namespace and does not depend on ingress routing or LAN DNS.
 
-`MCP_TRANSPORT` is `sse`. The viewer defaults to streamable HTTP, but our Basic Memory container runs `basic-memory mcp --transport sse`, so the default would fail to connect.
+`MCP_TRANSPORT` is `http`, matching Basic Memory's `--transport streamable-http`. `HEALTH_TTL` is `300`: Basic Memory keeps a little memory for every streamable-HTTP session and never frees it, so the viewer's health check reuses a good result for five minutes instead of opening a session per probe.
 
 ## Image Tag
 
