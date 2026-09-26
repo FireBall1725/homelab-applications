@@ -13,7 +13,7 @@ Traefik is the cluster's primary ingress controller, routing external HTTP/HTTPS
 | **Upstream Project** | [Traefik](https://traefik.io) |
 | **Helm Chart** | `traefik` ([Traefik Labs](https://traefik.github.io/charts)) |
 | **Chart Version** | `35.4.0` |
-| **App Version** | `3.4.0` |
+| **App Version** | `3.7.13` |
 | **Common Library** | Upstream chart |
 
 ## Ingress
