@@ -21,19 +21,19 @@ Basic Memory stores knowledge as plain Markdown files and exposes it to AI assis
 
 | Host | Description |
 |------|-------------|
-| `basic-memory.k8s.firekatt.ca` | MCP server (`/mcp`, SSE transport), internal ingress class |
+| `basic-memory.k8s.firekatt.ca` | MCP server (`/mcp`, streamable HTTP), internal ingress class |
 
 ## MCP Endpoint
 
-- The container runs `basic-memory mcp --transport sse --host 0.0.0.0 --port 8000` and serves the MCP protocol at `/mcp` on port 8000.
-- Transport is **SSE**, not streamableHttp. streamableHttp answers the initialize POST as an SSE stream, and Claude Code reuses that connection for the follow-up notification, which the cluster Traefik path turns into a 400. The same failure hit the node-red MCP sidecar. SSE keeps the long-lived stream on a dedicated request and avoids the pattern.
+- The container runs `basic-memory mcp --transport streamable-http --host 0.0.0.0 --port 8000 --path /mcp` and serves the MCP protocol at `/mcp` on port 8000.
+- Transport is **streamable HTTP**. It used to be SSE, but Claude Code's SSE client doesn't reconnect when its long-lived stream drops, so every call failed until a manual `/mcp`. Each streamable-HTTP call is its own request, and after a rollout the client gets a 404 and starts a new session by itself. The Traefik 400 that ruled it out in July is gone (retested 2026-09-26).
 - The endpoint has **no authentication**. The ingress is on the `internal` class only, so it is reachable on the LAN (or Tailscale), never from the public internet.
 - Health for the Uptime Kuma monitor is served by a sidecar at `/health` (see below), because Basic Memory itself ships no plain HTTP health route.
 
 ### Adding to Claude Code
 
 ```
-claude mcp add --transport sse -s user basic-memory https://basic-memory.k8s.firekatt.ca/mcp
+claude mcp add --transport http -s user basic-memory https://basic-memory.k8s.firekatt.ca/mcp
 ```
 
 The client machine has to be on the LAN (or Tailscale) since the host resolves on the LAN only.
