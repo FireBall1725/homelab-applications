@@ -8,7 +8,7 @@ traefik:
 
   # Image configuration
   image:
-    tag: v3.4.0
+    tag: v3.7.13
 
   # IngressClass configuration
   ingressClass:
@@ -16,12 +16,11 @@ traefik:
     isDefaultClass: true
     name: internal
 
-  # Logging configuration
-  logs:
-    general:
-      level: INFO
-    access:
-      enabled: true
+  # Logging configuration (chart 41 renamed logs.general -> log, logs.access -> accessLog)
+  log:
+    level: INFO
+  accessLog:
+    enabled: true
 
   # Metrics configuration
   metrics:
