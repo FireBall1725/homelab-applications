@@ -106,7 +106,7 @@ resources:
 additionalContainers:
   health:
     name: health
-    image: python:3.12-alpine
+    image: python:3.14-alpine
     imagePullPolicy: IfNotPresent
     command:
       - python3
