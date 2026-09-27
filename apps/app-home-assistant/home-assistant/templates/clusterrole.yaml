@@ -17,11 +17,16 @@ metadata:
 rules:
   # Core resources — monitoring + watch + pod deletion
   - apiGroups: [""]
-    resources: ["nodes", "namespaces", "events"]
+    resources: ["nodes", "namespaces", "events", "services"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list", "watch", "delete"]
+
+  # Networking resources — monitoring + watch (Ingress URLs in the panel)
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
 
   # Apps resources — monitoring + watch
   - apiGroups: ["apps"]
