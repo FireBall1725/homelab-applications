@@ -26,6 +26,12 @@ service:
       mqtt:
         enabled: true
         port: 1883
+      # MQTT over WebSockets, so a browser can join the broker: the PixelBar site's Try it page runs as a virtual display.
+      websockets:
+        enabled: true
+        port: 9001
+        protocol: TCP
+        targetPort: 9001
 
 auth:
   # -- By enabling this, `allow_anonymous` gets set to `false` in the mosquitto config.

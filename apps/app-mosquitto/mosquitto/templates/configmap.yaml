@@ -12,6 +12,10 @@ data:
     {{- if .Values.addListener }}
     listener {{ .Values.service.main.ports.mqtt.port }}
     {{- end}}
+    {{- if .Values.service.main.ports.websockets.enabled }}
+    listener {{ .Values.service.main.ports.websockets.port }}
+    protocol websockets
+    {{- end }}
     {{- if .Values.auth.enabled }}
     allow_anonymous false
     {{- else }}
