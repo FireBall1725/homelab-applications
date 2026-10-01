@@ -14,6 +14,11 @@ image:
   # -- image pull policy
   pullPolicy: IfNotPresent
 
+# -- Restart the pod when mosquitto.conf changes: Mosquitto only reads its config at start, and a
+# ConfigMap edit alone doesn't restart anything.
+podAnnotations:
+  checksum/mosquitto-config: '{{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}'
+
 # -- Configures service settings for the chart. Normally this does not need to be modified.
 # @default -- See values.yaml
 service:
