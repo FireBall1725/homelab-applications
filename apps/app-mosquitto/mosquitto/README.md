@@ -18,7 +18,7 @@ Eclipse Mosquitto is a lightweight MQTT broker used as the messaging backbone fo
 
 ## Ingress
 
-No HTTP ingress. Mosquitto is exposed via a `LoadBalancer` service on a fixed internal IP (port 1883).
+No HTTP ingress. Mosquitto is exposed via a `LoadBalancer` service on a fixed internal IP: MQTT on port 1883, and MQTT over WebSockets on port 9001 for browser clients such as the PixelBar site's virtual display.
 
 ## Persistence
 
@@ -33,6 +33,6 @@ No secrets required.
 ## Notes
 
 - Broker configuration is managed via a ConfigMap (`configmap.yaml`)
-- Anonymous authentication is disabled; clients must authenticate
+- Anonymous access is allowed (`auth.enabled: false`), on both listeners
 - Exposed via LoadBalancer with a fixed internal IP for direct device connectivity
 - Message persistence is enabled so in-flight messages survive restarts
