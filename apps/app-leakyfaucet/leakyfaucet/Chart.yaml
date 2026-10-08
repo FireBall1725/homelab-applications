@@ -1,0 +1,11 @@
+apiVersion: v2
+name: leakyfaucet
+type: application
+version: 0.1.0
+appVersion: "26.10.0-nightly.202610082332"
+kubeVersion: ">=1.25.0-0"
+
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://fireball1725.github.io/firelabs-helm-common/
