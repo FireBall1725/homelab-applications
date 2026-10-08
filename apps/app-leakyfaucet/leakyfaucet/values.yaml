@@ -1,0 +1,90 @@
+global:
+  fullnameOverride: leakyfaucet
+
+image:
+  repository: ghcr.io/fireball1725/leakyfaucet
+  tag: "26.10.0-nightly.202610082332"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ghcr-pull
+
+controller:
+  replicas: 1
+  strategy: Recreate
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8080
+
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: leakyfaucet.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /api/v1/health
+        port: http
+      initialDelaySeconds: 30
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /api/v1/health
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+configmap:
+  config:
+    enabled: true
+    data:
+      TZ: America/Toronto
+
+secret: {}
+
+envFrom:
+  - configMapRef:
+      name: leakyfaucet-config
+
+env:
+  DATABASE_URL:
+    valueFrom:
+      secretKeyRef:
+        name: leakyfaucet-db-app
+        key: uri
+  JWT_SECRET:
+    valueFrom:
+      secretKeyRef:
+        name: leakyfaucet-jwt
+        key: JWT_SECRET
+
+postgres:
+  clusterName: leakyfaucet-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-3
+  database: leakyfaucet
+  owner: leakyfaucet
+  storage:
+    size: 5Gi
+    storageClass: longhorn
