@@ -2,7 +2,7 @@ apiVersion: v2
 name: leakyfaucet
 type: application
 version: 0.1.0
-appVersion: "26.10.0-nightly.202610090117"
+appVersion: "26.10.0-nightly.202610090803"
 kubeVersion: ">=1.25.0-0"
 
 dependencies:
