@@ -3,7 +3,7 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/leakyfaucet
-  tag: "26.10.0-nightly.202610090803"
+  tag: "26.10.0-nightly.202610090836"
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
@@ -60,6 +60,7 @@ configmap:
     enabled: true
     data:
       TZ: America/Toronto
+      OLLAMA_URL: http://ollama.app-ai.svc.cluster.local:11434
 
 secret: {}
 
