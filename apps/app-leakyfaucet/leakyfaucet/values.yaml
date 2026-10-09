@@ -3,7 +3,7 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/leakyfaucet
-  tag: "26.10.0-nightly.202610090117"
+  tag: "26.10.0-nightly.202610090803"
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
