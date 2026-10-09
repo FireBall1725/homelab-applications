@@ -20,7 +20,7 @@ image:
   # Upstream publishes to Docker Hub only - there is no ghcr.io mirror, the release
   # workflow only logs into Docker Hub. Tags carry a leading "v".
   # renovate: image=docker.io/awkto/ssh-to-go
-  tag: "v1.29.0"
+  tag: "v1.32.1"
   pullPolicy: IfNotPresent
 
 # Single replica, Recreate strategy - both PVCs below are RWO.
