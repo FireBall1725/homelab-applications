@@ -88,3 +88,9 @@ postgres:
   storage:
     size: 5Gi
     storageClass: longhorn
+
+dump:
+  schedule: "30 2 * * *"
+  keepDays: 14
+  size: 2Gi
+  storageClass: longhorn
