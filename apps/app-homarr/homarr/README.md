@@ -13,7 +13,7 @@ Homarr is a sleek, configurable dashboard for the homelab with app tiles, integr
 | **Upstream Project** | [Homarr](https://homarr.dev) |
 | **Helm Chart** | `homarr` ([Homarr Labs](https://homarr-labs.github.io/charts/)) |
 | **Chart Version** | `8.29.2` |
-| **App Version** | `v1.77.2` |
+| **App Version** | `v2.6.0` |
 | **Common Library** | Upstream chart |
 
 ## Ingress
