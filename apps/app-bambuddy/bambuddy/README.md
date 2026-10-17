@@ -11,10 +11,10 @@ Bambuddy archives every print as a 3MF with its metadata, thumbnails, and cost, 
 | | |
 |---|---|
 | **Upstream Project** | [bambuddy](https://github.com/maziggy/bambuddy) ([docs](https://wiki.bambuddy.cool)) |
-| **Image** | `ghcr.io/maziggy/bambuddy:1.2.5.1` (public, multi-arch amd64/arm64) |
+| **Image** | `ghcr.io/maziggy/bambuddy:1.2.5.7` (public, multi-arch amd64/arm64) |
 | **Sidecar Image** | `ghcr.io/maziggy/orca-slicer-api:bambuddy-1.2.5.1` (linux/amd64 only) |
-| **Chart Version** | `0.1.1` |
-| **App Version** | `1.2.5.1` |
+| **Chart Version** | `0.1.2` |
+| **App Version** | `1.2.5.7` |
 | **Common Library** | `common` 5.0.3 ([firelabs-helm-common](https://fireball1725.github.io/firelabs-helm-common/)) |
 
 Image tags carry no leading `v` even though the upstream git tags do: git `v1.2.5.1` publishes as image `1.2.5.1`.
