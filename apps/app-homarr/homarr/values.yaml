@@ -1,6 +1,6 @@
 homarr:
   image:
-    tag: "v1.77.2"
+    tag: "v2.6.0"
 
   # The database is a ReadWriteOnce Longhorn volume. A rolling update starts the new
   # pod first, and when it lands on another node it can't attach the volume the old
