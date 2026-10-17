@@ -4,11 +4,11 @@ description: Bambuddy - self-hosted control plane for Bambu Lab printers (archiv
 type: application
 
 # Chart version. Bump on template/values changes; does not need to match appVersion.
-version: 0.1.1
+version: 0.1.2
 
 # Tracks the bambuddy release. Keep in sync with the pinned image tag in values.yaml.
 # Note: image tags carry no leading "v" even though git tags do.
-appVersion: "1.2.5.1"
+appVersion: "1.2.5.7"
 
 kubeVersion: ">=1.25.0-0"
 
