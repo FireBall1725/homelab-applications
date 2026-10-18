@@ -3,7 +3,7 @@
 # Long-term memory service for agents. One pod runs the API (:8888) and the
 # control-plane UI (:9999) from the standalone image. State lives in a
 # CloudNativePG cluster with the pgvector extension mounted as an image volume.
-# The LLM used for fact extraction is gpt-oss:20b on the M1 Max via the `ollama`
+# The LLM used for fact extraction is qwen3.6 on the M1 Max via the `ollama`
 # Service bridge in this namespace, so no memory text leaves the LAN.
 #
 # Embeddings and the reranker run in-process from models baked into the image.
@@ -98,7 +98,9 @@ configmap:
     data:
       HINDSIGHT_API_LLM_PROVIDER: "ollama"
       HINDSIGHT_API_LLM_BASE_URL: "http://ollama:11434/v1"
-      HINDSIGHT_API_LLM_MODEL: "gpt-oss:20b"
+      # Not gpt-oss: Ollama returns empty content for it when a JSON schema is
+      # enforced, which fails retain with a JSONDecodeError.
+      HINDSIGHT_API_LLM_MODEL: "qwen3.6:latest"
       # Ollama silently truncates to its own small default unless num_ctx is sent.
       # 65536 matches the server default, so Hindsight does not force a model
       # reload that would evict what ollama-admin and HA have loaded.
@@ -106,7 +108,8 @@ configmap:
       # Grammar-enforce JSON for a local model; the soft path wedges retain on
       # a JSONDecodeError.
       HINDSIGHT_API_LLM_STRICT_SCHEMA: "true"
-      HINDSIGHT_API_LLM_REASONING_EFFORT: "low"
+      # Skip the thinking block; extraction does not need it and it costs seconds.
+      HINDSIGHT_API_LLM_EXTRA_BODY: '{"think": false}'
       HINDSIGHT_API_VECTOR_EXTENSION: "pgvector"
       HINDSIGHT_API_TENANT_EXTENSION: "hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
 
