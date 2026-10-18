@@ -38,7 +38,7 @@ service:
         port: 9999
 
 # Two hosts instead of path routing: the UI at the bare name, API and MCP on -api.
-# Internal class only. The API is behind HINDSIGHT_API_TENANT_API_KEY, the UI is not.
+# Internal class only. Both are behind the same key (UI login and API bearer).
 ingress:
   main:
     enabled: true
@@ -128,6 +128,19 @@ env:
         key: DATABASE_URL
   # SealedSecret hindsight-api-key. The key itself is in the macOS Keychain.
   HINDSIGHT_API_TENANT_API_KEY:
+    valueFrom:
+      secretKeyRef:
+        name: hindsight-api-key
+        key: HINDSIGHT_API_TENANT_API_KEY
+  # The UI proxies to the API on localhost. Without the dataplane key every call
+  # is a 401 ("Invalid API key") and the UI shows its login box. The access key is
+  # the UI's own login; both reuse the one API key so there is a single secret.
+  HINDSIGHT_CP_DATAPLANE_API_KEY:
+    valueFrom:
+      secretKeyRef:
+        name: hindsight-api-key
+        key: HINDSIGHT_API_TENANT_API_KEY
+  HINDSIGHT_CP_ACCESS_KEY:
     valueFrom:
       secretKeyRef:
         name: hindsight-api-key
