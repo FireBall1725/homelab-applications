@@ -1,0 +1,34 @@
+{{- if .Values.postgres.create -}}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .Values.postgres.clusterName }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  instances: {{ .Values.postgres.instances | default 1 }}
+  imageName: {{ .Values.postgres.imageName | quote }}
+  bootstrap:
+    initdb:
+      database: {{ .Values.postgres.database | quote }}
+      owner: {{ .Values.postgres.owner | quote }}
+      secret:
+        name: {{ .Values.postgres.credsSecret | quote }}
+      # pgvector is a trusted extension, but create it here so the first boot
+      # never races the app's own migration.
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS vector
+  postgresql:
+    extensions:
+      - name: pgvector
+        image:
+          reference: {{ .Values.postgres.pgvectorImage | quote }}
+  storage:
+    size: {{ .Values.postgres.storage.size | quote }}
+    {{- with .Values.postgres.storage.storageClass }}
+    storageClass: {{ . | quote }}
+    {{- end }}
+  {{- with .Values.postgres.extraSpec }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}

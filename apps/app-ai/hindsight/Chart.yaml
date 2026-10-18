@@ -1,0 +1,31 @@
+apiVersion: v2
+name: hindsight
+description: Hindsight - long-term memory for AI agents (retain, recall, reflect), backed by CloudNativePG Postgres with pgvector.
+type: application
+
+# Chart version. Bump on template/values changes; does not need to match appVersion.
+version: 0.1.0
+
+# Tracks the upstream Hindsight release. Keep in sync with the pinned image tag.
+appVersion: "1.0.0"
+
+kubeVersion: ">=1.35.0-0"
+
+home: https://hindsight.vectorize.io/
+sources:
+  - https://github.com/vectorize-io/hindsight
+maintainers:
+  - name: fireball1725
+    url: https://github.com/fireball1725
+
+keywords:
+  - memory
+  - llm
+  - agents
+  - mcp
+  - self-hosted
+
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://fireball1725.github.io/firelabs-helm-common/
