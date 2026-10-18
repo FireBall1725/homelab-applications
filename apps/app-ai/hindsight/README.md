@@ -32,10 +32,10 @@ Embeddings and the reranker run in-process from models baked into the image.
 
 | Host | Target | Auth |
 |---|---|---|
-| `hindsight.k8s.firekatt.ca` | UI `:9999` | none |
+| `hindsight.k8s.firekatt.ca` | UI `:9999` | login, same key |
 | `hindsight-api.k8s.firekatt.ca` | API and MCP `:8888` | bearer key |
 
-Both are on the `internal` ingress class. The API key is `HINDSIGHT_API_TENANT_API_KEY` (SealedSecret `hindsight-api-key`); the value is in the macOS Keychain as `hindsight-api-key`. Each memory bank has an MCP endpoint at `/mcp/<bank>/`.
+Both are on the `internal` ingress class. One key covers both: `HINDSIGHT_API_TENANT_API_KEY` for the API, `HINDSIGHT_CP_ACCESS_KEY` for the UI login, and `HINDSIGHT_CP_DATAPLANE_API_KEY` for the UI-to-API calls (SealedSecret `hindsight-api-key`); the value is in the macOS Keychain as `hindsight-api-key`. Each memory bank has an MCP endpoint at `/mcp/<bank>/`.
 
 ## Persistence
 

@@ -4,7 +4,7 @@ description: Hindsight - long-term memory for AI agents (retain, recall, reflect
 type: application
 
 # Chart version. Bump on template/values changes; does not need to match appVersion.
-version: 0.1.0
+version: 0.1.1
 
 # Tracks the upstream Hindsight release. Keep in sync with the pinned image tag.
 appVersion: "1.0.0"
