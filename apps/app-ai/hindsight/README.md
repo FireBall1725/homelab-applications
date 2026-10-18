@@ -20,7 +20,7 @@ Upstream ships a Helm chart, but it is at 1.0.0 with no release and bundles its 
 
 ## LLM
 
-Fact extraction runs on `gpt-oss:20b` on the M1 Max, reached through the `ollama` Service in this namespace. Nothing leaves the LAN. `HINDSIGHT_API_LLM_OLLAMA_NUM_CTX` is 65536 to match the server default; any other value makes Ollama reload the model and evict what other apps have loaded. `HINDSIGHT_API_LLM_STRICT_SCHEMA` is on because the soft JSON path wedges retain on a local model. If the Mac is asleep, retain fails and retries.
+Fact extraction runs on `qwen3.6` on the M1 Max, reached through the `ollama` Service in this namespace. Nothing leaves the LAN. `HINDSIGHT_API_LLM_OLLAMA_NUM_CTX` is 65536 to match the server default; any other value makes Ollama reload the model and evict what other apps have loaded. `HINDSIGHT_API_LLM_STRICT_SCHEMA` is on because the soft JSON path wedges retain on a local model. `gpt-oss` does not work here: Ollama returns empty content for it when a JSON schema is enforced. If the Mac is asleep, retain fails and retries.
 
 Embeddings and the reranker run in-process from models baked into the image.
 
