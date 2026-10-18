@@ -110,6 +110,9 @@ configmap:
       HINDSIGHT_API_LLM_STRICT_SCHEMA: "true"
       # Skip the thinking block; extraction does not need it and it costs seconds.
       HINDSIGHT_API_LLM_EXTRA_BODY: '{"think": false}'
+      # Long notes (10 to 30 KB) take several minutes on a local model, and the
+      # default deadline cut them off with "chunk 0: TimeoutError" and a 500.
+      HINDSIGHT_API_RETAIN_LLM_TIMEOUT: "900"
       HINDSIGHT_API_VECTOR_EXTENSION: "pgvector"
       HINDSIGHT_API_TENANT_EXTENSION: "hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
 
