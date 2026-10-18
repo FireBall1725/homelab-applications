@@ -1,0 +1,176 @@
+# Hindsight - homelab values
+#
+# Long-term memory service for agents. One pod runs the API (:8888) and the
+# control-plane UI (:9999) from the standalone image. State lives in a
+# CloudNativePG cluster with the pgvector extension mounted as an image volume.
+# The LLM used for fact extraction is gpt-oss:20b on the M1 Max via the `ollama`
+# Service bridge in this namespace, so no memory text leaves the LAN.
+#
+# Embeddings and the reranker run in-process from models baked into the image.
+
+global:
+  fullnameOverride: hindsight
+
+image:
+  repository: ghcr.io/vectorize-io/hindsight
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+controller:
+  replicas: 1
+  strategy: Recreate
+
+# app-ai contains a Service named `ollama`; service links would inject
+# OLLAMA_PORT=tcp://... into a pod that talks to Ollama. Same trap as ollama-admin.
+enableServiceLinks: false
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8888
+      ui:
+        enabled: true
+        port: 9999
+
+# Two hosts instead of path routing: the UI at the bare name, API and MCP on -api.
+# Internal class only. The API is behind HINDSIGHT_API_TENANT_API_KEY, the UI is not.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: hindsight.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: hindsight
+              port: 9999
+      - host: hindsight-api.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: hindsight
+              port: 8888
+
+# /health/live does not touch the DB, /health does. First boot runs migrations and
+# loads the embedder and reranker, so the startup probe is patient (5 minutes).
+probes:
+  startup:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health/live
+        port: 8888
+      periodSeconds: 5
+      failureThreshold: 60
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health/live
+        port: 8888
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: 8888
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+configmap:
+  config:
+    enabled: true
+    data:
+      HINDSIGHT_API_LLM_PROVIDER: "ollama"
+      HINDSIGHT_API_LLM_BASE_URL: "http://ollama:11434/v1"
+      HINDSIGHT_API_LLM_MODEL: "gpt-oss:20b"
+      # Ollama silently truncates to its own small default unless num_ctx is sent.
+      # 65536 matches the server default, so Hindsight does not force a model
+      # reload that would evict what ollama-admin and HA have loaded.
+      HINDSIGHT_API_LLM_OLLAMA_NUM_CTX: "65536"
+      # Grammar-enforce JSON for a local model; the soft path wedges retain on
+      # a JSONDecodeError.
+      HINDSIGHT_API_LLM_STRICT_SCHEMA: "true"
+      HINDSIGHT_API_LLM_REASONING_EFFORT: "low"
+      HINDSIGHT_API_VECTOR_EXTENSION: "pgvector"
+      HINDSIGHT_API_TENANT_EXTENSION: "hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
+
+secret: {}
+
+envFrom:
+  - configMapRef:
+      name: hindsight-config
+
+env:
+  # SealedSecret hindsight-db-url: the CNPG owner password in a postgresql:// DSN.
+  HINDSIGHT_API_DATABASE_URL:
+    valueFrom:
+      secretKeyRef:
+        name: hindsight-db-url
+        key: DATABASE_URL
+  # SealedSecret hindsight-api-key. The key itself is in the macOS Keychain.
+  HINDSIGHT_API_TENANT_API_KEY:
+    valueFrom:
+      secretKeyRef:
+        name: hindsight-api-key
+        key: HINDSIGHT_API_TENANT_API_KEY
+  # No Ollama key is needed; the provider requires the variable to be non-empty.
+  HINDSIGHT_API_LLM_API_KEY: "ollama"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Models are baked into the image; state is in Postgres.
+persistence: {}
+
+# The in-process embedder and reranker load into RAM. Upstream asks for 2 GB.
+resources:
+  requests:
+    cpu: 250m
+    memory: 1Gi
+  limits:
+    memory: 4Gi
+
+postgres:
+  create: true
+  clusterName: hindsight-db
+  instances: 1
+  # PG 18 to match the pgvector extension image. "minimal" ships no extensions
+  # of its own; pgvector comes from the image volume below.
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie
+  pgvectorImage: ghcr.io/cloudnative-pg/pgvector:0.8.1-18-trixie
+  database: hindsight
+  owner: hindsight
+  credsSecret: hindsight-db-creds
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  extraSpec:
+    monitoring:
+      enablePodMonitor: true
