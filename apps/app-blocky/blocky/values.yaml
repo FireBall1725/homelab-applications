@@ -247,6 +247,9 @@ config: |
           # DNS can't match paths, so this is the whole host; ingest.sentry.io stays blocked.
           /^sentry\.io$/
           /^lost-crafters\.sentry\.io$/
+          # JS bundle host and the regional app/API hosts the login page loads from
+          /^s1\.sentry-cdn\.com$/
+          /^(us|de)\.sentry\.io$/
     # definition: which groups should be applied for which client
     clientGroupsBlock:
       # default will be used, if no special definition for a client name exists
