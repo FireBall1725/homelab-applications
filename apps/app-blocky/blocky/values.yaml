@@ -243,6 +243,10 @@ config: |
           /(^|\.)telemetrydeck\.com$/
           # regex catch-all: apex + every subdomain (app, us.i, eu.i, assets, ...)
           /(^|\.)posthog\.com$/
+          # Sentry login (SAML ACS lives on sentry.io) and the Lost Crafters org.
+          # DNS can't match paths, so this is the whole host; ingest.sentry.io stays blocked.
+          /^sentry\.io$/
+          /^lost-crafters\.sentry\.io$/
     # definition: which groups should be applied for which client
     clientGroupsBlock:
       # default will be used, if no special definition for a client name exists
