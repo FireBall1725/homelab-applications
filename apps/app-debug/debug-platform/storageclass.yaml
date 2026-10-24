@@ -1,0 +1,18 @@
+# Single-replica Longhorn for CNPG data in debug-* namespaces. Not the default
+# class and no recurring-job labels, so debug volumes are never backed up.
+# reclaimPolicy Delete: the volume goes when the namespace is reaped.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-debug
+provisioner: driver.longhorn.io
+allowVolumeExpansion: false
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+parameters:
+  numberOfReplicas: "1"
+  staleReplicaTimeout: "30"
+  fsType: ext4
+  dataLocality: best-effort
+  disableRevisionCounter: "true"
+  dataEngine: v1

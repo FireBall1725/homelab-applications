@@ -164,6 +164,8 @@ between namespaces; that isn't what the layout is for.
 | [Metrics Server](apps/kube-system/metrics-server/) | Kubernetes resource metrics |
 | [Blocky](apps/app-blocky/blocky/) | DNS-based ad blocking |
 | [Cloudflare DDNS](apps/app-cloudflare-ddns/cloudflare-ddns/) | Dynamic DNS updater |
+| [zot](apps/app-registry/zot/) | OCI registry at `registry.k8s.firekatt.ca` |
+| [Debug Platform](apps/app-debug/debug-platform/) | Guardrails, TTL reaper and RBAC for throwaway `debug-*` namespaces |
 
 ### AI
 | App | Description |

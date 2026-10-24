@@ -1,0 +1,8 @@
+apiVersion: v2
+name: zot
+type: application
+version: 1.0.0
+dependencies:
+  - name: zot
+    version: 0.1.128
+    repository: http://zotregistry.dev/helm-charts
