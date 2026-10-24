@@ -1,0 +1,142 @@
+# Guardrails on what the debug agent can ask for. All three policies match on
+# the agent's username only, so nothing here touches any other client. RBAC
+# alone cannot express "only debug-* namespaces" or "only debug-* hostnames".
+#
+# TTL: `debug.firekatt.ca/ttl` is a whole number of hours ("120h"), measured
+# from the namespace's creationTimestamp. Hard cap 720h (30 days). Anything over
+# 120h (the 5 day default) must also carry `debug.firekatt.ca/reason`.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: debug-namespaces
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [""]
+      apiVersions: ["v1"]
+      operations: [CREATE, UPDATE, DELETE]
+      resources: [namespaces]
+  matchConditions:
+  - name: debug-agent-only
+    expression: request.userInfo.username == 'system:serviceaccount:app-debug:debug-agent'
+  variables:
+  - name: isDelete
+    expression: request.operation == 'DELETE'
+  - name: target
+    expression: "variables.isDelete ? oldObject : object"
+  - name: ann
+    expression: >-
+      !variables.isDelete && has(object.metadata.annotations)
+        ? object.metadata.annotations : {}
+  - name: ttl
+    expression: >-
+      'debug.firekatt.ca/ttl' in variables.ann
+        ? variables.ann['debug.firekatt.ca/ttl'] : ''
+  validations:
+  - expression: variables.target.metadata.name.startsWith('debug-')
+    message: the debug agent may only touch namespaces named debug-*
+  - expression: variables.isDelete || variables.ttl.matches('^[1-9][0-9]{0,3}h$')
+    message: annotation debug.firekatt.ca/ttl is required, as whole hours such as 120h
+  - expression: >-
+      variables.isDelete || !variables.ttl.matches('^[1-9][0-9]{0,3}h$')
+        || duration(variables.ttl) <= duration('720h')
+    message: debug.firekatt.ca/ttl may not exceed 720h (30 days)
+  - expression: >-
+      variables.isDelete || !variables.ttl.matches('^[1-9][0-9]{0,3}h$')
+        || duration(variables.ttl) <= duration('120h')
+        || ('debug.firekatt.ca/reason' in variables.ann
+            && size(variables.ann['debug.firekatt.ca/reason']) > 0)
+    message: a ttl over 120h needs a non-empty debug.firekatt.ca/reason annotation
+  - expression: >-
+      variables.isDelete
+        || (has(object.metadata.labels)
+            && 'pod-security.kubernetes.io/enforce' in object.metadata.labels
+            && object.metadata.labels['pod-security.kubernetes.io/enforce'] in ['baseline', 'restricted'])
+    message: label pod-security.kubernetes.io/enforce must be baseline or restricted
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: debug-namespaces
+spec:
+  policyName: debug-namespaces
+  validationActions: [Deny]
+---
+# Ingress hosts must be <namespace>.k8s.firekatt.ca or <namespace>-<x>.k8s.firekatt.ca.
+# One label deep so the existing *.k8s.firekatt.ca wildcard cert covers it, and
+# namespace-prefixed so a test cannot claim librarium.k8s.firekatt.ca.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: debug-ingress-hosts
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [networking.k8s.io]
+      apiVersions: ["v1"]
+      operations: [CREATE, UPDATE]
+      resources: [ingresses]
+  matchConditions:
+  - name: debug-agent-only
+    expression: request.userInfo.username == 'system:serviceaccount:app-debug:debug-agent'
+  validations:
+  - expression: >-
+      has(object.spec.ingressClassName) && object.spec.ingressClassName == 'internal'
+    message: ingressClassName must be internal
+  - expression: "!has(object.spec.defaultBackend)"
+    message: defaultBackend would catch traffic for other hosts
+  - expression: has(object.spec.rules) && size(object.spec.rules) > 0
+    message: at least one rule with a host is required
+  - expression: >-
+      !has(object.spec.rules) || object.spec.rules.all(r, has(r.host)
+        && r.host.matches('^' + namespaceObject.metadata.name + '(-[a-z0-9-]+)?\\.k8s\\.firekatt\\.ca$'))
+    message: hosts must be <namespace>[-suffix].k8s.firekatt.ca
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: debug-ingress-hosts
+spec:
+  policyName: debug-ingress-hosts
+  validationActions: [Deny]
+---
+# Databases: single small instance on the single-replica debug class only. The
+# ResourceQuota also blocks PVCs from any other class.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: debug-cnpg
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [postgresql.cnpg.io]
+      apiVersions: ["v1"]
+      operations: [CREATE, UPDATE]
+      resources: [clusters]
+  matchConditions:
+  - name: debug-agent-only
+    expression: request.userInfo.username == 'system:serviceaccount:app-debug:debug-agent'
+  validations:
+  - expression: "!has(object.spec.instances) || object.spec.instances <= 2"
+    message: at most 2 instances
+  - expression: >-
+      has(object.spec.storage) && has(object.spec.storage.storageClass)
+        && object.spec.storage.storageClass == 'longhorn-debug'
+    message: spec.storage.storageClass must be longhorn-debug
+  - expression: >-
+      has(object.spec.storage) && has(object.spec.storage.size)
+        && quantity(object.spec.storage.size).compareTo(quantity('5Gi')) <= 0
+    message: spec.storage.size may not exceed 5Gi
+  - expression: "!has(object.spec.walStorage)"
+    message: walStorage is not allowed, it is a second PVC
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: debug-cnpg
+spec:
+  policyName: debug-cnpg
+  validationActions: [Deny]

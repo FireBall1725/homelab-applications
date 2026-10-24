@@ -1,0 +1,79 @@
+# zot OCI registry: https://zotregistry.dev
+# Anonymous read, push needs the `fireball` htpasswd user (secret `zot-secret`).
+zot:
+  image:
+    tag: v2.1.22
+
+  service:
+    type: ClusterIP
+
+  ingress:
+    enabled: true
+    className: internal
+    pathtype: Prefix
+    hosts:
+      - host: registry.k8s.firekatt.ca
+        paths:
+          - path: /
+
+  persistence: true
+  pvc:
+    create: true
+    storage: 30Gi
+  strategy:
+    type: Recreate
+
+  mountConfig: true
+  mountSecret: true
+  # Managed by templates/sealed-secret.yaml, not the chart.
+  secretFiles: null
+
+  configFiles:
+    config.json: |-
+      {
+        "storage": {
+          "rootDirectory": "/var/lib/registry",
+          "gc": true,
+          "gcDelay": "1h",
+          "gcInterval": "24h",
+          "retention": {
+            "dryRun": false,
+            "delay": "24h",
+            "policies": [{
+              "repositories": ["**"],
+              "deleteReferrers": true,
+              "deleteUntagged": true,
+              "keepTags": [{ "mostRecentlyPushedCount": 10 }]
+            }]
+          }
+        },
+        "http": {
+          "address": "0.0.0.0",
+          "port": "5000",
+          "auth": { "htpasswd": { "path": "/secret/htpasswd" } },
+          "accessControl": {
+            "repositories": {
+              "**": {
+                "anonymousPolicy": ["read"],
+                "policies": [{
+                  "users": ["fireball"],
+                  "actions": ["read", "create", "update", "delete"]
+                }],
+                "defaultPolicy": ["read"]
+              }
+            }
+          }
+        },
+        "log": { "level": "info" },
+        "extensions": {
+          "search": { "enable": true },
+          "ui": { "enable": true }
+        }
+      }
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi

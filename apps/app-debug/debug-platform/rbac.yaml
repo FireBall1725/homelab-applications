@@ -1,0 +1,129 @@
+# Identity the debug agent uses, plus the two ClusterRoles behind it.
+#
+# The agent can create/update/delete Namespaces, but RBAC cannot match a name
+# prefix, so admission-policy.yaml is what pins that to debug-*. It holds no
+# RoleBinding rights: the controller binds debug-ns-admin into each debug-*
+# namespace, so the agent only ever has rights inside namespaces that passed
+# the policy.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: debug-agent
+  namespace: app-debug
+---
+# Long-lived token for the agent's kubeconfig. The controller fills in the
+# value; nothing secret is in git. Build the kubeconfig from it with
+# `kubectl get secret debug-agent-token -n app-debug`.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: debug-agent-token
+  namespace: app-debug
+  annotations:
+    kubernetes.io/service-account.name: debug-agent
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: debug-agent
+rules:
+- apiGroups: [""]
+  resources: [namespaces]
+  verbs: [get, list, watch, create, update, patch, delete]
+# Read-only context for picking nodes, classes and sizes.
+- apiGroups: [""]
+  resources: [nodes]
+  verbs: [get, list]
+- apiGroups: [storage.k8s.io]
+  resources: [storageclasses]
+  verbs: [get, list]
+- apiGroups: [networking.k8s.io]
+  resources: [ingressclasses]
+  verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: debug-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: debug-agent
+subjects:
+- kind: ServiceAccount
+  name: debug-agent
+  namespace: app-debug
+---
+# Bound into each debug-* namespace by the controller. No PVC create (the CNPG
+# operator makes its own), no Roles/RoleBindings, no quota or limit edits.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: debug-ns-admin
+rules:
+- apiGroups: [""]
+  resources: [pods, services, configmaps, secrets, serviceaccounts]
+  verbs: [get, list, watch, create, update, patch, delete, deletecollection]
+- apiGroups: [""]
+  resources: [pods/log, pods/exec, pods/portforward, pods/attach]
+  verbs: [get, list, create]
+- apiGroups: [""]
+  resources: [events, endpoints, persistentvolumeclaims, resourcequotas, limitranges]
+  verbs: [get, list, watch]
+- apiGroups: [apps]
+  resources: [deployments, statefulsets, replicasets]
+  verbs: [get, list, watch, create, update, patch, delete, deletecollection]
+- apiGroups: [apps]
+  resources: [deployments/scale, statefulsets/scale]
+  verbs: [get, update, patch]
+- apiGroups: [batch]
+  resources: [jobs, cronjobs]
+  verbs: [get, list, watch, create, update, patch, delete, deletecollection]
+- apiGroups: [networking.k8s.io]
+  resources: [ingresses]
+  verbs: [get, list, watch, create, update, patch, delete]
+- apiGroups: [postgresql.cnpg.io]
+  resources: [clusters, databases, poolers]
+  verbs: [get, list, watch, create, update, patch, delete]
+---
+# Identity for the controller that reaps expired namespaces and bootstraps new
+# ones (quota, limits, agent RoleBinding).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: debug-controller
+  namespace: app-debug
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: debug-controller
+rules:
+- apiGroups: [""]
+  resources: [namespaces]
+  verbs: [get, list, delete]
+- apiGroups: [""]
+  resources: [resourcequotas, limitranges]
+  verbs: [get, list, create, update, patch]
+- apiGroups: [rbac.authorization.k8s.io]
+  resources: [rolebindings]
+  verbs: [get, list, create, update, patch]
+# Needed to bind a role it does not itself hold every permission of.
+- apiGroups: [rbac.authorization.k8s.io]
+  resources: [clusterroles]
+  resourceNames: [debug-ns-admin]
+  verbs: [bind]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: debug-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: debug-controller
+subjects:
+- kind: ServiceAccount
+  name: debug-controller
+  namespace: app-debug
