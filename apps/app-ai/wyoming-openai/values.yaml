@@ -1,0 +1,120 @@
+# wyoming_openai - homelab values
+#
+# Wyoming server (TCP :10300) that turns Home Assistant TTS requests into calls to an
+# OpenAI-compatible /v1/audio/speech endpoint, here the `kokoro` Service in this
+# namespace. Text-to-speech only; no STT is configured.
+
+global:
+  fullnameOverride: wyoming-openai
+
+image:
+  repository: ghcr.io/roryeckel/wyoming_openai
+  tag: "0.9.0"
+  pullPolicy: IfNotPresent
+
+controller:
+  replicas: 1
+  strategy: Recreate
+
+# app-ai has a Service named `ollama`; service links would inject OLLAMA_PORT=tcp://...
+enableServiceLinks: false
+
+nodeSelector:
+  kubernetes.io/arch: amd64
+
+# Home Assistant runs with hostNetwork on a worker and its pod DNS is ClusterFirst, so
+# it cannot resolve cluster Service names. A MetalLB address from service-pool
+# (10.0.1.101-119) is stable and reachable from HA and the rest of the LAN, the same
+# way Mosquitto is exposed on 10.0.1.101.
+service:
+  main:
+    enabled: true
+    type: LoadBalancer
+    loadBalancerIP: 10.0.1.103
+    ports:
+      http:
+        enabled: false
+      wyoming:
+        enabled: true
+        primary: true
+        port: 10300
+        protocol: TCP
+        targetPort: 10300
+
+ingress:
+  main:
+    enabled: false
+
+# Variable names are from the wyoming_openai README (Configuration Options).
+env:
+  WYOMING_URI: "tcp://0.0.0.0:10300"
+  WYOMING_LOG_LEVEL: "INFO"
+  WYOMING_LANGUAGES: "en"
+  TTS_OPENAI_URL: "http://kokoro:8880/v1"
+  TTS_MODELS: "kokoro"
+  # Sentence-chunked streaming, so Home Assistant starts playing before the whole
+  # reply is synthesised. Kokoro runs one request at a time, so do not fan out.
+  TTS_STREAMING_MODELS: "kokoro"
+  TTS_CONCURRENT_REQUESTS: "1"
+  TTS_BACKEND: "KOKORO_FASTAPI"
+  # English voices only. Without this the bridge advertises all 67 voices the backend
+  # lists, including the Chinese, Japanese and other packs, under "en".
+  TTS_VOICES: >-
+    af_heart af_alloy af_aoede af_bella af_jessica af_kore af_nicole af_nova
+    af_river af_sarah af_sky
+    am_adam am_echo am_eric am_fenrir am_liam am_michael am_onyx am_puck am_santa
+    bf_alice bf_emma bf_isabella bf_lily
+    bm_daniel bm_fable bm_george bm_lewis
+
+# Wyoming has no HTTP endpoint, so probe the TCP listener.
+probes:
+  startup:
+    enabled: true
+    custom: true
+    spec:
+      tcpSocket:
+        port: 10300
+      periodSeconds: 5
+      failureThreshold: 30
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      tcpSocket:
+        port: 10300
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      tcpSocket:
+        port: 10300
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+persistence: {}
+
+# Thin proxy: it forwards text and relays audio, and does no inference.
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
