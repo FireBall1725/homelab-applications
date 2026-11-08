@@ -1,0 +1,28 @@
+apiVersion: v2
+name: wyoming-openai
+description: Wyoming bridge that exposes the OpenAI-compatible Kokoro TTS service to Home Assistant.
+type: application
+
+# Chart version. Bump on template/values changes; does not need to match appVersion.
+version: 0.1.0
+
+# Tracks the upstream wyoming_openai release. Keep in sync with the pinned image tag.
+appVersion: "0.9.0"
+
+home: https://github.com/roryeckel/wyoming_openai
+sources:
+  - https://github.com/roryeckel/wyoming_openai
+maintainers:
+  - name: fireball1725
+    url: https://github.com/fireball1725
+
+keywords:
+  - wyoming
+  - tts
+  - home-assistant
+  - self-hosted
+
+dependencies:
+  - name: common
+    version: 5.0.3
+    repository: https://fireball1725.github.io/firelabs-helm-common/

@@ -1,0 +1,123 @@
+# Kokoro-FastAPI - homelab values
+#
+# CPU text-to-speech. Serves the OpenAI speech API (POST /v1/audio/speech) on :8880.
+# This is the only thing clients talk to: Kisuke calls it directly, and the
+# wyoming-openai bridge in this namespace fronts it for Home Assistant. To swap in
+# a heavier engine later (Chatterbox, Orpheus, Sesame CSM on a GPU), replace this
+# app and keep the `kokoro` Service name and the tts host, and nothing else changes.
+#
+# The Kokoro weights and voice packs are baked into the image, so there is no
+# download on start and nothing to persist.
+
+global:
+  fullnameOverride: kokoro
+
+image:
+  repository: ghcr.io/remsky/kokoro-fastapi-cpu
+  tag: "v0.9.2"
+  pullPolicy: IfNotPresent
+
+controller:
+  replicas: 1
+  strategy: Recreate
+
+# app-ai has a Service named `ollama`; service links inject OLLAMA_PORT=tcp://...
+# into every pod in the namespace. Same trap as hindsight and ollama-admin.
+enableServiceLinks: false
+
+# The image ships amd64 and arm64. Keep it off the Pi worker and onto the big workers.
+nodeSelector:
+  kubernetes.io/arch: amd64
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8880
+
+# Internal class only. No API key is set, so this is LAN-trust like the other
+# app-ai endpoints. `tts` rather than `kokoro` so the hostname survives an engine swap.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: tts.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+env:
+  # The model is baked into the image. Skipping the start-time download keeps a
+  # restart from touching the network.
+  DOWNLOAD_MODEL: "false"
+  # The image default is DEBUG and logs every chunk.
+  API_LOG_LEVEL: "INFO"
+  DEFAULT_VOICE: "af_heart"
+  # Inference is synchronous, so one process serves one request at a time and each
+  # extra worker loads its own copy of the model. Leave at 1.
+  WEB_CONCURRENCY: "1"
+
+# /health answers without touching the model. Loading the model and warming the
+# default voice takes a while on first start, so the startup probe is patient (5 minutes).
+probes:
+  startup:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: 8880
+      periodSeconds: 5
+      failureThreshold: 60
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: 8880
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: 8880
+      periodSeconds: 10
+      timeoutSeconds: 10
+      failureThreshold: 3
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Models are baked into the image; request temp files are pruned by the app.
+persistence: {}
+
+# CPU inference uses every core it is given. The workers (talos-wk-01..04) have 8 CPU
+# and 32Gi each; the 3Gi request does not fit on the 3.5Gi VM workers or the Pi.
+resources:
+  requests:
+    cpu: "2"
+    memory: 3Gi
+  limits:
+    cpu: "6"
+    memory: 6Gi
