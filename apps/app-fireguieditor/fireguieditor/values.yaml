@@ -1,0 +1,126 @@
+# FireGui editor - homelab values
+#
+# One image, two processes: the Go API (web UI, REST, MCP at /mcp) on :8080 and the Java
+# render worker on 127.0.0.1:8081 inside the same pod. Built on the firelabs-helm-common
+# library with a CloudNativePG cluster and a SealedSecret for the bearer token.
+
+global:
+  # Keep release names predictable (otherwise common prepends the release name).
+  fullnameOverride: fireguieditor
+
+image:
+  repository: ghcr.io/fireball1725/fireguieditor
+  # Pinned by the release workflow's deploy bump.
+  tag: "26.11.0-nightly.202611092141"
+  pullPolicy: IfNotPresent
+
+# The image holds the private FireCore jar, so its GHCR package is private.
+imagePullSecrets:
+  - name: ghcr-pull
+
+# Single replica, Recreate: the render sessions live in the worker's memory and the
+# /data volume is RWO.
+controller:
+  replicas: 1
+  strategy: Recreate
+
+# The image runs as uid 65532. fsGroup makes kubelet chown the Longhorn volume so the
+# Minecraft asset cache can be written.
+podSecurityContext:
+  fsGroup: 65532
+  fsGroupChangePolicy: OnRootMismatch
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8080
+
+# Internal ingress on the homelab Traefik class. *.k8s.firekatt.ca resolves inside the
+# LAN only. HTTP only, no TLS at the ingress, matching the other app-* hosts.
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: fireguieditor.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# GET /health is public and does not touch the database.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 30
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 10
+  startup:
+    enabled: false
+
+# The worker downloads the Minecraft client jar from Mojang on first use and keeps it
+# here (MC_CACHE_DIR=/data/minecraft in the image), so later starts need no network.
+persistence:
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /data
+    accessMode: ReadWriteOnce
+    size: 2Gi
+    storageClass: longhorn
+
+# DATABASE_URL and the bearer token come in as explicit env vars via secretKeyRef.
+env:
+  # CNPG-generated Secret: <clusterName>-app, key `uri` holds the full DSN.
+  DATABASE_URL:
+    valueFrom:
+      secretKeyRef:
+        name: fireguieditor-db-app
+        key: uri
+  # SealedSecret managed in this chart (templates/sealed-secret-api-token.yaml).
+  FIREGUIEDITOR_API_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: fireguieditor-api
+        key: FIREGUIEDITOR_API_TOKEN
+
+# The image caps the worker heap at 384m; the Go API and the JVM's non-heap memory fit
+# in the rest of the limit.
+resources:
+  requests:
+    cpu: 200m
+    memory: 768Mi
+  limits:
+    memory: 1536Mi
+
+# CloudNativePG-managed Postgres cluster. The operator lives in app-cloudnative-pg.
+postgres:
+  create: true
+  clusterName: fireguieditor-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-3
+  database: fireguieditor
+  owner: fireguieditor
+  storage:
+    size: 5Gi
+    storageClass: longhorn
+  extraSpec:
+    monitoring:
+      enablePodMonitor: true
