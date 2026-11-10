@@ -1,0 +1,21 @@
+Thanks for installing fireguieditor.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Image:     {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+{{- if .Values.postgres.create }}
+
+Postgres (CloudNativePG) is managed by this release:
+  Cluster:  {{ .Values.postgres.clusterName }}
+  Database: {{ .Values.postgres.database }}
+
+The app reads DATABASE_URL from the auto-generated secret
+"{{ .Values.postgres.clusterName }}-app" (key: uri) and runs its own migrations on start.
+{{- end }}
+
+FIREGUIEDITOR_API_TOKEN comes from the SealedSecret fireguieditor-api. The same bearer
+token protects /api/v1 and the MCP endpoint at /mcp.
+
+Reach it:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "common.names.fullname" . }} 8080:8080
