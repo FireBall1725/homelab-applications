@@ -11,7 +11,7 @@ global:
 image:
   repository: ghcr.io/fireball1725/fireguieditor
   # Pinned by the release workflow's deploy bump.
-  tag: "26.11.0-nightly.202611092141"
+  tag: "26.11.0-nightly.202611100053"
   pullPolicy: IfNotPresent
 
 # The image holds the private FireCore jar, so its GHCR package is private.
