@@ -1,6 +1,6 @@
 # Kisuke - homelab values
 #
-# Discord bot (Go). Built on the firelabs-helm-common library, matching the
+# Discord bot (Go). Tickets are filed and repos read as the Urahara-Shop GitHub App. Built on the firelabs-helm-common library, matching the
 # firebin-api pattern: a pinned image, a CloudNativePG Postgres cluster, and
 # SealedSecrets. The image is private, so it is pulled with the ghcr-pull secret.
 #
@@ -12,7 +12,7 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/firediscordmodbot
-  tag: "26.11.0-nightly.202611110158"
+  tag: "26.11.0-nightly.202611110517"
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
@@ -69,6 +69,8 @@ configmap:
     data:
       LOG_LEVEL: info
       GITHUB_REPO: FireBall1725/mod-issues
+      GITHUB_APP_ID: "5707677"
+      GITHUB_APP_INSTALLATION_ID: "180766781"
       KISUKE_READ_REPOS: "FireBall1725/FireCore,FireBall1725/DevWorld3,FireBall1725/pcexpress-mcp-server,FireBall1725/librarium-api,FireBall1725/librarium,FireBall1725/pixelbar-site,FireBall1725/pixelbar-marketplace,FireBall1725/pixelbar-hass,FireBall1725/auto-gui-scale,FireBall1725/create-turbolifts,FireBall1725/ae2-traffic-monitor,FireBall1725/mod-issues,FireBall1725/pixelbar-mc,FireBall1725/pixelbar-firmware"
       KISUKE_WEB_SEARCH: "on"
       KISUKE_BASIC_MEMORY_URL: "https://basic-memory.k8s.firekatt.ca/mcp"
@@ -96,11 +98,11 @@ env:
       secretKeyRef:
         name: kisuke-secrets
         key: ANTHROPIC_API_KEY
-  GITHUB_TOKEN:
+  GITHUB_APP_PRIVATE_KEY:
     valueFrom:
       secretKeyRef:
         name: kisuke-secrets
-        key: GITHUB_TOKEN
+        key: GITHUB_APP_PRIVATE_KEY
   ALLOWED_USER_IDS:
     valueFrom:
       secretKeyRef:

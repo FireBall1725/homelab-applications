@@ -15,8 +15,9 @@ registry. rc and stable releases pin themselves through the release workflow
 
 Both are sealed in `templates/` and scoped to the `app-kisuke` namespace.
 
-- `kisuke-secrets`: `DISCORD_TOKEN`, `ANTHROPIC_API_KEY`, `GITHUB_TOKEN`, `ALLOWED_USER_IDS`,
-  and `KISUKE_HINDSIGHT_AUTH` (optional).
+- `kisuke-secrets`: `DISCORD_TOKEN`, `ANTHROPIC_API_KEY`, `GITHUB_APP_PRIVATE_KEY` (base64 of the
+  Urahara-Shop app key), `ALLOWED_USER_IDS`, and `KISUKE_HINDSIGHT_AUTH` (optional). The app and
+  installation ids are not secret and sit in the ConfigMap.
 - `ghcr-pull`: a pull credential for the private image.
 
 ## Notes
