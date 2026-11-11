@@ -12,7 +12,7 @@ global:
 
 image:
   repository: ghcr.io/fireball1725/firediscordmodbot
-  tag: "26.11.0-nightly.202611110517"
+  tag: "26.11.0-nightly.202611110537"
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
