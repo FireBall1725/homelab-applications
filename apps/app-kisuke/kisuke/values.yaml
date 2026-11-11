@@ -1,0 +1,136 @@
+# Kisuke - homelab values
+#
+# Discord bot (Go). Built on the firelabs-helm-common library, matching the
+# firebin-api pattern: a pinned image, a CloudNativePG Postgres cluster, and
+# SealedSecrets. The image is private, so it is pulled with the ghcr-pull secret.
+#
+# One replica with Recreate: two gateway connections would answer every message
+# twice. The bot runs its own database migrations on start.
+
+global:
+  fullnameOverride: kisuke
+
+image:
+  repository: ghcr.io/fireball1725/firediscordmodbot
+  tag: "26.11.0-nightly.202611110158"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ghcr-pull
+
+controller:
+  replicas: 1
+  strategy: Recreate
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        primary: true
+        port: 8080
+
+# The bot only makes outbound connections (Discord, Anthropic, GitHub). The HTTP
+# port exists for the probes.
+ingress:
+  main:
+    enabled: false
+
+# /api/v1/health is liveness only. /api/v1/ready also needs the database and the
+# Discord gateway, so a bot that has lost its connection leaves the Service.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /api/v1/health
+        port: http
+      initialDelaySeconds: 20
+      periodSeconds: 30
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /api/v1/ready
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 15
+  startup:
+    enabled: false
+
+# Non-sensitive configuration. Memory stays off for any URL left out.
+configmap:
+  config:
+    enabled: true
+    data:
+      LOG_LEVEL: info
+      GITHUB_REPO: FireBall1725/mod-issues
+      KISUKE_READ_REPOS: "FireBall1725/FireCore,FireBall1725/DevWorld3,FireBall1725/pcexpress-mcp-server,FireBall1725/librarium-api,FireBall1725/librarium,FireBall1725/pixelbar-site,FireBall1725/pixelbar-marketplace,FireBall1725/pixelbar-hass,FireBall1725/auto-gui-scale,FireBall1725/create-turbolifts,FireBall1725/ae2-traffic-monitor,FireBall1725/mod-issues,FireBall1725/pixelbar-mc,FireBall1725/pixelbar-firmware"
+      KISUKE_WEB_SEARCH: "on"
+      KISUKE_BASIC_MEMORY_URL: "https://basic-memory.k8s.firekatt.ca/mcp"
+      KISUKE_HINDSIGHT_URL: "https://hindsight-api.k8s.firekatt.ca"
+
+envFrom:
+  - configMapRef:
+      name: kisuke-config
+
+env:
+  # CNPG-generated Secret for the kisuke-db cluster.
+  DATABASE_URL:
+    valueFrom:
+      secretKeyRef:
+        name: kisuke-db-app
+        key: uri
+  # SealedSecret in this chart (templates/sealed-secret-kisuke.yaml).
+  DISCORD_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: kisuke-secrets
+        key: DISCORD_TOKEN
+  ANTHROPIC_API_KEY:
+    valueFrom:
+      secretKeyRef:
+        name: kisuke-secrets
+        key: ANTHROPIC_API_KEY
+  GITHUB_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: kisuke-secrets
+        key: GITHUB_TOKEN
+  ALLOWED_USER_IDS:
+    valueFrom:
+      secretKeyRef:
+        name: kisuke-secrets
+        key: ALLOWED_USER_IDS
+  KISUKE_HINDSIGHT_AUTH:
+    valueFrom:
+      secretKeyRef:
+        name: kisuke-secrets
+        key: KISUKE_HINDSIGHT_AUTH
+        optional: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+# CloudNativePG-managed Postgres cluster. The operator lives in app-cloudnative-pg.
+postgres:
+  create: true
+  clusterName: kisuke-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-3
+  database: kisuke
+  owner: kisuke
+  storage:
+    size: 5Gi
+    storageClass: longhorn
+  extraSpec:
+    monitoring:
+      enablePodMonitor: true
