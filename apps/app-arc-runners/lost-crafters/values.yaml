@@ -19,6 +19,9 @@ gha-runner-scale-set:
 
   template:
     spec:
+      # amd64 only: the Pi (arm64) can't build the launcher's Linux target.
+      nodeSelector:
+        kubernetes.io/arch: amd64
       # The 4 GB vwk VMs and the Pi can't take job pods; use the big amd64 workers.
       affinity:
         nodeAffinity:
