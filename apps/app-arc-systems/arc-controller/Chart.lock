@@ -1,0 +1,6 @@
+dependencies:
+- name: gha-runner-scale-set-controller
+  repository: oci://ghcr.io/actions/actions-runner-controller-charts
+  version: 0.15.1
+digest: sha256:926d3eb7b6d0bed3a9c6cf7608034fc0996cd6e26b5066bf5f86ab22fe4b054c
+generated: "2026-11-21T17:36:25.043029-05:00"
