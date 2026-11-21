@@ -1,11 +1,11 @@
 # modwatch
 
-[Modwatch](https://github.com/fireball1725/modwatch) polls CurseForge once an hour for the download counts of my mods, keeps a snapshot of each, and shows them on a dashboard.
+[Modwatch](https://github.com/fireball1725/modwatch) polls CurseForge and Modrinth once an hour for the download counts of my mods, keeps a snapshot of each, and shows them on a dashboard. The Grafana dashboard is `grafana-dashboard-modwatch` in `app-monitoring/kube-prometheus-stack/templates/`.
 
 - UI: http://modwatch.k8s.firekatt.ca/ (internal ingress, no login)
 - Image: `ghcr.io/fireball1725/modwatch`, pinned to an immutable tag in `values.yaml` and `appVersion`
 - Data: 1 Gi Longhorn PVC at `/data` (the SQLite database). CurseForge only reports lifetime totals, so the history exists nowhere else.
-- Metrics: a ServiceMonitor scrapes `/metrics`; `ModwatchPollFailing` and `ModwatchPollsStale` alert when polls fail or stop
+- Metrics: a ServiceMonitor scrapes `/metrics`; `ModwatchPollFailing`, `ModwatchSourceDown` and `ModwatchPollsStale` alert when polls fail, a source can't be read, or polls stop
 
 ## CurseForge key
 

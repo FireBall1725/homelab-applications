@@ -9,8 +9,7 @@ image:
   repository: ghcr.io/fireball1725/modwatch
   # -- Pin to the immutable nightly or release version. Argo syncs on a git change and
   # pullPolicy is IfNotPresent, so a floating :nightly tag would never redeploy.
-  # "0.0.0-unreleased" is a placeholder: set the real tag before this merges.
-  tag: "0.0.0-unreleased"
+  tag: "26.11.0-nightly.202611210930"
   pullPolicy: IfNotPresent
 
 # -- The repo and its GHCR package are private, so the nodes pull with the sealed
@@ -27,6 +26,9 @@ controller:
 env:
   TZ: America/Toronto
   CURSEFORGE_AUTHOR_ID: "8109937"
+  # -- Modrinth reads public projects without a token. Set MODRINTH_TOKEN from a SealedSecret
+  # only if drafts or private projects should show up too.
+  MODRINTH_USER: FireBall1725
   MODWATCH_SCHEDULE: "0 * * * *"
   # -- Core API key from console.curseforge.com (not the "API Tokens" page, whose
   # upload tokens get a 403). optional so the pod starts before the SealedSecret
