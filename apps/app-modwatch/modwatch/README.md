@@ -4,7 +4,7 @@
 
 - UI: http://modwatch.k8s.firekatt.ca/ (internal ingress, no login)
 - Image: `ghcr.io/fireball1725/modwatch`, pinned to an immutable tag in `values.yaml` and `appVersion`
-- Data: 1 Gi Longhorn PVC at `/data` (the SQLite database). CurseForge only reports lifetime totals, so the history exists nowhere else.
+- Data: a CloudNativePG cluster, `modwatch-db` (2 Gi Longhorn). CurseForge only reports lifetime totals, so the history exists nowhere else.
 - Metrics: a ServiceMonitor scrapes `/metrics`; `ModwatchPollFailing`, `ModwatchSourceDown` and `ModwatchPollsStale` alert when polls fail, a source can't be read, or polls stop
 
 ## CurseForge key

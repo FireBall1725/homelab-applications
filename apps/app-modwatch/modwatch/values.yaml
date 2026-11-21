@@ -17,11 +17,9 @@ image:
 imagePullSecrets:
   - name: ghcr-pull
 
-# -- One replica, Recreate: the SQLite database sits on a ReadWriteOnce volume
-# that two pods can't share.
+# -- One replica. The state is in Postgres, so a rollout can start the new pod before the old one stops.
 controller:
   replicas: 1
-  strategy: Recreate
 
 env:
   TZ: America/Toronto
@@ -39,8 +37,15 @@ env:
         name: modwatch-curseforge
         key: CURSEFORGE_API_KEY
         optional: true
+  # -- CloudNativePG writes the connection URL to the <clusterName>-app secret, key `uri`.
+  # No `optional`: without a database the app can't start, so the pod should wait for the secret.
+  DATABASE_URL:
+    valueFrom:
+      secretKeyRef:
+        name: modwatch-db-app
+        key: uri
 
-# -- The image runs as uid 65532. fsGroup gives it write access to the PVC.
+# -- The image runs as uid 65532.
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 65532
@@ -50,7 +55,7 @@ podSecurityContext:
   seccompProfile:
     type: RuntimeDefault
 
-# -- Writes only to /data, so the root filesystem is read-only.
+# -- Writes nothing but /tmp, so the root filesystem is read-only.
 securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
@@ -59,15 +64,6 @@ securityContext:
       - ALL
 
 persistence:
-  # -- SQLite database. The download history can't be rebuilt: CurseForge only
-  # reports lifetime totals, so every snapshot lost is a day of trend lost.
-  data:
-    enabled: true
-    type: pvc
-    mountPath: /data
-    accessMode: ReadWriteOnce
-    storageClass: longhorn
-    size: 1Gi
   tmp:
     enabled: true
     type: emptyDir
@@ -138,3 +134,23 @@ resources:
 metrics:
   enabled: true
   interval: 60s
+
+# -----------------------------------------------------------------------------
+# CloudNativePG-managed Postgres cluster. The operator lives in app-cloudnative-pg.
+# The download history can't be rebuilt: CurseForge only reports lifetime totals,
+# so every snapshot lost is a day of trend lost.
+# -----------------------------------------------------------------------------
+postgres:
+  create: true
+  clusterName: modwatch-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-3
+  database: modwatch
+  owner: modwatch
+  storage:
+    size: 2Gi
+    storageClass: longhorn
+  # Enable CNPG Prometheus metrics so kube-prometheus-stack PodMonitor discovery picks this cluster up.
+  extraSpec:
+    monitoring:
+      enablePodMonitor: true
