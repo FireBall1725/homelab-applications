@@ -1,0 +1,1149 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-modwatch
+  namespace: app-monitoring
+  labels:
+    grafana_dashboard: "1"
+    app: kube-prometheus-stack-grafana
+    release: kube-prometheus-stack
+data:
+  modwatch-dashboard.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "Download counts for the mods published on CurseForge and Modrinth: totals, daily movement, and which Minecraft versions and loaders people download for.",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Total downloads",
+          "description": "Lifetime CurseForge downloads of mods you own.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(modwatch_mod_downloads_total{owned=\"true\"})",
+              "refId": "A",
+              "editorMode": "code",
+              "instant": true,
+              "range": false
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "#ff69b4"
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Last 24 hours",
+          "description": "Downloads in the last day. Needs a day of data before it is exact.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 4,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(increase(modwatch_mod_downloads_total{owned=\"true\"}[1d]))",
+              "refId": "A",
+              "editorMode": "code",
+              "instant": true,
+              "range": false
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "#6fcb8c"
+              },
+              "unit": "short",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Last 7 days",
+          "description": "Downloads in the last week. Needs a week of data before it is exact.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(increase(modwatch_mod_downloads_total{owned=\"true\"}[7d]))",
+              "refId": "A",
+              "editorMode": "code",
+              "instant": true,
+              "range": false
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "#6fcb8c"
+              },
+              "unit": "short",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "Mods tracked",
+          "description": "Mods the last successful poll found that you own.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(modwatch_mods{owned=\"true\"})",
+              "refId": "A",
+              "editorMode": "code",
+              "instant": true,
+              "range": false
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 5,
+          "type": "stat",
+          "title": "Since last good poll",
+          "description": "Polls run hourly. The ModwatchPollsStale alert fires after 3 hours.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "time() - modwatch_last_success_timestamp_seconds",
+              "refId": "A",
+              "editorMode": "code",
+              "instant": true,
+              "range": false
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "unit": "s",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 7200
+                  },
+                  {
+                    "color": "red",
+                    "value": 10800
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 6,
+          "type": "stat",
+          "title": "Sources",
+          "description": "OK when CurseForge and Modrinth were both read without error last time.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 20,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "min(modwatch_source_up)",
+              "refId": "A",
+              "editorMode": "code",
+              "instant": true,
+              "range": false
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "PROBLEM",
+                      "color": "red",
+                      "index": 0
+                    },
+                    "1": {
+                      "text": "OK",
+                      "color": "green",
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "Downloads per day, by mod",
+          "description": "Each point is the last 24 hours ending then. Stacked, so the top edge is your total.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 4,
+            "w": 12,
+            "h": 9
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (name) (increase(modwatch_mod_downloads_total{owned=\"true\",name=~\"$mod\"}[1d]))",
+              "refId": "A",
+              "editorMode": "code",
+              "legendFormat": "{{`{{name}}`}}",
+              "interval": "1h"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "short",
+              "custom": {
+                "drawStyle": "bars",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                },
+                "fillOpacity": 80,
+                "lineWidth": 0
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "sum"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Total downloads, by mod",
+          "description": "Lifetime count as of each poll.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 4,
+            "w": 12,
+            "h": 9
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (name) (modwatch_mod_downloads_total{owned=\"true\",name=~\"$mod\"})",
+              "refId": "A",
+              "editorMode": "code",
+              "legendFormat": "{{`{{name}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "short",
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 9,
+          "type": "table",
+          "title": "Mods",
+          "description": "Lifetime downloads and the last day and week for each mod you own.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 13,
+            "w": 24,
+            "h": 9
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (name) (modwatch_mod_downloads_total{owned=\"true\",name=~\"$mod\"})",
+              "refId": "A",
+              "editorMode": "code",
+              "instant": true,
+              "range": false,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (name) (increase(modwatch_mod_downloads_total{owned=\"true\",name=~\"$mod\"}[1d]))",
+              "refId": "B",
+              "editorMode": "code",
+              "instant": true,
+              "range": false,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (name) (increase(modwatch_mod_downloads_total{owned=\"true\",name=~\"$mod\"}[7d]))",
+              "refId": "C",
+              "editorMode": "code",
+              "instant": true,
+              "range": false,
+              "format": "table"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "align": "auto"
+              },
+              "decimals": 0
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Downloads"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "24h"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "7d"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true,
+            "sortBy": [
+              {
+                "displayName": "Downloads",
+                "desc": true
+              }
+            ]
+          },
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "name": "Mod",
+                  "Value #A": "Downloads",
+                  "Value #B": "24h",
+                  "Value #C": "7d"
+                },
+                "indexByName": {
+                  "name": 0,
+                  "Value #A": 1,
+                  "Value #B": 2,
+                  "Value #C": 3
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "bargauge",
+          "title": "Minecraft versions people download for",
+          "description": "File downloads by the Minecraft version each file targets. A file for several versions counts toward each, so these overlap. Includes mods you only own on one site.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 22,
+            "w": 12,
+            "h": 11
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "topk(15, sum by (game_version) (modwatch_game_version_downloads_total{source=~\"$source\",name=~\"$mod\"}))",
+              "refId": "A",
+              "editorMode": "code",
+              "legendFormat": "{{`{{game_version}}`}}",
+              "instant": true,
+              "range": false
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "#ff69b4"
+              },
+              "unit": "short",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "horizontal",
+            "displayMode": "gradient",
+            "showUnfilled": true,
+            "valueMode": "color",
+            "namePlacement": "left"
+          }
+        },
+        {
+          "id": 11,
+          "type": "bargauge",
+          "title": "Loaders",
+          "description": "File downloads by mod loader. Files from before loaders were tagged carry none, so old mods are under-counted here.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 22,
+            "w": 12,
+            "h": 11
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (loader) (modwatch_loader_downloads_total{source=~\"$source\",name=~\"$mod\"})",
+              "refId": "A",
+              "editorMode": "code",
+              "legendFormat": "{{`{{loader}}`}}",
+              "instant": true,
+              "range": false
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "#ff69b4"
+              },
+              "unit": "short",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "horizontal",
+            "displayMode": "gradient",
+            "showUnfilled": true,
+            "valueMode": "color",
+            "namePlacement": "left"
+          }
+        },
+        {
+          "id": 12,
+          "type": "timeseries",
+          "title": "Downloads per day, by Minecraft version",
+          "description": "Which versions people are on, over time. Shows the ten busiest.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 33,
+            "w": 24,
+            "h": 9
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "topk(10, sum by (game_version) (increase(modwatch_game_version_downloads_total{source=~\"$source\",name=~\"$mod\"}[1d])))",
+              "refId": "A",
+              "editorMode": "code",
+              "legendFormat": "{{`{{game_version}}`}}",
+              "interval": "1h"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "short",
+              "custom": {
+                "drawStyle": "bars",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                },
+                "fillOpacity": 80,
+                "lineWidth": 0
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "sum"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 13,
+          "type": "table",
+          "title": "Files",
+          "description": "One row per file (CurseForge) or version (Modrinth). CurseForge counts each file on its own, so these don't add up to a mod's total.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 42,
+            "w": 24,
+            "h": 12
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "modwatch_file_downloads_total{source=~\"$source\",name=~\"$mod\"}",
+              "refId": "A",
+              "editorMode": "code",
+              "instant": true,
+              "range": false,
+              "format": "table"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "align": "auto"
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Downloads"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true,
+            "sortBy": [
+              {
+                "displayName": "Downloads",
+                "desc": true
+              }
+            ]
+          },
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true,
+                  "endpoint": true,
+                  "namespace": true,
+                  "pod": true,
+                  "service": true,
+                  "container": true,
+                  "slug": true
+                },
+                "renameByName": {
+                  "name": "Mod",
+                  "version": "Version",
+                  "game_versions": "Minecraft",
+                  "loaders": "Loader",
+                  "release_type": "Type",
+                  "source": "Source",
+                  "Value": "Downloads"
+                },
+                "indexByName": {
+                  "name": 0,
+                  "version": 1,
+                  "game_versions": 2,
+                  "loaders": 3,
+                  "release_type": 4,
+                  "source": 5,
+                  "Value": 6
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": 14,
+          "type": "timeseries",
+          "title": "Poll duration",
+          "description": "How long each hourly poll took. Mostly CurseForge and Modrinth response time.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 54,
+            "w": 12,
+            "h": 7
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "modwatch_last_poll_duration_seconds",
+              "refId": "A",
+              "editorMode": "code",
+              "legendFormat": "poll"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "s",
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 10,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          }
+        },
+        {
+          "id": 15,
+          "type": "timeseries",
+          "title": "Source health",
+          "description": "1 when the last attempt to read a source worked. A source can fail while the other keeps going.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 54,
+            "w": 12,
+            "h": 7
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "modwatch_source_up",
+              "refId": "A",
+              "editorMode": "code",
+              "legendFormat": "{{`{{source}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "min": 0,
+              "max": 1,
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "PROBLEM",
+                      "color": "red",
+                      "index": 0
+                    },
+                    "1": {
+                      "text": "OK",
+                      "color": "green",
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 0,
+                "showPoints": "never",
+                "lineInterpolation": "stepAfter"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          }
+        }
+      ],
+      "refresh": "5m",
+      "schemaVersion": 39,
+      "tags": [
+        "modwatch",
+        "minecraft"
+      ],
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "label": "Data source",
+            "type": "datasource",
+            "query": "prometheus",
+            "refresh": 1,
+            "hide": 0,
+            "current": {},
+            "options": [],
+            "regex": "",
+            "multi": false,
+            "includeAll": false
+          },
+          {
+            "name": "mod",
+            "label": "Mod",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "query": {
+              "query": "label_values(modwatch_mod_downloads_total{owned=\"true\"}, name)",
+              "refId": "var-mod"
+            },
+            "definition": "label_values(modwatch_mod_downloads_total{owned=\"true\"}, name)",
+            "refresh": 2,
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "sort": 1,
+            "hide": 0,
+            "options": []
+          },
+          {
+            "name": "source",
+            "label": "Source",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "query": {
+              "query": "label_values(modwatch_file_downloads_total, source)",
+              "refId": "var-source"
+            },
+            "definition": "label_values(modwatch_file_downloads_total, source)",
+            "refresh": 2,
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "sort": 1,
+            "hide": 0,
+            "options": []
+          }
+        ]
+      },
+      "time": {
+        "from": "now-30d",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Modwatch",
+      "uid": "modwatch",
+      "version": 1
+    }

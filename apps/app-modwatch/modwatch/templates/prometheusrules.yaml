@@ -1,0 +1,42 @@
+{{- if .Values.metrics.enabled }}
+{{- include "common.values.setup" . -}}
+---
+{{- /*
+  Only what needs a person: polls failing, a source failing, or polls not running at all.
+  Download counts are what the dashboard is for, so nothing here alerts on them.
+*/}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "common.names.fullname" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: {{ include "common.names.fullname" . }}
+      rules:
+        - alert: ModwatchPollFailing
+          annotations:
+            summary: Modwatch can't fetch download counts from CurseForge.
+            description: The most recent poll failed. The error is on the Modwatch page. A 403 means the API key is missing or isn't a Core API key.
+          expr: modwatch_last_poll_success == 0
+          for: 3h
+          labels:
+            severity: warning
+        - alert: ModwatchSourceDown
+          annotations:
+            summary: Modwatch can't read {{`{{ $labels.source }}`}}.
+            description: The mod totals still update, but per-file counts for {{`{{ $labels.source }}`}} are stale. The error is on the Modwatch page.
+          expr: modwatch_source_up == 0
+          for: 3h
+          labels:
+            severity: warning
+        - alert: ModwatchPollsStale
+          annotations:
+            summary: Modwatch hasn't had a successful poll in 3 hours.
+            description: Polls run hourly, so two have been missed. Check the pod and its schedule.
+          expr: time() - modwatch_last_success_timestamp_seconds > 3 * 3600
+          for: 30m
+          labels:
+            severity: warning
+{{- end }}
