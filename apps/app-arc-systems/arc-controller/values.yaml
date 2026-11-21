@@ -1,0 +1,9 @@
+# GitHub Actions Runner Controller (ARC). Runs the listeners that watch GitHub
+# for queued jobs. The runner pods themselves live in app-arc-runners.
+gha-runner-scale-set-controller:
+  # Fixed so the scale sets can name it in controllerServiceAccount. The scale
+  # set chart looks the controller up at render time, and Argo CD can't do that.
+  serviceAccount:
+    create: true
+    name: arc-controller
+  replicaCount: 1

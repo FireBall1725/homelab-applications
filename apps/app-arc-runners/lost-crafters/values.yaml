@@ -1,0 +1,37 @@
+# Org-level runner scale set for github.com/Lost-Crafters-SMP.
+# Workflows use `runs-on: lost-crafters` (the release name is the label).
+# Auth is a GitHub App; secret `arc-lost-crafters` comes from templates/sealed-secret.yaml.
+gha-runner-scale-set:
+  githubConfigUrl: https://github.com/Lost-Crafters-SMP
+  githubConfigSecret: arc-lost-crafters
+
+  minRunners: 0
+  maxRunners: 4
+
+  # Argo CD can't run Helm `lookup`, so say where the controller is.
+  controllerServiceAccount:
+    namespace: app-arc-systems
+    name: arc-controller
+
+  # Docker-in-Docker sidecar for jobs that run docker build / buildx.
+  containerMode:
+    type: dind
+
+  template:
+    spec:
+      # The 4 GB vwk VMs and the Pi can't take job pods; use the big amd64 workers.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values: [talos-wk-01, talos-wk-02, talos-wk-03, talos-wk-04]
+      containers:
+        - name: runner
+          image: ghcr.io/actions/actions-runner:latest
+          command: ["/home/runner/run.sh"]
+          resources:
+            requests: { cpu: "1", memory: 2Gi }
+            limits: { memory: 6Gi }
