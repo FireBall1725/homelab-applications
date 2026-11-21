@@ -2,8 +2,8 @@ apiVersion: v2
 name: modwatch
 description: Dashboard and Prometheus exporter for the CurseForge download counts of FireBall1725's mods
 type: application
-version: 1.2.0
-appVersion: "26.11.0-nightly.202611211404"
+version: 1.3.0
+appVersion: "26.11.0-nightly.202611211931"
 home: https://github.com/fireball1725/modwatch
 sources:
   - https://github.com/fireball1725/modwatch
