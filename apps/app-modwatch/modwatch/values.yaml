@@ -1,0 +1,138 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  repository: ghcr.io/fireball1725/modwatch
+  # -- Pin to the immutable nightly or release version. Argo syncs on a git change and
+  # pullPolicy is IfNotPresent, so a floating :nightly tag would never redeploy.
+  # "0.0.0-unreleased" is a placeholder: set the real tag before this merges.
+  tag: "0.0.0-unreleased"
+  pullPolicy: IfNotPresent
+
+# -- The repo and its GHCR package are private, so the nodes pull with the sealed
+# ghcr-pull secret (templates/sealed-secret-ghcr-pull.yaml), same as leakyfaucet.
+imagePullSecrets:
+  - name: ghcr-pull
+
+# -- One replica, Recreate: the SQLite database sits on a ReadWriteOnce volume
+# that two pods can't share.
+controller:
+  replicas: 1
+  strategy: Recreate
+
+env:
+  TZ: America/Toronto
+  CURSEFORGE_AUTHOR_ID: "8109937"
+  MODWATCH_SCHEDULE: "0 * * * *"
+  # -- Core API key from console.curseforge.com (not the "API Tokens" page, whose
+  # upload tokens get a 403). optional so the pod starts before the SealedSecret
+  # exists; the UI lists the missing key as a setup problem.
+  CURSEFORGE_API_KEY:
+    valueFrom:
+      secretKeyRef:
+        name: modwatch-curseforge
+        key: CURSEFORGE_API_KEY
+        optional: true
+
+# -- The image runs as uid 65532. fsGroup gives it write access to the PVC.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Writes only to /data, so the root filesystem is read-only.
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+persistence:
+  # -- SQLite database. The download history can't be rebuilt: CurseForge only
+  # reports lifetime totals, so every snapshot lost is a day of trend lost.
+  data:
+    enabled: true
+    type: pvc
+    mountPath: /data
+    accessMode: ReadWriteOnce
+    storageClass: longhorn
+    size: 1Gi
+  tmp:
+    enabled: true
+    type: emptyDir
+    mountPath: /tmp
+
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+
+ingress:
+  # -- Internal ingress class only. There's no login, so it must never be
+  # reachable from the internet.
+  main:
+    enabled: true
+    ingressClassName: internal
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /healthz
+    hosts:
+      - host: modwatch.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 3
+  startup:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      periodSeconds: 5
+      failureThreshold: 20
+
+# -- Idle almost all the time; a poll is two HTTP requests an hour.
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 500m
+    memory: 128Mi
+
+# -- Prometheus scrapes /metrics through the ServiceMonitor; kube-prometheus-stack
+# selects every ServiceMonitor and PrometheusRule, so no selector labels are needed.
+metrics:
+  enabled: true
+  interval: 60s
