@@ -13,9 +13,9 @@ gha-runner-scale-set:
     namespace: app-arc-systems
     name: arc-controller
 
-  # Docker-in-Docker sidecar for jobs that run docker build / buildx.
-  containerMode:
-    type: dind
+  # No Docker-in-Docker sidecar: it needs a privileged container, which the
+  # app-arc-runners namespace (PodSecurity baseline) rejects. Add
+  # `containerMode: { type: dind }` back only together with a privileged namespace.
 
   template:
     spec:
