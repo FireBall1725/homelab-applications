@@ -9,7 +9,7 @@ image:
   repository: ghcr.io/fireball1725/modwatch
   # -- Pin to the immutable nightly or release version. Argo syncs on a git change and
   # pullPolicy is IfNotPresent, so a floating :nightly tag would never redeploy.
-  tag: "26.11.0-nightly.202611220327"
+  tag: "26.11.0"
   pullPolicy: IfNotPresent
 
 # -- The repo and its GHCR package are private, so the nodes pull with the sealed
