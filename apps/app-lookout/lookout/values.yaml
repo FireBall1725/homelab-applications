@@ -1,0 +1,216 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  repository: ghcr.io/fireball1725/lookout
+  # -- Pin to the immutable nightly or release version. Argo syncs on a git change and
+  # pullPolicy is IfNotPresent, so a floating :nightly tag would never redeploy.
+  tag: "26.11.0-nightly.202611242109"
+  pullPolicy: IfNotPresent
+
+# -- The repo and its GHCR package are private, so the nodes pull with the sealed
+# ghcr-pull secret (templates/sealed-secret-ghcr-pull.yaml), same as modwatch.
+imagePullSecrets:
+  - name: ghcr-pull
+
+# -- One replica with Recreate. The poller runs inside the app, so two pods would poll twice
+# and spend the token's GraphQL budget twice.
+controller:
+  replicas: 1
+  strategy: Recreate
+
+# -- The Service is named lookout, so service links would add LOOKOUT_PORT, LOOKOUT_SERVICE_HOST
+# and friends to the environment, inside the prefix Lookout reads its settings from.
+enableServiceLinks: false
+
+env:
+  TZ: America/Toronto
+  # -- Phase 2: the deployed tag of each app is read from apps/app-*/*/values.yaml here.
+  LOOKOUT_GITOPS_REPO: FireBall1725/homelab-applications
+  # -- Read only while the projects table is empty. After the first start, projects are
+  # edited on the Settings page and changing the ConfigMap does nothing.
+  LOOKOUT_SEED_FILE: /seed/lookout.seed.yaml
+  # No LOOKOUT_GITHUB_TOKEN on purpose. The read-only token is pasted on the Settings
+  # page and kept in the database; until then Lookout polls nothing.
+  # -- Bearer token for /mcp, sealed in templates/sealed-secret-mcp.yaml. The plain value is
+  # in the Keychain as homelab/lookout-mcp-token.
+  LOOKOUT_MCP_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: lookout-mcp
+        key: LOOKOUT_MCP_TOKEN
+  # -- CloudNativePG writes the connection URL to the <clusterName>-app secret, key `uri`.
+  # No `optional`: without a database the app can't start, so the pod should wait for the secret.
+  DATABASE_URL:
+    valueFrom:
+      secretKeyRef:
+        name: lookout-db-app
+        key: uri
+
+# -- The six projects to start with. Becomes the ConfigMap lookout-seed.
+configmap:
+  seed:
+    enabled: true
+    data:
+      lookout.seed.yaml: |
+        projects:
+          - name: Librarium
+            repos:
+              - FireBall1725/librarium
+              - FireBall1725/librarium-api
+              - FireBall1725/librarium-web
+              - FireBall1725/librarium-ios
+              - FireBall1725/librarium-mcp
+          - name: FireBin
+            repos:
+              - FireBall1725/firebin
+              - FireBall1725/firebin-api
+              - FireBall1725/firebin-web
+              - FireBall1725/firebin-mcp
+              - FireBall1725/firebin-site
+              - FireBall1725/firebin-kicad
+          - name: Modwatch
+            repos:
+              - FireBall1725/modwatch
+          - name: Lookout
+            repos:
+              - FireBall1725/lookout
+          - name: PixelBar
+            repos:
+              - FireBall1725/pixelbar-firmware
+              - FireBall1725/pixelbar-mc
+              - FireBall1725/pixelbar-hass
+              - FireBall1725/pixelbar-site
+              - FireBall1725/pixelbar-marketplace
+          - name: FireLabs
+            repos:
+              - FireBall1725/firelabs-core
+              - FireBall1725/firelabs-hass
+              - FireBall1725/firelabs-plant-display
+              - FireBall1725/firelabs-weather-display
+              - FireBall1725/firelabs-s31-firmware
+              - FireBall1725/firelabs-helm-common
+
+# -- The image runs as uid 65532.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- On Postgres it writes nothing to disk, so the root filesystem is read-only.
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+persistence:
+  tmp:
+    enabled: true
+    type: emptyDir
+    mountPath: /tmp
+  seed:
+    enabled: true
+    type: configMap
+    name: lookout-seed
+    mountPath: /seed
+    readOnly: true
+
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+
+ingress:
+  # -- Internal ingress class only. There's no login and anyone who reaches it can change
+  # every setting, so it must never be reachable from the internet.
+  main:
+    enabled: true
+    ingressClassName: internal
+    annotations:
+      uptime-kuma.autodiscovery.probe.path: /healthz
+    hosts:
+      - host: lookout.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# -- /healthz never calls GitHub, so a GitHub outage doesn't restart the pod.
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 3
+  startup:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      periodSeconds: 5
+      failureThreshold: 20
+
+# -- Same as modwatch.
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 500m
+    memory: 128Mi
+
+# -- Prometheus scrapes /metrics through the ServiceMonitor; kube-prometheus-stack
+# selects every ServiceMonitor, so no selector labels are needed. A scrape only reads
+# the database, so 60s costs no GitHub budget. The dashboard is grafana-dashboard-lookout
+# in app-monitoring/kube-prometheus-stack/templates/.
+metrics:
+  enabled: true
+  interval: 60s
+
+# -----------------------------------------------------------------------------
+# CloudNativePG-managed Postgres cluster. The operator lives in app-cloudnative-pg.
+# Lookout keeps the current state of each repo, not a history. Losing it loses the
+# snoozes, dismissals, project edits and Settings values (the GitHub token among
+# them); the seed file and the next poll rebuild the rest.
+# -----------------------------------------------------------------------------
+postgres:
+  create: true
+  clusterName: lookout-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-3
+  database: lookout
+  owner: lookout
+  storage:
+    size: 2Gi
+    storageClass: longhorn
+  # Enable CNPG Prometheus metrics so kube-prometheus-stack PodMonitor discovery picks this cluster up.
+  extraSpec:
+    monitoring:
+      enablePodMonitor: true

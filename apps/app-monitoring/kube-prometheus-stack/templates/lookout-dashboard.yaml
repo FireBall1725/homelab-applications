@@ -1,0 +1,3342 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-lookout
+  namespace: app-monitoring
+  labels:
+    grafana_dashboard: "1"
+    app: kube-prometheus-stack-grafana
+    release: kube-prometheus-stack
+data:
+  lookout-dashboard.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "Lookout: what needs attention across your GitHub projects, from its /metrics endpoint.",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "type": "row",
+          "title": "Needs attention",
+          "id": 1,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "panels": []
+        },
+        {
+          "type": "stat",
+          "id": 2,
+          "title": "Problems",
+          "description": "Attention items of problem severity that aren't snoozed or dismissed, across every project.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 0,
+            "y": 1
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(lookout_attention_items{severity=\"problem\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 3,
+          "title": "Warnings",
+          "description": "Attention items of warning severity that aren't snoozed or dismissed, across every project.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 3,
+            "y": 1
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(lookout_attention_items{severity=\"warning\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 4,
+          "title": "PRs waiting on you",
+          "description": "Contributor pull requests waiting on your review, snoozed ones included.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 6,
+            "y": 1
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(lookout_pull_requests_waiting_on_me{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "#FF69B4",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 5,
+          "title": "Issues waiting on you",
+          "description": "Open issues where someone else had the last word.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 9,
+            "y": 1
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(lookout_issues_their_turn{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 6,
+          "title": "Unreleased commits",
+          "description": "Commits on the default branches since each repo's newest release.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 12,
+            "y": 1
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(lookout_unreleased_commits{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "blue",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 7,
+          "title": "Failing CI",
+          "description": "Repos whose default branch has failing checks on its head commit.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 15,
+            "y": 1
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count(lookout_ci_status{project=~\"$project\",run=\"default_branch\",state=\"failing\"}) or vector(0)",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 8,
+          "title": "Releases not deployed",
+          "description": "Repos whose deployed tag is behind the release it should run (phase 2).",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 18,
+            "y": 1
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count(lookout_deploy_status{project=~\"$project\",status=\"behind\"}) or vector(0)",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 9,
+          "title": "Last good poll",
+          "description": "Time since the newest poll that read GitHub. Polls run every 10 minutes by default.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 21,
+            "y": 1
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "time() - max(lookout_last_success_timestamp_seconds)",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "dtdurations",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1800
+                  },
+                  {
+                    "color": "red",
+                    "value": 3600
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "timeseries",
+          "id": 10,
+          "title": "Attention items by kind",
+          "description": "Items not snoozed or dismissed, across every project: these series carry no project label.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 5
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (kind) (lookout_attention_items)",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{kind}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false,
+                "lineInterpolation": "stepAfter",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "type": "state-timeline",
+          "id": 11,
+          "title": "Project health",
+          "description": "Each project's health: problem beats attention beats ok, and notes change nothing.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 5
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (project) ((lookout_project_health{project=~\"$project\",health=\"ok\"} * 0) or (lookout_project_health{project=~\"$project\",health=\"attention\"} * 1) or (lookout_project_health{project=~\"$project\",health=\"problem\"} * 2))",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{project}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "ok",
+                      "color": "green",
+                      "index": 0
+                    },
+                    "1": {
+                      "text": "attention",
+                      "color": "orange",
+                      "index": 1
+                    },
+                    "2": {
+                      "text": "problem",
+                      "color": "red",
+                      "index": 2
+                    }
+                  }
+                }
+              ],
+              "custom": {
+                "fillOpacity": 75,
+                "lineWidth": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "mergeValues": true,
+            "showValue": "auto",
+            "alignValue": "left",
+            "rowHeight": 0.9,
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          }
+        },
+        {
+          "type": "table",
+          "id": 12,
+          "title": "By project",
+          "description": "What each project has waiting, the counts behind its health.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 16,
+            "x": 0,
+            "y": 13
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (project) ((lookout_project_health{project=~\"$project\",health=\"ok\"} * 0) or (lookout_project_health{project=~\"$project\",health=\"attention\"} * 1) or (lookout_project_health{project=~\"$project\",health=\"problem\"} * 2))",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (project) (lookout_pull_requests_waiting_on_me{project=~\"$project\"})",
+              "refId": "B",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (project) (lookout_issues_their_turn{project=~\"$project\"})",
+              "refId": "C",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (project) (lookout_unreleased_commits{project=~\"$project\"})",
+              "refId": "D",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(count by (project) (lookout_ci_status{project=~\"$project\",run=\"default_branch\",state=\"failing\"})) or (sum by (project) (lookout_repos{project=~\"$project\"}) * 0)",
+              "refId": "E",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "(count by (project) (lookout_deploy_status{project=~\"$project\",status=\"behind\"})) or (sum by (project) (lookout_repos{project=~\"$project\"}) * 0)",
+              "refId": "F",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (project) (lookout_repos{project=~\"$project\"})",
+              "refId": "G",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true,
+                  "namespace": true,
+                  "pod": true,
+                  "service": true,
+                  "container": true,
+                  "endpoint": true
+                },
+                "renameByName": {
+                  "project": "Project",
+                  "Value #A": "Health",
+                  "Value #B": "PRs waiting on you",
+                  "Value #C": "Issues waiting on you",
+                  "Value #D": "Unreleased commits",
+                  "Value #E": "Failing CI",
+                  "Value #F": "Not deployed",
+                  "Value #G": "Repos"
+                },
+                "indexByName": {
+                  "project": 0,
+                  "Value #A": 1,
+                  "Value #G": 2,
+                  "Value #B": 3,
+                  "Value #C": 4,
+                  "Value #D": 5,
+                  "Value #E": 6,
+                  "Value #F": 7
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Health"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "0": {
+                            "text": "ok",
+                            "color": "green",
+                            "index": 0
+                          },
+                          "1": {
+                            "text": "attention",
+                            "color": "orange",
+                            "index": 1
+                          },
+                          "2": {
+                            "text": "problem",
+                            "color": "red",
+                            "index": 2
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "sortBy": [
+              {
+                "displayName": "Health",
+                "desc": true
+              }
+            ],
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "countRows": false,
+              "fields": ""
+            }
+          }
+        },
+        {
+          "type": "bargauge",
+          "id": 13,
+          "title": "Snoozed and dismissed",
+          "description": "Attention items hidden by a snooze or a dismissal, by kind.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 13
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (kind) (lookout_attention_hidden_items)",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "legendFormat": "{{`{{kind}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "min": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "color",
+            "namePlacement": "auto",
+            "sizing": "auto",
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "maxVizHeight": 300
+          }
+        },
+        {
+          "type": "row",
+          "title": "Pull requests",
+          "id": 14,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 21
+          },
+          "panels": []
+        },
+        {
+          "type": "timeseries",
+          "id": 15,
+          "title": "Open pull requests by author",
+          "description": "Open pull requests split into yours, contributors' and bots'.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 22
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (author_kind) (lookout_pull_requests_open{project=~\"$project\"})",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{author_kind}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false,
+                "lineInterpolation": "stepAfter",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "type": "timeseries",
+          "id": 16,
+          "title": "Waiting on your review",
+          "description": "Contributor pull requests waiting on your review, per repo.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 22
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (repo) (lookout_pull_requests_waiting_on_me{project=~\"$project\"}) > 0",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{repo}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false,
+                "lineInterpolation": "stepAfter",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "type": "bargauge",
+          "id": 17,
+          "title": "Longest wait on your review",
+          "description": "The longest current wait on your review per repo. Red at 7 days, the default contributorPrDays.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 22
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (repo) (lookout_oldest_contributor_wait_seconds{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "legendFormat": "{{`{{repo}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "dtdurations",
+              "min": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 259200
+                  },
+                  {
+                    "color": "red",
+                    "value": 604800
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "color",
+            "namePlacement": "auto",
+            "sizing": "auto",
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "maxVizHeight": 300
+          }
+        },
+        {
+          "type": "row",
+          "title": "Issues",
+          "id": 18,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 30
+          },
+          "panels": []
+        },
+        {
+          "type": "timeseries",
+          "id": 19,
+          "title": "Open issues",
+          "description": "Open issues per project, GitHub's totals.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 31
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (project) (lookout_issues_open{project=~\"$project\"})",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{project}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false,
+                "lineInterpolation": "stepAfter",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "type": "timeseries",
+          "id": 20,
+          "title": "Issues waiting on your reply",
+          "description": "Open issues where the last word is someone else's, per repo.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 31
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (repo) (lookout_issues_their_turn{project=~\"$project\"}) > 0",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{repo}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false,
+                "lineInterpolation": "stepAfter",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "type": "row",
+          "title": "Releases",
+          "id": 21,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 39
+          },
+          "panels": []
+        },
+        {
+          "type": "bargauge",
+          "id": 22,
+          "title": "Unreleased commits",
+          "description": "Commits on the default branch since the newest release, stable or rc.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 40
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (repo) (lookout_unreleased_commits{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "legendFormat": "{{`{{repo}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "min": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "blue",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "color",
+            "namePlacement": "auto",
+            "sizing": "auto",
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "maxVizHeight": 300
+          }
+        },
+        {
+          "type": "bargauge",
+          "id": 23,
+          "title": "Oldest unreleased commit",
+          "description": "Age of the oldest commit since the newest release. Amber at 14 days, the default unreleasedDays.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 40
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (repo) (lookout_oldest_unreleased_commit_age_seconds{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "legendFormat": "{{`{{repo}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "dtdurations",
+              "min": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "blue",
+                    "value": 604800
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1209600
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "color",
+            "namePlacement": "auto",
+            "sizing": "auto",
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "maxVizHeight": 300
+          }
+        },
+        {
+          "type": "table",
+          "id": 24,
+          "title": "Latest releases",
+          "description": "The newest release of each channel per repo and when it was published.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 40
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (project, repo, channel, tag) (lookout_release_info{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (project, repo, channel) (lookout_latest_release_timestamp_seconds{project=~\"$project\"}) * 1000",
+              "refId": "B",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true,
+                  "namespace": true,
+                  "pod": true,
+                  "service": true,
+                  "container": true,
+                  "endpoint": true,
+                  "Value #A": true
+                },
+                "renameByName": {
+                  "project": "Project",
+                  "repo": "Repo",
+                  "channel": "Channel",
+                  "tag": "Tag",
+                  "Value #B": "Published"
+                },
+                "indexByName": {
+                  "project": 0,
+                  "repo": 1,
+                  "channel": 2,
+                  "tag": 3,
+                  "Value #B": 4
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Published"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dateTimeFromNow"
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "sortBy": [],
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "countRows": false,
+              "fields": ""
+            }
+          }
+        },
+        {
+          "type": "row",
+          "title": "CI",
+          "id": 25,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 48
+          },
+          "panels": []
+        },
+        {
+          "type": "table",
+          "id": 26,
+          "title": "CI state",
+          "description": "The default branch's checks and the newest release run, per repo.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 49
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (project, repo, run, state) (lookout_ci_status{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true,
+                  "namespace": true,
+                  "pod": true,
+                  "service": true,
+                  "container": true,
+                  "endpoint": true,
+                  "Value": true
+                },
+                "renameByName": {
+                  "project": "Project",
+                  "repo": "Repo",
+                  "run": "Run",
+                  "state": "State"
+                },
+                "indexByName": {
+                  "project": 0,
+                  "repo": 1,
+                  "run": 2,
+                  "state": 3
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "State"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "passing": {
+                            "text": "passing",
+                            "color": "green",
+                            "index": 0
+                          },
+                          "failing": {
+                            "text": "failing",
+                            "color": "red",
+                            "index": 1
+                          },
+                          "running": {
+                            "text": "running",
+                            "color": "blue",
+                            "index": 2
+                          },
+                          "waiting": {
+                            "text": "waiting",
+                            "color": "yellow",
+                            "index": 3
+                          },
+                          "cancelled": {
+                            "text": "cancelled",
+                            "color": "text",
+                            "index": 4
+                          },
+                          "none": {
+                            "text": "none",
+                            "color": "text",
+                            "index": 5
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "sortBy": [
+              {
+                "displayName": "State",
+                "desc": false
+              }
+            ],
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "countRows": false,
+              "fields": ""
+            }
+          }
+        },
+        {
+          "type": "timeseries",
+          "id": 27,
+          "title": "Default branches by CI state",
+          "description": "How many repos' default branches are in each state.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 49
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count by (state) (lookout_ci_status{project=~\"$project\",run=\"default_branch\"})",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{state}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false,
+                "lineInterpolation": "stepAfter",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                }
+              },
+              "min": 0
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "passing"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "green"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "failing"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "red"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "running"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "blue"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "waiting"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "yellow"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "type": "row",
+          "title": "Deployments",
+          "id": 28,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 57
+          },
+          "panels": []
+        },
+        {
+          "type": "table",
+          "id": 29,
+          "title": "Deployed versions",
+          "description": "The image tag the GitOps repo pins for each repo, and how it compares with the newest release (phase 2).",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 58
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (project, repo, tag) (lookout_deployed_info{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (project, repo, status) (lookout_deploy_status{project=~\"$project\"})",
+              "refId": "B",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true,
+                  "namespace": true,
+                  "pod": true,
+                  "service": true,
+                  "container": true,
+                  "endpoint": true,
+                  "Value #A": true,
+                  "Value #B": true
+                },
+                "renameByName": {
+                  "project": "Project",
+                  "repo": "Repo",
+                  "tag": "Deployed",
+                  "status": "Status"
+                },
+                "indexByName": {
+                  "project": 0,
+                  "repo": 1,
+                  "tag": 2,
+                  "status": 3
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Status"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "matches": {
+                            "text": "matches",
+                            "color": "green",
+                            "index": 0
+                          },
+                          "behind": {
+                            "text": "behind",
+                            "color": "orange",
+                            "index": 1
+                          },
+                          "ahead": {
+                            "text": "ahead",
+                            "color": "blue",
+                            "index": 2
+                          },
+                          "nightly": {
+                            "text": "nightly",
+                            "color": "purple",
+                            "index": 3
+                          },
+                          "unknown": {
+                            "text": "unknown",
+                            "color": "text",
+                            "index": 4
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "sortBy": [],
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "countRows": false,
+              "fields": ""
+            }
+          }
+        },
+        {
+          "type": "timeseries",
+          "id": 30,
+          "title": "Deployments by status",
+          "description": "How many deployed repos match, trail or lead their newest release.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 58
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "count by (status) (lookout_deploy_status{project=~\"$project\"})",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{status}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false,
+                "lineInterpolation": "stepAfter",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "type": "row",
+          "title": "Polling",
+          "id": 31,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 66
+          },
+          "panels": []
+        },
+        {
+          "type": "stat",
+          "id": 32,
+          "title": "Version",
+          "description": "The running build.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 0,
+            "y": 67
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (version) (lookout_build_info)",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "legendFormat": "{{`{{version}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "name",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 33,
+          "title": "Projects",
+          "description": "Projects on the dashboard.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 4,
+            "y": 67
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max(lookout_projects)",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 34,
+          "title": "Repos",
+          "description": "Repos tracked in the selected projects.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 8,
+            "y": 67
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum(lookout_repos{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 35,
+          "title": "Newest poll",
+          "description": "Whether the newest poll was ok.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 12,
+            "y": 67
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max(lookout_last_poll_success)",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "1": {
+                      "text": "ok",
+                      "color": "green",
+                      "index": 0
+                    },
+                    "0": {
+                      "text": "failed",
+                      "color": "red",
+                      "index": 1
+                    }
+                  }
+                }
+              ]
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 36,
+          "title": "Since the newest poll",
+          "description": "Time since the newest poll finished, ok or not.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 16,
+            "y": 67
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "time() - max(lookout_last_poll_timestamp_seconds)",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "dtdurations",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1800
+                  },
+                  {
+                    "color": "red",
+                    "value": 3600
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "stat",
+          "id": 37,
+          "title": "Since each source was read",
+          "description": "Time since each source was last read without error: github, and gitops while a GitOps repo is set.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 20,
+            "y": 67
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "time() - max by (source) (lookout_source_last_success_timestamp_seconds)",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "legendFormat": "{{`{{source}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "dtdurations",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1800
+                  },
+                  {
+                    "color": "red",
+                    "value": 3600
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        },
+        {
+          "type": "state-timeline",
+          "id": 38,
+          "title": "Poll outcome and sources",
+          "description": "Whether the newest poll was ok, and whether each source was read without error.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 71
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max(lookout_last_poll_success)",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "poll"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (source) (lookout_source_up)",
+              "refId": "B",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{source}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "1": {
+                      "text": "ok",
+                      "color": "green",
+                      "index": 0
+                    },
+                    "0": {
+                      "text": "failed",
+                      "color": "red",
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "custom": {
+                "fillOpacity": 75,
+                "lineWidth": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "mergeValues": true,
+            "showValue": "auto",
+            "alignValue": "left",
+            "rowHeight": 0.9,
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          }
+        },
+        {
+          "type": "timeseries",
+          "id": 39,
+          "title": "Poll duration",
+          "description": "How long the newest poll took.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 71
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max(lookout_last_poll_duration_seconds)",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "duration"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false,
+                "lineInterpolation": "stepAfter",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "type": "timeseries",
+          "id": 40,
+          "title": "Poll cost",
+          "description": "GraphQL points the newest ok poll spent.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 71
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max(lookout_last_poll_cost_points)",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "points"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false,
+                "lineInterpolation": "stepAfter",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "type": "table",
+          "id": 41,
+          "title": "Repos",
+          "description": "Whether the newest poll read each repo, and how long ago it was last read without error.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 79
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (project, repo) (lookout_repo_up{project=~\"$project\"})",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "time() - max by (project, repo) (lookout_repo_last_success_timestamp_seconds{project=~\"$project\"})",
+              "refId": "B",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true,
+                  "namespace": true,
+                  "pod": true,
+                  "service": true,
+                  "container": true,
+                  "endpoint": true
+                },
+                "renameByName": {
+                  "project": "Project",
+                  "repo": "Repo",
+                  "Value #A": "Read",
+                  "Value #B": "Last read"
+                },
+                "indexByName": {
+                  "project": 0,
+                  "repo": 1,
+                  "Value #A": 2,
+                  "Value #B": 3
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Read"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "1": {
+                            "text": "yes",
+                            "color": "green",
+                            "index": 0
+                          },
+                          "0": {
+                            "text": "no",
+                            "color": "red",
+                            "index": 1
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Last read"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dtdurations"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "text",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 3600
+                        },
+                        {
+                          "color": "red",
+                          "value": 86400
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "sortBy": [
+              {
+                "displayName": "Read",
+                "desc": false
+              }
+            ],
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "countRows": false,
+              "fields": ""
+            }
+          }
+        },
+        {
+          "type": "row",
+          "title": "GitHub budget",
+          "id": 42,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 87
+          },
+          "panels": []
+        },
+        {
+          "type": "timeseries",
+          "id": 43,
+          "title": "Budget remaining",
+          "description": "What is left of GitHub's hourly budget: graphql for the poll, core for REST.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 88
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (resource) (lookout_github_rate_limit_remaining)",
+              "refId": "A",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{resource}}`}} remaining"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (resource) (lookout_github_rate_limit_limit)",
+              "refId": "B",
+              "range": true,
+              "instant": false,
+              "legendFormat": "{{`{{resource}}`}} limit"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 15,
+                "showPoints": "never",
+                "spanNulls": false,
+                "lineInterpolation": "stepAfter",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "min": 0
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".* limit"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "fill": "dash",
+                      "dash": [
+                        10,
+                        10
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.fillOpacity",
+                    "value": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "type": "bargauge",
+          "id": 44,
+          "title": "Budget left",
+          "description": "Remaining over limit. Polls are held back when the budget runs short.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 12,
+            "y": 88
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (resource) (lookout_github_rate_limit_remaining) / max by (resource) (lookout_github_rate_limit_limit)",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "legendFormat": "{{`{{resource}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 0.1
+                  },
+                  {
+                    "color": "green",
+                    "value": 0.25
+                  }
+                ]
+              },
+              "max": 1
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "color",
+            "namePlacement": "auto",
+            "sizing": "auto",
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "maxVizHeight": 300
+          }
+        },
+        {
+          "type": "stat",
+          "id": 45,
+          "title": "Budget resets",
+          "description": "When GitHub refills each budget.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 88
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (resource) (lookout_github_rate_limit_reset_timestamp_seconds) * 1000",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "legendFormat": "{{`{{resource}}`}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "dateTimeFromNow",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "textMode": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          }
+        }
+      ],
+      "refresh": "1m",
+      "schemaVersion": 39,
+      "tags": [
+        "lookout",
+        "github"
+      ],
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "label": "Data source",
+            "type": "datasource",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "options": [],
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false
+          },
+          {
+            "name": "project",
+            "label": "Project",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "definition": "label_values(lookout_repos, project)",
+            "query": {
+              "query": "label_values(lookout_repos, project)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery",
+              "qryType": 1
+            },
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "hide": 0,
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": true,
+            "options": [],
+            "refresh": 2,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1
+          }
+        ]
+      },
+      "time": {
+        "from": "now-7d",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Lookout",
+      "uid": "lookout",
+      "version": 1,
+      "weekStart": ""
+    }
