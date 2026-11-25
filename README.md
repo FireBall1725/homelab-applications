@@ -146,7 +146,6 @@ between namespaces; that isn't what the layout is for.
 | [Lidarr](apps/app-media/lidarr/) | Music library management |
 | [Prowlarr](apps/app-media/prowlarr/) | Indexer aggregator |
 | [SABnzbd](apps/app-media/sabnzbd/) | Usenet downloader |
-| [Pinchflat](apps/app-media/pinchflat/) | YouTube channel archival |
 | [Sportarr](apps/app-media/sportarr/) | Sports event PVR |
 | [Tautulli](apps/app-media/tautulli/) | Plex analytics |
 | [Audiobookshelf](apps/app-media/audiobookshelf/) | Audiobook & podcast server |
