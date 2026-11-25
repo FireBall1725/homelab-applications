@@ -135,13 +135,13 @@ persistence:
     server: 10.0.1.241
     path: /volume2/media/tubearchivist
 
-# Elasticsearch runs as uid 1000 and TubeArchivist as 1026:100; neither can write a fresh
+# Elasticsearch runs as uid 1000, Redis as 999 and TubeArchivist as 1026:100; none can write a fresh
 # Longhorn volume owned by root.
 initContainers:
   update-volume-permission:
     name: update-volume-permission
     image: busybox
-    command: ["sh", "-c", "chown -R 1000:1000 /es-data /redis-data && chown -R 1026:100 /cache-data"]
+    command: ["sh", "-c", "chown -R 1000:1000 /es-data && chown -R 999:999 /redis-data && chown -R 1026:100 /cache-data"]
     volumeMounts:
       - name: es
         mountPath: /es-data
