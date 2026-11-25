@@ -1,0 +1,194 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/geek-cookbook/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+# TubeArchivist needs Elasticsearch and Redis. Both run as sidecars in this pod, so
+# TubeArchivist reaches them on localhost and nothing else in the cluster can.
+
+controller:
+  replicas: 1
+  # Every volume here is RWO. RollingUpdate would deadlock on Multi-Attach.
+  strategy: Recreate
+
+image:
+  repository: bbilly1/tubearchivist
+  tag: ""
+  pullPolicy: IfNotPresent
+
+nodeSelector:
+  kubernetes.io/arch: amd64
+
+env:
+  TZ: America/Toronto
+  ES_URL: http://localhost:9200
+  REDIS_CON: redis://localhost:6379
+  # Space separated list of the URLs TubeArchivist answers on.
+  TA_HOST: https://tubearchivist.k8s.firekatt.ca http://tubearchivist.k8s.firekatt.ca
+  TA_USERNAME: admin
+  # Own downloads as 1026:100, matching the rest of the media tree on the NAS.
+  HOST_UID: "1026"
+  HOST_GID: "100"
+  # SealedSecret in templates/sealed-secret.yaml.
+  TA_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: tubearchivist
+        key: TA_PASSWORD
+  ELASTIC_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: tubearchivist
+        key: ELASTIC_PASSWORD
+
+service:
+  main:
+    ports:
+      http:
+        port: 8000
+
+ingress:
+  main:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - host: tubearchivist.k8s.firekatt.ca
+        paths:
+          - path: /
+            pathType: Prefix
+
+# TubeArchivist waits for Elasticsearch on first start and builds its indexes, so the
+# startup probe is generous. /api/health/ needs no login.
+probes:
+  liveness:
+    custom: true
+    spec:
+      httpGet:
+        path: /api/health/
+        port: 8000
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+  readiness:
+    custom: true
+    spec:
+      httpGet:
+        path: /api/health/
+        port: 8000
+      periodSeconds: 15
+      timeoutSeconds: 10
+      failureThreshold: 3
+  startup:
+    custom: true
+    spec:
+      httpGet:
+        path: /api/health/
+        port: 8000
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 10
+      failureThreshold: 60
+
+persistence:
+  # Thumbnails, channel art and the download cache.
+  cache:
+    enabled: true
+    mountPath: /cache
+    accessMode: ReadWriteOnce
+    size: 10Gi
+
+  # Elasticsearch index. mountPath "-" keeps it out of the main container; the es
+  # sidecar mounts it by name.
+  es:
+    enabled: true
+    mountPath: "-"
+    accessMode: ReadWriteOnce
+    size: 10Gi
+
+  # Redis data. Same sidecar-only mount.
+  redis:
+    enabled: true
+    mountPath: "-"
+    accessMode: ReadWriteOnce
+    size: 1Gi
+
+  # The whole media share at /media, like the other media apps.
+  media:
+    enabled: true
+    mountPath: /media
+    type: nfs
+    server: 10.0.1.241
+    path: /volume2/media
+
+  # TubeArchivist writes downloads to a fixed /youtube path, in its own layout
+  # (channel id / video id). It is a separate folder from /media/youtube, which holds
+  # the Pinchflat tree, so the two never touch each other's files.
+  youtube:
+    enabled: true
+    mountPath: /youtube
+    type: nfs
+    server: 10.0.1.241
+    path: /volume2/media/tubearchivist
+
+# Elasticsearch runs as uid 1000 and cannot write a fresh Longhorn volume owned by root.
+initContainers:
+  update-volume-permission:
+    name: update-volume-permission
+    image: busybox
+    command: ["sh", "-c", "chown -R 1000:1000 /es-data /redis-data"]
+    volumeMounts:
+      - name: es
+        mountPath: /es-data
+      - name: redis
+        mountPath: /redis-data
+    securityContext:
+      runAsUser: 0
+
+additionalContainers:
+  es:
+    image: bbilly1/tubearchivist-es:9.5.5
+    imagePullPolicy: IfNotPresent
+    env:
+      - name: ELASTIC_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: tubearchivist
+            key: ELASTIC_PASSWORD
+      - name: ES_JAVA_OPTS
+        value: "-Xms1g -Xmx1g"
+      - name: xpack.security.enabled
+        value: "true"
+      - name: discovery.type
+        value: single-node
+      - name: path.repo
+        value: /usr/share/elasticsearch/data/snapshot
+    volumeMounts:
+      - name: es
+        mountPath: /usr/share/elasticsearch/data
+    resources:
+      requests:
+        cpu: 100m
+        memory: 2Gi
+      limits:
+        memory: 3Gi
+  redis:
+    image: redis:8
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - name: redis
+        mountPath: /data
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    memory: 2Gi
