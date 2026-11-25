@@ -28,9 +28,6 @@ env:
   # Space separated list of the URLs TubeArchivist answers on.
   TA_HOST: https://tubearchivist.k8s.firekatt.ca http://tubearchivist.k8s.firekatt.ca
   TA_USERNAME: admin
-  # Own downloads as 1026:100, matching the rest of the media tree on the NAS.
-  HOST_UID: "1026"
-  HOST_GID: "100"
   # SealedSecret in templates/sealed-secret.yaml.
   TA_PASSWORD:
     valueFrom:
@@ -42,6 +39,12 @@ env:
       secretKeyRef:
         name: tubearchivist
         key: ELASTIC_PASSWORD
+
+# v0.6.0 dropped HOST_UID and HOST_GID and no longer chowns anything. The container runs
+# as 1026:100 instead, matching the rest of the media tree on the NAS.
+securityContext:
+  runAsUser: 1026
+  runAsGroup: 100
 
 service:
   main:
@@ -132,17 +135,20 @@ persistence:
     server: 10.0.1.241
     path: /volume2/media/tubearchivist
 
-# Elasticsearch runs as uid 1000 and cannot write a fresh Longhorn volume owned by root.
+# Elasticsearch runs as uid 1000 and TubeArchivist as 1026:100; neither can write a fresh
+# Longhorn volume owned by root.
 initContainers:
   update-volume-permission:
     name: update-volume-permission
     image: busybox
-    command: ["sh", "-c", "chown -R 1000:1000 /es-data /redis-data"]
+    command: ["sh", "-c", "chown -R 1000:1000 /es-data /redis-data && chown -R 1026:100 /cache-data"]
     volumeMounts:
       - name: es
         mountPath: /es-data
       - name: redis
         mountPath: /redis-data
+      - name: cache
+        mountPath: /cache-data
     securityContext:
       runAsUser: 0
 
