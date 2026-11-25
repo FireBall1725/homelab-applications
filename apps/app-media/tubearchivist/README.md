@@ -28,11 +28,11 @@ Elasticsearch and Redis run as sidecars in the same pod, so TubeArchivist reache
 |---|---|---|
 | `/cache` | Longhorn, 10Gi | thumbnails and channel art |
 | `/media` | NFS `10.0.1.241:/volume2/media` | the whole media share, like the other media apps |
-| `/youtube` | NFS `10.0.1.241:/volume2/media/tubearchivist` | downloaded videos, one folder per channel ID |
+| `/youtube` | NFS `10.0.1.241:/volume2/media/youtube` | downloaded videos, one folder per channel ID |
 | Elasticsearch | Longhorn, 10Gi | the index |
 | Redis | Longhorn, 1Gi | task queue |
 
-`/volume2/media/tubearchivist` has to exist on the NAS before the pod starts, or the NFS mount fails. It is separate from `/volume2/media/youtube`, which holds the Pinchflat tree.
+`/volume2/media/youtube` has to exist on the NAS before the pod starts, or the NFS mount fails.
 
 ## Login
 

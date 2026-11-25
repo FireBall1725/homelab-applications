@@ -136,14 +136,13 @@ persistence:
     path: /volume2/media
 
   # TubeArchivist writes downloads to a fixed /youtube path, in its own layout
-  # (channel id / video id). It is a separate folder from /media/youtube, which holds
-  # the Pinchflat tree, so the two never touch each other's files.
+  # (channel id / video id), here the shared youtube folder on the NAS.
   youtube:
     enabled: true
     mountPath: /youtube
     type: nfs
     server: 10.0.1.241
-    path: /volume2/media/tubearchivist
+    path: /volume2/media/youtube
 
 # Elasticsearch runs as uid 1000, Redis as 999 and TubeArchivist as 1026:100; none can write a fresh
 # Longhorn volume owned by root.
