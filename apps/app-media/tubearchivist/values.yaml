@@ -63,7 +63,8 @@ ingress:
             pathType: Prefix
 
 # TubeArchivist waits for Elasticsearch on first start and builds its indexes, so the
-# startup probe is generous. /api/health/ needs no login.
+# startup probe is generous. /api/health/ needs no login, but TubeArchivist answers 400 to a
+# Host it does not know (TA_HOST), so the probes send the ingress hostname.
 probes:
   liveness:
     custom: true
@@ -71,6 +72,9 @@ probes:
       httpGet:
         path: /api/health/
         port: 8000
+        httpHeaders:
+          - name: Host
+            value: tubearchivist.k8s.firekatt.ca
       periodSeconds: 30
       timeoutSeconds: 10
       failureThreshold: 3
@@ -80,6 +84,9 @@ probes:
       httpGet:
         path: /api/health/
         port: 8000
+        httpHeaders:
+          - name: Host
+            value: tubearchivist.k8s.firekatt.ca
       periodSeconds: 15
       timeoutSeconds: 10
       failureThreshold: 3
@@ -89,6 +96,9 @@ probes:
       httpGet:
         path: /api/health/
         port: 8000
+        httpHeaders:
+          - name: Host
+            value: tubearchivist.k8s.firekatt.ca
       initialDelaySeconds: 15
       periodSeconds: 10
       timeoutSeconds: 10
