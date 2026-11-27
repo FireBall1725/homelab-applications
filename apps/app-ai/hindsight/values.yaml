@@ -183,7 +183,7 @@ postgres:
   # PG 18 to match the pgvector extension image. "minimal" ships no extensions
   # of its own; pgvector comes from the image volume below.
   imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie
-  pgvectorImage: ghcr.io/cloudnative-pg/pgvector:0.8.1-18-trixie
+  pgvectorImage: ghcr.io/cloudnative-pg/pgvector:0.8.7-18-trixie
   database: hindsight
   owner: hindsight
   credsSecret: hindsight-db-creds
